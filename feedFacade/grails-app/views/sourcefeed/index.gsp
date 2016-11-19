@@ -11,7 +11,7 @@
     <div class="row">
   
       <h1>Registered Feeds</h1>
-      <table>
+      <table class="table table-striped well">
         <thead>
           <tr>
             <th>uriname</th>
