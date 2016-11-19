@@ -46,6 +46,7 @@ dependencies {
     compile "org.hibernate:hibernate-core:5.1.2.Final"
     compile "org.hibernate:hibernate-ehcache:5.1.2.Final"
     console "org.grails:grails-console"
+    compile 'org.grails.plugins:quartz:2.0.9'
     profile "org.grails.profiles:web"
     runtime "com.bertramlabs.plugins:asset-pipeline-grails:2.11.6"
     runtime "com.h2database:h2"

@@ -33,6 +33,13 @@
           </div>
 
           <div class="form-group">
+            <label for="pollInterval"class="col-sm-2 control-label">Poll Interval</label>
+            <div class="col-sm-10">
+              <input type="text" name="pollInterval" class="form-control" id="pollInterval" placeholder="Poll Interval"/>
+            </div>
+          </div>
+
+          <div class="form-group">
             <div class="col-sm-2">
             </div>
             <div class="col-sm-10">
