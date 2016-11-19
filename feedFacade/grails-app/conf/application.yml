@@ -6,6 +6,11 @@ grails:
     spring:
         transactionManagement:
             proxies: false
+    resources:
+        pattern: '/**'
+    plugin:
+        console:
+            baseUrl: 'console'
 info:
     app:
         name: '@info.app.name@'

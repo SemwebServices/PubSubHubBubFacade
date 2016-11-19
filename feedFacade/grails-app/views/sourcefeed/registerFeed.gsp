@@ -16,7 +16,7 @@
     </div>
     <div class="row">
 
-        <g:form class="form-horizontal">
+        <g:form class="form-horizontal" action="registerFeed" method="post">
 
           <div class="form-group">
             <label for="feedname" class="col-sm-2 control-label">Feed Name / Identifier</label>

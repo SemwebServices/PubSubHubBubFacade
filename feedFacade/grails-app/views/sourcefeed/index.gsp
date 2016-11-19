@@ -18,14 +18,19 @@
             <th>status</th>
             <th>baseurl</th>
             <th>lastCompleted</th>
-            <th>processingTimeStart</th>
+            <th>processing Start Time</th>
             <th>pollInterval</th>
           </tr>
         </thead>
         <tbody>
           <g:each in="${feeds}" var="f" >
             <tr>
-              <td></td>
+              <td>${f.uriname}</td>
+              <td>${f.status}</td>
+              <td>${f.baseUrl}</td>
+              <td>${f.lastCompleted}</td>
+              <td>${f.processingStartTime}</td>
+              <td>${f.pollInterval}</td>
             </tr>
           </g:each>
         </tbody>
