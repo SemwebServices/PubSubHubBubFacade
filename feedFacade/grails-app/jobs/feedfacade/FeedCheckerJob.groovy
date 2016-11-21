@@ -1,11 +1,14 @@
 package feedfacade
 
 class FeedCheckerJob {
+  
+  def feedCheckerService 
+
     static triggers = {
-      simple repeatInterval: 5000l // execute job once in 5 seconds
+      simple repeatInterval: 60000l // execute job once in 5 seconds
     }
 
     def execute() {
-        // execute job
+      feedCheckerService.triggerFeedCheck()
     }
 }

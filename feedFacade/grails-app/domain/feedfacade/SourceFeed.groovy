@@ -12,14 +12,18 @@ class SourceFeed {
   String baseUrl 
 
   // The time the feed last changed from 'in-process' to 'paused'
-  Date lastCompleted
+  Long lastCompleted
 
   // The time the feed went from 'paused' to 'in-process'
-  Date processingStartTime 
+  Long processingStartTime 
 
   // How long to wait between polls
   Long pollInterval
 
+  // Last hash
+  String lastHash
+
   static constraints = {
+    lastHash blank: false, nullable:true
   }
 }
