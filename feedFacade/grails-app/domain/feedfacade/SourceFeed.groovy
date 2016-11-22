@@ -20,10 +20,14 @@ class SourceFeed {
   // How long to wait between polls
   Long pollInterval
 
+  // Highest timestamp seen on any entry
+  Long highestTimestamp
+
   // Last hash
   String lastHash
 
   static constraints = {
-    lastHash blank: false, nullable:true
+            lastHash blank: false, nullable:true
+    highestTimestamp blank: false, nullable:true
   }
 }

@@ -31,7 +31,7 @@ class FeedCheckerService {
       // Grab the next feed to examine -- do it in a transaction
       def feed_info = null
       SourceFeed.withNewTransaction {
-        def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash from SourceFeed as sf where sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm order by (sf.lastCompleted + sf.pollInterval) asc',[paused:'paused',ctm:start_time],[lock:true])
+        def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp from SourceFeed as sf where sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm order by (sf.lastCompleted + sf.pollInterval) asc',[paused:'paused',ctm:start_time],[lock:true])
 
         if ( q.size() > 0 ) {
           def row = q.get(0)
@@ -39,11 +39,12 @@ class FeedCheckerService {
           feed_info.id = row[0]
           feed_info.url = row[1]
           feed_info.hash = row[2]
+          feed_info.highesTimestamp = row[3]
         }
       }
 
       if ( feed_info ) {
-        processFeed(start_time, feed_info.id,feed_info.url,feed_info.hash);
+        processFeed(start_time, feed_info.id,feed_info.url,feed_info.hash,feed_info.highesTimestamp);
       }
       else {  
         // nothing left in the queue
@@ -54,10 +55,11 @@ class FeedCheckerService {
     running=false;
   }
 
-  def processFeed(start_time, id, url, hash) {
+  def processFeed(start_time, id, url, hash, highestRecordedTimestamp) {
 
-    log.debug("processFeed(${start_time},${id},${url},${hash})");
+    log.debug("processFeed(${start_time},${id},${url},${hash},${highestRecordedTimestamp})");
     def newhash = null;
+    def highestSeenTimestamp = null;
 
     SourceFeed.withNewTransaction {
       log.debug('Mark feed as in-process');
@@ -72,11 +74,18 @@ class FeedCheckerService {
     if ( ( hash == null ) || ( feed_info.hash != hash ) ) {
       newhash = feed_info.hash
       log.debug("Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
-      getNewEntries(id, feed_info.feed_text)
+
+      def processing_result = getNewEntries(id, feed_info.feed_text, highestRecordedTimestamp)
+
+      if ( processing_result.highestSeenTimestamp ) {
+        highestSeenTimestamp = processing_result.highestSeenTimestamp
+      }
     }
     else {
       log.debug("${url} unchanged");
     }
+
+    log.debug("After processing entries, highest timestamp seen is ${highestSeenTimestamp}");
 
     SourceFeed.withNewTransaction {
       log.debug('Mark feed as paused');
@@ -86,6 +95,10 @@ class FeedCheckerService {
       if ( newhash ) {
         log.debug("Updating hash to ${newhash}");
         sf.lastHash = newhash
+      }
+      if ( highestSeenTimestamp ) {
+        log.debug("Updating sf.highestTimestamp to be ${highestSeenTimestamp}");
+        sf.highestTimestamp = highestSeenTimestamp
       }
       sf.lastCompleted=start_time
       sf.save(flush:true, failOnError:true);
@@ -105,7 +118,28 @@ class FeedCheckerService {
     result
   }
 
-  def getNewEntries(id, feed_text) {
-    log.debug("getNewEntries(${id},...feedText...)");
+  def getNewEntries(id, feed_text, highestRecordedTimestamp) {
+    def result = [:]
+
+    // 2016-11-22T07:47:55-04:00
+    def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
+    def rootNode = new XmlParser().parseText(feed_text)
+    rootNode.entry.each { entry ->
+      def entry_updated_time = sdf.parse(entry.updated.text()).getTime();
+      
+      log.debug("${entry.id.text()} :: ${entry_updated_time}");
+
+      // Keep track of the highest timestamp we have seen in this pass over the changed feed
+      if ( entry_updated_time && ( ( result.highestSeenTimestamp == null ) || ( result.highestSeenTimestamp < entry_updated_time ) ) ) {
+        log.debug("Update result.highestTimestamp to ${result.highestTimestamp}");
+        result.highestSeenTimestamp = entry_updated_time
+      }
+
+      // See if this entry has a timestamp greater than any we have seen so far
+      if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
+        log.debug("    -> ${entry.id.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
+      }
+    }
+    result
   }
 }
