@@ -120,7 +120,7 @@ class FeedCheckerService {
 
   def getNewEntries(id, feed_text, highestRecordedTimestamp) {
     def result = [:]
-
+    result.numNewEntries=0
     // 2016-11-22T07:47:55-04:00
     def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
     def rootNode = new XmlParser().parseText(feed_text)
@@ -131,15 +131,18 @@ class FeedCheckerService {
 
       // Keep track of the highest timestamp we have seen in this pass over the changed feed
       if ( entry_updated_time && ( ( result.highestSeenTimestamp == null ) || ( result.highestSeenTimestamp < entry_updated_time ) ) ) {
-        log.debug("Update result.highestTimestamp to ${result.highestTimestamp}");
+        // log.debug("Update result.highestTimestamp to ${result.highestTimestamp}");
         result.highestSeenTimestamp = entry_updated_time
       }
 
       // See if this entry has a timestamp greater than any we have seen so far
       if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
         log.debug("    -> ${entry.id.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
+        result.numNewEntries++
       }
     }
+
+    log.debug("Found ${result.numNewEntries} new entries, highest timestamp seen ${result.highestSeenTimestamp}, highest timestamp recorded ${highestRecordedTimestamp}");
     result
   }
 }
