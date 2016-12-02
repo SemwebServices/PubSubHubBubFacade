@@ -8,13 +8,17 @@ import java.security.MessageDigest
 class FeedCheckerService {
 
   def running = false;
+  def error_count = 0;
 
   def triggerFeedCheck() {
     log.debug("FeedCheckerService::triggerFeedCheck");
     if ( running ) {
-      log.debug("Feed checker already running - not launching another");
+      log.debug("Feed checker already running - not launching another [${error_count++}]");
+      if ( error_count > 10 )
+        System.exit(0);
     }
     else {
+      def error_count = 0;
       doFeedCheck()
     }
   }
@@ -26,30 +30,35 @@ class FeedCheckerService {
 
     log.debug("Finding all feeds due on or after ${start_time}");
 
-    def cont = true
-    while ( cont ) {
-      // Grab the next feed to examine -- do it in a transaction
-      def feed_info = null
-      SourceFeed.withNewTransaction {
-        def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp from SourceFeed as sf where sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm order by (sf.lastCompleted + sf.pollInterval) asc',[paused:'paused',ctm:start_time],[lock:true])
+    try {
+      def cont = true
+      while ( cont ) {
+        // Grab the next feed to examine -- do it in a transaction
+        def feed_info = null
+        SourceFeed.withNewTransaction {
+          def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp from SourceFeed as sf where sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm order by (sf.lastCompleted + sf.pollInterval) asc',[paused:'paused',ctm:start_time],[lock:true])
 
-        if ( q.size() > 0 ) {
-          def row = q.get(0)
-          feed_info = [:]
-          feed_info.id = row[0]
-          feed_info.url = row[1]
-          feed_info.hash = row[2]
-          feed_info.highesTimestamp = row[3]
+          if ( q.size() > 0 ) {
+            def row = q.get(0)
+            feed_info = [:]
+            feed_info.id = row[0]
+            feed_info.url = row[1]
+            feed_info.hash = row[2]
+            feed_info.highesTimestamp = row[3]
+          }
+        }
+
+        if ( feed_info ) {
+          processFeed(start_time, feed_info.id,feed_info.url,feed_info.hash,feed_info.highesTimestamp);
+        }
+        else {  
+          // nothing left in the queue
+          cont = false
         }
       }
-
-      if ( feed_info ) {
-        processFeed(start_time, feed_info.id,feed_info.url,feed_info.hash,feed_info.highesTimestamp);
-      }
-      else {  
-        // nothing left in the queue
-        cont = false
-      }
+    }
+    catch ( Exception e ) {
+      e.printStackTrace()
     }
 
     running=false;
@@ -127,7 +136,7 @@ class FeedCheckerService {
     rootNode.entry.each { entry ->
       def entry_updated_time = sdf.parse(entry.updated.text()).getTime();
       
-      log.debug("${entry.id.text()} :: ${entry_updated_time}");
+      // log.debug("${entry.id.text()} :: ${entry_updated_time}");
 
       // Keep track of the highest timestamp we have seen in this pass over the changed feed
       if ( entry_updated_time && ( ( result.highestSeenTimestamp == null ) || ( result.highestSeenTimestamp < entry_updated_time ) ) ) {
