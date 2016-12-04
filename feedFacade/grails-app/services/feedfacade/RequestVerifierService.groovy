@@ -39,7 +39,7 @@ class RequestVerifierService {
         // Grab the next pending request off the list of pending requests. Lock the request so nobody else can tamper with it whilst we
         // Do so. At the end we will change the status of the request we grabbed to "processing"
         PendingRequest.withNewTransaction {
-          def q = PendingRequest.executeQuery('select pr.id, pr.mode, pr.callback, pr.topic from PendingRequest as pr where pr.status = :pending order by pr.requestTimestamp asc',[pending:'pending'],[lock:true])
+          def q = PendingRequest.executeQuery('select pr.id, pr.mode, pr.callback, pr.topic, pr.guid, pr.leaseSeconds from PendingRequest as pr where pr.status = :pending order by pr.requestTimestamp asc',[pending:'pending'],[lock:true])
           if ( q.size() > 0 ) {
             def row = q.get(0)
             request_info = [:]
@@ -47,6 +47,8 @@ class RequestVerifierService {
             request_info.mode = row[1]
             request_info.callback = row[2]
             request_info.topic = row[3]
+            request_info.guid = row[4]
+            request_info.leaseSeconds = row[5]
 
             log.debug("Found request to verify ${request_info} - mark as in processing");
             PendingRequest.executeUpdate('update PendingRequest set status = :p where id = :id',[p:'procesing', id:request_info.id]);
@@ -83,8 +85,23 @@ class RequestVerifierService {
     def verify_url = new java.net.URL(verify_request)
     def response = verify_url.text
     log.debug(response)
+
     if ( response.equals(challenge) ) {
       log.debug("Client responded with challenge, subscriber intent verified");
+
+      def topic = Topic.findByName(request_info.topic.trim().toLowerCase())
+
+      if ( topic ) {
+        if ( request.mode == 'subscribe' ) {
+          def s = new Subscription(
+                                   guid:request_info.guid,
+                                   callback:request_info.callback,
+                                   topic:topic,
+                                   leaseSeconds:request_info.leaseSeconds
+                                  ).save(flush:true, failOnError:true);
+          log.debug("Subscription created...");
+        }
+      }
     }
     else {
       log.debug("Client did not respond correctly to challenge, subscriber intent not verified");

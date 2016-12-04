@@ -28,6 +28,7 @@
         <ul class="nav navbar-nav">
           <li class="active"><a href="#">Home</a></li>
           <li><g:link controller="sourcefeed" action="index">Feeds</g:link></li>
+          <li><g:link controller="topics" action="index">Topics</g:link></li>
           <!--
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
