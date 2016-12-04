@@ -69,6 +69,9 @@ class FeedCheckerService {
     log.debug("processFeed(${start_time},${id},${url},${hash},${highestRecordedTimestamp})");
     def newhash = null;
     def highestSeenTimestamp = null;
+    def error = false
+    def error_message = null
+    def new_entry_count = 0
 
     SourceFeed.withNewTransaction {
       log.debug('Mark feed as in-process');
@@ -78,20 +81,28 @@ class FeedCheckerService {
       sf.save(flush:true, failOnError:true);
     }
 
-    log.debug("Doing checking....${url} ${hash}");
-    def feed_info = fetchFeedPage(url);
-    if ( ( hash == null ) || ( feed_info.hash != hash ) ) {
-      newhash = feed_info.hash
-      log.debug("Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
-
-      def processing_result = getNewEntries(id, feed_info.feed_text, highestRecordedTimestamp)
-
-      if ( processing_result.highestSeenTimestamp ) {
-        highestSeenTimestamp = processing_result.highestSeenTimestamp
+    try {
+      log.debug("Doing checking....${url} ${hash}");
+      def feed_info = fetchFeedPage(url);
+      if ( ( hash == null ) || ( feed_info.hash != hash ) ) {
+        newhash = feed_info.hash
+        log.debug("Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
+  
+        def processing_result = getNewEntries(id, feed_info.feed_text, highestRecordedTimestamp)
+        new_entry_count = processing_result.numNewEntries
+  
+        if ( processing_result.highestSeenTimestamp ) {
+          highestSeenTimestamp = processing_result.highestSeenTimestamp
+        }
+      }
+      else {
+        log.debug("${url} unchanged");
       }
     }
-    else {
-      log.debug("${url} unchanged");
+    catch ( Exception e ) {
+      error=true
+      error_message = e.message()
+      log.error("problem fetching feed",e);
     }
 
     log.debug("After processing entries, highest timestamp seen is ${highestSeenTimestamp}");
@@ -110,6 +121,17 @@ class FeedCheckerService {
         sf.highestTimestamp = highestSeenTimestamp
       }
       sf.lastCompleted=start_time
+      sf.lastError=error_message
+
+      if ( error ) {
+        sf.feedStatus='ERROR'
+        SourceFeedStats.logError(sf,start_time);
+      }
+      else { 
+        sf.feedStatus='OK'
+        SourceFeedStats.logSuccess(sf,start_time,new_entry_count);
+      }
+
       sf.save(flush:true, failOnError:true);
     }
   }

@@ -23,6 +23,10 @@ class SourceFeed {
   // Highest timestamp seen on any entry
   Long highestTimestamp
 
+  String feedStatus
+
+  String lastError
+
   static hasMany = [
     topics:FeedTopic
   ]
@@ -37,6 +41,8 @@ class SourceFeed {
   static constraints = {
             lastHash blank: false, nullable:true
     highestTimestamp blank: false, nullable:true
+          feedStatus blank: false, nullable:true
+           lastError blank: false, nullable:true
   }
 
   static mapping = {
@@ -53,5 +59,14 @@ class SourceFeed {
         def feed_topic = FeedTopic.findByOwnerFeedAndTopic(this, topic) ?: new FeedTopic(ownerFeed:this, topic:topic).save(flush:true, failOnError:true);
       }
     }
+  }
+
+  def getHistogram() {
+    SourceFeedStats.executeQuery('select sfs from SourceFeedStats as sfs order by sfs.lastUpdate asc');
+  }
+
+  def getHistogramLastDay() {
+    def start_time = System.currentTimeMillis() - ( 25 * 60 * 60 * 1000 ) 
+    SourceFeedStats.executeQuery('select sfs from SourceFeedStats as sfs where sfs.lastUpdate > :start_time order by sfs.lastUpdate asc', [ start_time : start_time ]);
   }
 }
