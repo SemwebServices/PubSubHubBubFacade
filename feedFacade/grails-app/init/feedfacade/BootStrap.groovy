@@ -11,6 +11,8 @@ class BootStrap {
                                                                              lastCompleted:new Long(0),
                                                                              processingStartTime:new Long(0),
                                                                              pollInterval:60*1000).save(flush:true, failOnError:true);
+    ca_msc_en.addTopics('ca_msc_en')
+    ca_msc_en.addTopics('AlertHub,TestFeed, NormalisationTest')
 
   }
 

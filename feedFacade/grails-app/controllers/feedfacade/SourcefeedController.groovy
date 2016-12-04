@@ -31,6 +31,7 @@ class SourcefeedController {
           if ( feed == null ) {
             log.debug("Create new feed ${params}");
             feed = new SourceFeed(uriname:params.feedname, baseUrl:params.baseUrl, pollInterval:params.pollInterval, status:'paused', processingStartTime:0, lastCompleted:0).save(flush:true, failOnError:true);
+            feed.addTopics(params.topics)
           }
           else {
             log.debug("Update feed ${params}");

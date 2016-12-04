@@ -26,3 +26,8 @@ production jar. An embedded database is used for feed state.
 
 There are many deployment options, the initial goal was for a local facade, but projects may also use the
 service internally to poll RSS and turn feeds into event streams.
+
+## References
+
+http://pubsubhubbub.github.io/PubSubHubbub/pubsubhubbub-core-0.4.html
+https://github.com/pubsubhubbub/PubSubHubbub

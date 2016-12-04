@@ -15,6 +15,7 @@
         <thead>
           <tr>
             <th>uriname</th>
+            <th>Topics</th>
             <th>status</th>
             <th>baseurl</th>
             <th>lastCompleted</th>
@@ -26,6 +27,7 @@
           <g:each in="${feeds}" var="f" >
             <tr>
               <td>${f.uriname}</td>
+              <td><ul><g:each in="${f.topics}" var="topic"><li>${topic.topic.name}</li></g:each></ul></td>
               <td>${f.status}</td>
               <td>${f.baseUrl}</td>
               <td>${f.lastCompleted}</td>
