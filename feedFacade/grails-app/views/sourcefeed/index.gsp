@@ -44,7 +44,7 @@
               <tr>
                 <td colspan="9">
                   <g:set var="stats" value="${f.getHistogramLastDay()}"/>
-                  <table>
+                  <table class="table">
                     <thead>
                       <tr>
                         <th>Hour &nbsp;</th>

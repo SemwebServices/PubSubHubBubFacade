@@ -49,7 +49,7 @@ class NewEventService {
           break;
       }
 
-      recent_notification.add([targetMimetype:sub.targetMimetype, content:result, target: sub.callback, topic: sub.topic.name]);
+      recent_notifications.add([targetMimetype:sub.targetMimetype, content:result, target: sub.callback, topic: sub.topic.name]);
 
       log.debug("done");
     }
