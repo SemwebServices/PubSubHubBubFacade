@@ -76,7 +76,20 @@ class RequestVerifierService {
 
   def processRequest(start_time, request_info) {
     log.debug("processRequest(${start_time}, ${request_info})");
-    //
+
+    def challenge = java.util.UUID.randomUUID().toString()
+    def verify_request = request_info.callback+"?hub.mode=${request_info.mode}&hub.topic=${request_info.topic}&hub.challenge=${challenge}"
+    log.debug("Constructed verify  request");
+    def verify_url = new java.net.URL(verify_request)
+    def response = verify_url.text
+    log.debug(response)
+    if ( response.equals(challenge) ) {
+      log.debug("Client responded with challenge, subscriber intent verified");
+    }
+    else {
+      log.debug("Client did not respond correctly to challenge, subscriber intent not verified");
+    }
+
     PendingRequest.withNewTransaction {
       PendingRequest.executeUpdate('delete from PendingRequest where id = :id',[id:request_info.id]);
     }
