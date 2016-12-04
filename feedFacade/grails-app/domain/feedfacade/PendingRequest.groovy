@@ -9,6 +9,7 @@ class PendingRequest {
   String topic
   String leaseSeconds
   String secret
+  String status
 
   static constraints = {
                 guid blank:false, nullable:false
@@ -16,6 +17,7 @@ class PendingRequest {
             callback blank:false, nullable:false
                 mode blank:false, nullable:false
                topic blank:false, nullable:false
+              status blank:false, nullable:false
         leaseSeconds blank:false, nullable:true
               secret blank:false, nullable:true
   }

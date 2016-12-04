@@ -30,6 +30,7 @@ class HubController {
                                     callback:params.hub.callback,
                                     mode:params.hub.mode,
                                     topic:params.hub.topic,
+                                    status:'pending',
                                     leaseSeconds:params.hub.lease_seconds,
                                     secret:params.hub.secret).save(flush:true, failOnError:true);
         render(status: 202, text: 'Subscription Request Accepted. Request ID is '+pending_request_uuid)
