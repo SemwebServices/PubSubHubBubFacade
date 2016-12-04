@@ -39,7 +39,7 @@ class RequestVerifierService {
         // Grab the next pending request off the list of pending requests. Lock the request so nobody else can tamper with it whilst we
         // Do so. At the end we will change the status of the request we grabbed to "processing"
         PendingRequest.withNewTransaction {
-          def q = PendingRequest.executeQuery('select pr.id, pr.mode, pr.callback, pr.topic, pr.guid, pr.leaseSeconds from PendingRequest as pr where pr.status = :pending order by pr.requestTimestamp asc',[pending:'pending'],[lock:true])
+          def q = PendingRequest.executeQuery('select pr.id, pr.mode, pr.callback, pr.topic, pr.guid, pr.leaseSeconds, pr.trimNs, pr.targetMimetype from PendingRequest as pr where pr.status = :pending order by pr.requestTimestamp asc',[pending:'pending'],[lock:true])
           if ( q.size() > 0 ) {
             def row = q.get(0)
             request_info = [:]
@@ -49,6 +49,8 @@ class RequestVerifierService {
             request_info.topic = row[3]
             request_info.guid = row[4]
             request_info.leaseSeconds = row[5]
+            request_info.trimNs = row[6]
+            request_info.targetMimetype = row[7]
 
             log.debug("Found request to verify ${request_info} - mark as in processing");
             PendingRequest.executeUpdate('update PendingRequest set status = :p where id = :id',[p:'procesing', id:request_info.id]);
