@@ -2,26 +2,32 @@
 <html>
 <head>
     <meta name="layout" content="main"/>
-    <title>Topics</title>
+    <title>Registered Source Feeds</title>
+
     <asset:link rel="icon" href="favicon.ico" type="image/x-ico" />
 </head>
 <body>
   <div class="container-fluid">
     <div class="row">
       <div class="container-fluid">
-        <h1>Registered Topics</h1>
+
+        <h1>Notification Log</h1>
         <table class="table table-striped well">
           <thead>
             <tr>
-              <th>Topic name</th>
-              <th>Subscriptions</th>
+              <th>Callback</th>
+              <th>Topic</th>
+              <th>Target Mimetype</th>
+              <th>Content</th>
             </tr>
           </thead>
           <tbody>
-            <g:each in="${topics}" var="t" >
+            <g:each in="${log}" var="e" >
               <tr>
-                <td>${t.name}</td>
-                <td><ul><g:each in="${t.subscriptions}" var="sub"><li>${sub}</li></g:each></ul></td>
+                <td>${e.target}</td>
+                <td>${e.topic}</td>
+                <td>${e.targetMimetype}</td>
+                <td>${e.content}</td>
               </tr>
             </g:each>
           </tbody>

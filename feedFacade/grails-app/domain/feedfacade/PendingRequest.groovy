@@ -10,6 +10,8 @@ class PendingRequest {
   String leaseSeconds
   String secret
   String status
+  String trimNs
+  String targetMimetype
 
   static constraints = {
                 guid blank:false, nullable:false
@@ -20,5 +22,7 @@ class PendingRequest {
               status blank:false, nullable:false
         leaseSeconds blank:false, nullable:true
               secret blank:false, nullable:true
+              trimNs blank:false, nullable:true
+      targetMimetype blank:false, nullable:true
   }
 }

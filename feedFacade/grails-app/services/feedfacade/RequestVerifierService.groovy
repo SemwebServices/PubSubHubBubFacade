@@ -92,12 +92,14 @@ class RequestVerifierService {
       def topic = Topic.findByName(request_info.topic.trim().toLowerCase())
 
       if ( topic ) {
-        if ( request.mode == 'subscribe' ) {
+        if ( request_info.mode == 'subscribe' ) {
           def s = new Subscription(
                                    guid:request_info.guid,
                                    callback:request_info.callback,
                                    topic:topic,
-                                   leaseSeconds:request_info.leaseSeconds
+                                   leaseSeconds:request_info.leaseSeconds,
+                                   trimNs:request_info.trimNs,
+                                   targetMimetype:request_info.targetMimetype
                                   ).save(flush:true, failOnError:true);
           log.debug("Subscription created...");
         }

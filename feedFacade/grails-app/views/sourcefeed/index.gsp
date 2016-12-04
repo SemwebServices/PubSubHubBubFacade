@@ -17,6 +17,7 @@
             <tr>
               <th>Name</th>
               <th>Topics</th>
+              <th>Tags</th>
               <th>Status</th>
               <th>Base Url</th>
               <th>Last Completed</th>
@@ -31,8 +32,9 @@
               <tr>
                 <td rowspan="2">${f.uriname}</td>
                 <td><ul><g:each in="${f.topics}" var="topic"><li>${topic.topic.name}</li></g:each></ul></td>
+                <td><ul><g:each in="${f.tags}" var="tv"><li>${tv.tag.tag}: <strong>${tv.value}</strong></li></g:each></ul></td>
                 <td>${f.status}</td>
-                <td>${f.baseUrl}</td>
+                <td><a href="${f.baseUrl}">${f.baseUrl}</a></td>
                 <td>${f.lastCompleted}</td>
                 <td>${f.processingStartTime}</td>
                 <td>${f.pollInterval}</td>

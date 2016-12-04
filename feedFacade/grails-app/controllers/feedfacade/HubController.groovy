@@ -32,6 +32,8 @@ class HubController {
                                     topic:params.hub.topic,
                                     status:'pending',
                                     leaseSeconds:params.hub.lease_seconds,
+                                    trimNs:params.trimNs,
+                                    targetMimetype:params.targetMimetype,
                                     secret:params.hub.secret).save(flush:true, failOnError:true);
         render(status: 202, text: 'Subscription Request Accepted. Request ID is '+pending_request_uuid)
       }

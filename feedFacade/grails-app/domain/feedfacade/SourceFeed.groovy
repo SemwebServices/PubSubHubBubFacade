@@ -8,6 +8,8 @@ class SourceFeed {
   // Status - 'in-process', 'paused'  -- in-process if being actively checked
   String status 
 
+  String name
+
   // Base URL of the underlying feed which will be polled
   String baseUrl 
 
@@ -40,6 +42,7 @@ class SourceFeed {
 
   static constraints = {
             lastHash blank: false, nullable:true
+                name blank: false, nullable:true
     highestTimestamp blank: false, nullable:true
           feedStatus blank: false, nullable:true
            lastError blank: false, nullable:true
@@ -47,6 +50,7 @@ class SourceFeed {
 
   static mapping = {
     topics sort:'topic'
+    lastError type:'text'
   }
 
   public void addTopics(String topicList) {
@@ -62,11 +66,22 @@ class SourceFeed {
   }
 
   def getHistogram() {
-    SourceFeedStats.executeQuery('select sfs from SourceFeedStats as sfs order by sfs.lastUpdate asc');
+    SourceFeedStats.executeQuery('select sfs from SourceFeedStats as sfs where sfs.owner = :owner order by sfs.lastUpdate asc',[ owner:this]);
   }
 
   def getHistogramLastDay() {
     def start_time = System.currentTimeMillis() - ( 25 * 60 * 60 * 1000 ) 
-    SourceFeedStats.executeQuery('select sfs from SourceFeedStats as sfs where sfs.lastUpdate > :start_time order by sfs.lastUpdate asc', [ start_time : start_time ]);
+    SourceFeedStats.executeQuery('select sfs from SourceFeedStats as sfs where sfs.owner = :owner and sfs.lastUpdate > :start_time order by sfs.lastUpdate asc', [ owner:this, start_time : start_time ]);
+  }
+
+  def addTag(tag_txt,value) {
+    if ( value && ( value.length() > 0 ) ) {
+      def tag = Tag.findByTag(tag_txt) ?: new Tag(tag:tag_txt).save(flush:true, failOnError:true);
+      def source_tag = SourceTag.findByOwnerAndTagAndValue(this,tag,value) ?: new SourceTag(owner:this, tag:tag, value:value).save(flush:true, failOnError:true);
+    }
+  }
+
+  def getTags() {
+    SourceTag.findAllByOwner(this)
   }
 }

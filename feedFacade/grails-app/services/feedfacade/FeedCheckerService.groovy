@@ -9,6 +9,7 @@ class FeedCheckerService {
 
   def running = false;
   def error_count = 0;
+  def newEventService
 
   def triggerFeedCheck() {
     log.debug("FeedCheckerService::triggerFeedCheck");
@@ -90,6 +91,9 @@ class FeedCheckerService {
   
         def processing_result = getNewEntries(id, feed_info.feed_text, highestRecordedTimestamp)
         new_entry_count = processing_result.numNewEntries
+        processing_result.newEntries.each { entry ->
+          newEventService.handleNewEvent(id,entry)
+        }
   
         if ( processing_result.highestSeenTimestamp ) {
           highestSeenTimestamp = processing_result.highestSeenTimestamp
@@ -101,7 +105,7 @@ class FeedCheckerService {
     }
     catch ( Exception e ) {
       error=true
-      error_message = e.message()
+      error_message = e.toString()
       log.error("problem fetching feed",e);
     }
 
@@ -125,7 +129,7 @@ class FeedCheckerService {
 
       if ( error ) {
         sf.feedStatus='ERROR'
-        SourceFeedStats.logError(sf,start_time);
+        SourceFeedStats.logFailure(sf,start_time);
       }
       else { 
         sf.feedStatus='OK'
@@ -152,9 +156,12 @@ class FeedCheckerService {
   def getNewEntries(id, feed_text, highestRecordedTimestamp) {
     def result = [:]
     result.numNewEntries=0
+    result.newEntries=[]
+
     // 2016-11-22T07:47:55-04:00
     def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
     def rootNode = new XmlParser().parseText(feed_text)
+
     rootNode.entry.each { entry ->
       def entry_updated_time = sdf.parse(entry.updated.text()).getTime();
       
@@ -170,6 +177,7 @@ class FeedCheckerService {
       if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
         log.debug("    -> ${entry.id.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
         result.numNewEntries++
+        result.newEntries.add(entry)
       }
     }
 
