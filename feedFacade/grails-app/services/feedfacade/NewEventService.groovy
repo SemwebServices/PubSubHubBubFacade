@@ -45,7 +45,7 @@ class NewEventService {
 
         default:
           log.debug("Notify via XML");
-          result="hello"
+          result=xml_text
           break;
       }
 
