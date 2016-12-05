@@ -23,7 +23,7 @@ class NewEventService {
       }
 
       //Create stand-alone XML for the entry
-      def xml_text =  groovy.xml.XmlUtil.serialize(entry)
+      String xml_text =  groovy.xml.XmlUtil.serialize(entry)
 
       log.debug("Got xml_text... target mime type is ${sub.targetMimetype}");
 
@@ -37,10 +37,16 @@ class NewEventService {
           // First we need to render the XML entry as a stand-alone document
 
           def xs=new net.sf.json.xml.XMLSerializer();
-          xs.setSkipNamespaces( true );  
-          xs.setTrimSpaces( true );  
-          xs.setRemoveNamespacePrefixFromElements( true );  
-          result = xs.read(xml_text)
+
+          xs.class.methods.each {println(it)} 
+
+          xs.skipNamespaces = (boolean)true
+          xs.skipWhitespace = (boolean)true;  
+          xs.trimSpaces= (boolean)true;  
+          xs.removeNamespacePrefixFromElements = (boolean)true;  
+          net.sf.json.JSON json_obj = xs.readFromStream(new ByteArrayInputStream(xml_text.getBytes()))
+          String json_text = json_obj.toString()
+          result = xml_text+'\n\n'+json_text
           break;
 
         default:
