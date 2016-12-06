@@ -2,7 +2,7 @@ package feedfacade
 
 import grails.transaction.Transactional
 import java.security.MessageDigest
-
+import org.apache.commons.io.input.BOMInputStream
 
 @Transactional
 class FeedCheckerService {
@@ -89,7 +89,7 @@ class FeedCheckerService {
         newhash = feed_info.hash
         log.debug("Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
   
-        def processing_result = getNewEntries(id, feed_info.feed_text, highestRecordedTimestamp)
+        def processing_result = getNewEntries(id, new java.net.URL(url).openStream(), highestRecordedTimestamp)
         new_entry_count = processing_result.numNewEntries
         processing_result.newEntries.each { entry ->
           newEventService.handleNewEvent(id,entry)
@@ -102,6 +102,11 @@ class FeedCheckerService {
       else {
         log.debug("${url} unchanged");
       }
+    }
+    catch ( java.io.FileNotFoundException fnfe ) {
+      error=true
+      error_message = e.toString()
+      log.error("Feed seems not to exist",e.message);
     }
     catch ( Exception e ) {
       error=true
@@ -153,14 +158,16 @@ class FeedCheckerService {
     result
   }
 
-  def getNewEntries(id, feed_text, highestRecordedTimestamp) {
+  def getNewEntries(id, feed_is, highestRecordedTimestamp) {
     def result = [:]
     result.numNewEntries=0
     result.newEntries=[]
 
     // 2016-11-22T07:47:55-04:00
     def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
-    def rootNode = new XmlParser().parseText(feed_text)
+    // def input_stream = new BOMInputStream(request.getFile("soFile")?.inputStream)
+    // def rootNode = new XmlParser().parseText(feed_text)
+    def rootNode = new XmlParser().parse(new BOMInputStream(feed_is))
 
     rootNode.entry.each { entry ->
       def entry_updated_time = sdf.parse(entry.updated.text()).getTime();
