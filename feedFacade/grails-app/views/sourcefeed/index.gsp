@@ -30,7 +30,7 @@
           <tbody>
             <g:each in="${feeds}" var="f" >
               <tr>
-                <td rowspan="2">${f.uriname}</td>
+                <td rowspan="2"><g:link controller="sourcefeed" action="feed" id="${f.id}">${f.uriname}</g:link></td>
                 <td><ul><g:each in="${f.topics}" var="topic"><li>${topic.topic.name}</li></g:each></ul></td>
                 <td><ul><g:each in="${f.tags}" var="tv"><li>${tv.tag.tag}: <strong>${tv.value}</strong></li></g:each></ul></td>
                 <td>${f.status}</td>

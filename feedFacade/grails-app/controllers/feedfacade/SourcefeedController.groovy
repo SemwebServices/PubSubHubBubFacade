@@ -48,4 +48,12 @@ class SourcefeedController {
 
     result
   }
+
+  def feed() {
+    log.debug("SourcefeedController::feed ${params.id}");
+    def result = [:]
+    result.feed = SourceFeed.get(params.id)
+    result.latestEntries = Entry.executeQuery('select e from Entry as e where e.ownerFeed.id = :owner order by entryTs desc',[owner:result.feed.id],[max:50])
+    result
+  }
 }

@@ -105,8 +105,13 @@ class FeedCheckerService {
     }
     catch ( java.io.FileNotFoundException fnfe ) {
       error=true
-      error_message = e.toString()
-      log.error("Feed seems not to exist",e.message);
+      error_message = fnfe.toString()
+      log.error("Feed seems not to exist",fnfe.message);
+    }
+    catch ( java.io.IOException ioe ) {
+      error=true
+      error_message = ioe.toString()
+      log.error("IO Problem",ioe.message);
     }
     catch ( Exception e ) {
       error=true
