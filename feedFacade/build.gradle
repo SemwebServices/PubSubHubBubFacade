@@ -48,6 +48,8 @@ dependencies {
     console "org.grails:grails-console"
     compile 'org.grails.plugins:quartz:2.0.9'
     compile 'net.sf.json-lib:json-lib:2.4:jdk15'
+    compile group: 'xom', name: 'xom', version: '1.2.5'
+
     compile 'org.apache.commons:commons-collections4:4.1'
     compile 'commons-io:commons-io:2.5'
 

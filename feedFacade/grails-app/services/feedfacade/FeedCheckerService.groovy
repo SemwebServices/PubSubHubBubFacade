@@ -170,9 +170,17 @@ class FeedCheckerService {
 
     // 2016-11-22T07:47:55-04:00
     def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
-    // def input_stream = new BOMInputStream(request.getFile("soFile")?.inputStream)
-    // def rootNode = new XmlParser().parseText(feed_text)
-    def rootNode = new XmlParser().parse(new BOMInputStream(feed_is))
+    // http://docs.groovy-lang.org/latest/html/api/groovy/util/XmlParser.html
+    def rootNodeParser = new XmlParser()
+    def bom_is = new BOMInputStream(feed_is)
+    if (bom_is.hasBOM() == false) {
+      log.debug("No BOM in input stream");
+    }
+    else {
+      log.debug("BOM detected in input stream");
+    }
+    // rootNodeParser.setFeature('http://apache.org/xml/features/disallow-doctype-decl',false);
+    def rootNode = rootNodeParser.parse(bom_is)
 
     rootNode.entry.each { entry ->
       def entry_updated_time = sdf.parse(entry.updated.text()).getTime();

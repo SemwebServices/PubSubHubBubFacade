@@ -3,7 +3,6 @@ package feedfacade
 import grails.transaction.Transactional
 import java.security.MessageDigest
 
-
 @Transactional
 class NewEventService {
 
@@ -70,14 +69,7 @@ class NewEventService {
         case 'json':
           // See snippet here https://gist.github.com/ianibo/fe36ab6220f820b1cd49
           log.debug("Notify via JSON");
-          def xs=new net.sf.json.xml.XMLSerializer();
-          xs.class.methods.each {println(it)} 
-          xs.skipNamespaces = (boolean)true
-          xs.skipWhitespace = (boolean)true;  
-          xs.trimSpaces= (boolean)true;  
-          xs.removeNamespacePrefixFromElements = (boolean)true;  
-          net.sf.json.JSON json_obj = xs.readFromStream(new ByteArrayInputStream(xml_text.getBytes()))
-          String json_text = json_obj.toString()
+          String json_text = feedfacade.Utils.XmlToJson(xml_text);
           result = xml_text+'\n\n'+json_text
           break;
 

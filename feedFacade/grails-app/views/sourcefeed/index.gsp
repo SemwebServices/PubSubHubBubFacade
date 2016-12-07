@@ -35,8 +35,8 @@
                 <td><ul><g:each in="${f.tags}" var="tv"><li>${tv.tag.tag}: <strong>${tv.value}</strong></li></g:each></ul></td>
                 <td>${f.status}</td>
                 <td><a href="${f.baseUrl}">${f.baseUrl}</a></td>
-                <td>${f.lastCompleted}</td>
-                <td>${f.processingStartTime}</td>
+                <td><g:formatDate date="${new Date(f.lastCompleted)}" format="yyyy MM dd hh:mm:ss.SSS"/></td>
+                <td><g:formatDate date="${new Date(f.processingStartTime)}" format="yyyy MM dd hh:mm:ss.SSS"/></td>
                 <td>${f.pollInterval}</td>
                 <td>${f.feedStatus}</td>
                 <td>${f.lastError}</td>
@@ -47,7 +47,7 @@
                   <table class="table">
                     <thead>
                       <tr>
-                        <th>Hour &nbsp;</th>
+                        <th class="col-md-1">Hour &nbsp;</th>
                         <g:each in="${stats}" var="h">
                           <th>${h.hour}</th>
                         </g:each>
