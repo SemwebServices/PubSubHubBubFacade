@@ -3,6 +3,7 @@ package feedfacade
 import grails.transaction.Transactional
 import java.security.MessageDigest
 import org.apache.commons.io.input.BOMInputStream
+import java.text.SimpleDateFormat
 
 @Transactional
 class FeedCheckerService {
@@ -10,6 +11,18 @@ class FeedCheckerService {
   def running = false;
   def error_count = 0;
   def newEventService
+
+  def possible_date_formats = [
+    // new SimpleDateFormat('yyyy-MM-dd'), // Default format Owen is pushing ATM.
+    // new SimpleDateFormat('yyyy/MM/dd'),
+    // new SimpleDateFormat('dd/MM/yyyy'),
+    // new SimpleDateFormat('dd/MM/yy'),
+    // new SimpleDateFormat('yyyy/MM'),
+    // new SimpleDateFormat('yyyy')
+    new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX"),
+    new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
+  ];
+
 
   def triggerFeedCheck() {
     log.debug("FeedCheckerService::triggerFeedCheck");
@@ -168,8 +181,6 @@ class FeedCheckerService {
     result.numNewEntries=0
     result.newEntries=[]
 
-    // 2016-11-22T07:47:55-04:00
-    def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
     // http://docs.groovy-lang.org/latest/html/api/groovy/util/XmlParser.html
     def rootNodeParser = new XmlParser()
     def bom_is = new BOMInputStream(feed_is)
@@ -183,7 +194,7 @@ class FeedCheckerService {
     def rootNode = rootNodeParser.parse(bom_is)
 
     rootNode.entry.each { entry ->
-      def entry_updated_time = sdf.parse(entry.updated.text()).getTime();
+      def entry_updated_time = parseDate(entry.updated.text()).getTime();
       
       // log.debug("${entry.id.text()} :: ${entry_updated_time}");
 
@@ -204,4 +215,22 @@ class FeedCheckerService {
     log.debug("Found ${result.numNewEntries} new entries, highest timestamp seen ${result.highestSeenTimestamp}, highest timestamp recorded ${highestRecordedTimestamp}");
     result
   }
+
+  /**
+   * Dates can come in many different formats, use the list defined in possible_date_formats as a list of possible formats.
+   */
+  Date parseDate(String datestr) {
+    def parsed_date = null;
+    if ( datestr && ( datestr.length() > 0 ) ) {
+      for(Iterator<SimpleDateFormat> i = possible_date_formats.iterator(); ( i.hasNext() && ( parsed_date == null ) ); ) {
+        try {
+          parsed_date = i.next().clone().parse(datestr);
+        }
+        catch ( Exception e ) {
+        }
+      }
+    }
+    parsed_date
+  }
+
 }
