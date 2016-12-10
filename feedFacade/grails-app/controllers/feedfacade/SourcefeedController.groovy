@@ -1,7 +1,12 @@
 package feedfacade
 
+import grails.plugin.springsecurity.annotation.Secured
+
+
+
 class SourcefeedController {
 
+  @Secured(['ROLE_USER', 'IS_AUTHENTICATED_FULLY'])
   def index() { 
     log.debug("SourcefeedController::index");
     def result = [:]
@@ -10,6 +15,7 @@ class SourcefeedController {
     result
   }
 
+  @Secured(['ROLE_USER', 'IS_AUTHENTICATED_FULLY'])
   def registerFeed() {
     log.debug("SourcefeedController::registerFeed");
     def result = [:]
@@ -49,6 +55,7 @@ class SourcefeedController {
     result
   }
 
+  @Secured(['ROLE_USER', 'IS_AUTHENTICATED_FULLY'])
   def feed() {
     log.debug("SourcefeedController::feed ${params.id}");
     def result = [:]

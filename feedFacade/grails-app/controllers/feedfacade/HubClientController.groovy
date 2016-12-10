@@ -1,5 +1,7 @@
 package feedfacade
 
+import grails.plugin.springsecurity.annotation.Secured
+
 class HubClientController {
 
   def index() { 

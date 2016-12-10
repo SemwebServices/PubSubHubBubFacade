@@ -5,7 +5,7 @@ import groovy.transform.ToString
 
 @EqualsAndHashCode(includes='username')
 @ToString(includes='username', includeNames=true, includePackage=false)
-class FFUser implements Serializable {
+class User implements Serializable {
 
 	private static final long serialVersionUID = 1
 
@@ -18,8 +18,8 @@ class FFUser implements Serializable {
 	boolean accountLocked
 	boolean passwordExpired
 
-	Set<FFRole> getAuthorities() {
-		FFUserFFRole.findAllByFFUser(this)*.FFRole
+	Set<Role> getAuthorities() {
+		UserRole.findAllByUser(this)*.role
 	}
 
 	def beforeInsert() {
@@ -44,6 +44,7 @@ class FFUser implements Serializable {
 	}
 
 	static mapping = {
+                table 'ff_user'
 		password column: '`password`'
 	}
 }

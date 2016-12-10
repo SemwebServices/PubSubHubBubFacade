@@ -1,5 +1,8 @@
 package feedfacade
 
+import grails.plugin.springsecurity.annotation.Secured
+
+
 class HubController {
 
   def index() { 
@@ -24,6 +27,7 @@ class HubController {
       // All mandatory params are present
 
       if ( params.hub.mode.trim().toLowerCase() == 'subscribe' ) {
+
         def pending_request_uuid = java.util.UUID.randomUUID().toString()
         def pr = new PendingRequest(guid:pending_request_uuid,
                                     requestTimestamp:new Date(),
@@ -36,6 +40,7 @@ class HubController {
                                     targetMimetype:params.targetMimetype,
                                     secret:params.hub.secret).save(flush:true, failOnError:true);
         render(status: 202, text: 'Subscription Request Accepted. Request ID is '+pending_request_uuid)
+        // RequestVerifierJob will pick up this pending request and send the validation request
       }
       else if ( params.hub.mode.trim().toLowerCase() == 'unsubscribe' ) {
       }

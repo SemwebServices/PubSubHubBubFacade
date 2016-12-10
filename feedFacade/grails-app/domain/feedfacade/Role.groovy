@@ -5,7 +5,7 @@ import groovy.transform.ToString
 
 @EqualsAndHashCode(includes='authority')
 @ToString(includes='authority', includeNames=true, includePackage=false)
-class FFRole implements Serializable {
+class Role implements Serializable {
 
 	private static final long serialVersionUID = 1
 
@@ -16,6 +16,7 @@ class FFRole implements Serializable {
 	}
 
 	static mapping = {
+                table 'ff_role'
 		cache true
 	}
 }
