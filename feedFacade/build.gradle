@@ -57,6 +57,7 @@ dependencies {
     profile "org.grails.profiles:web"
     runtime "com.bertramlabs.plugins:asset-pipeline-grails:2.11.6"
     runtime "com.h2database:h2"
+    runtime 'postgresql:postgresql:9.4.1208-jdbc42-atlassian-hosted'
     runtime 'org.grails.plugins:grails-console:2.0.8'
     testCompile "org.grails:grails-plugin-testing"
     testCompile "org.grails.plugins:geb"
