@@ -29,10 +29,10 @@ service internally to poll RSS and turn feeds into event streams.
 
 ### Production Deployment Postgresql Backed
 
-    CREATE USER feedFacade WITH PASSWORD 'feedFacade';
-    DROP DATABASE feedFacade;
-    CREATE DATABASE feedFacade;
-    GRANT ALL PRIVILEGES ON DATABASE feedFacade to feedFacade;
+    CREATE USER feedfacade WITH PASSWORD 'feedFacade';
+    DROP DATABASE feedfacade;
+    CREATE DATABASE feedfacade;
+    GRANT ALL PRIVILEGES ON DATABASE feedfacade to feedfacade;
 
 
 ## References

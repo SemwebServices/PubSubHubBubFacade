@@ -44,12 +44,18 @@ class FeedCheckerService {
 
     log.debug("Finding all feeds due on or after ${start_time}");
 
+    def processed_feed_counter = 0;
+
     try {
       def cont = true
       while ( cont ) {
+
+        log.debug("Processing feed ${++processed_feed_counter}");
+
         // Grab the next feed to examine -- do it in a transaction
         def feed_info = null
-        SourceFeed.withNewTransaction {
+        SourceFeed.withNewSession {
+          log.debug("Lock next feed, and mark as running");
           def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp from SourceFeed as sf where sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm order by (sf.lastCompleted + sf.pollInterval) asc',[paused:'paused',ctm:start_time],[lock:true])
 
           if ( q.size() > 0 ) {
@@ -63,16 +69,22 @@ class FeedCheckerService {
         }
 
         if ( feed_info ) {
+          log.debug("Process feed");
           processFeed(start_time, feed_info.id,feed_info.url,feed_info.hash,feed_info.highesTimestamp);
         }
         else {  
           // nothing left in the queue
+          log.debug("Nothing left to process.. Continue");
           cont = false
         }
       }
     }
     catch ( Exception e ) {
+      log.error("Problem processing feeds",e);
       e.printStackTrace()
+    }
+    finally {
+      log.error("processed ${processed_feed_counter} feeds");
     }
 
     running=false;
@@ -87,7 +99,7 @@ class FeedCheckerService {
     def error_message = null
     def new_entry_count = 0
 
-    SourceFeed.withNewTransaction {
+    SourceFeed.withNewSession {
       log.debug('Mark feed as in-process');
       def sf = SourceFeed.get(id)
       sf.lock()
@@ -134,7 +146,7 @@ class FeedCheckerService {
 
     log.debug("After processing entries, highest timestamp seen is ${highestSeenTimestamp}");
 
-    SourceFeed.withNewTransaction {
+    SourceFeed.withNewSession {
       log.debug('Mark feed as paused');
       def sf = SourceFeed.get(id)
       sf.lock()
@@ -159,8 +171,11 @@ class FeedCheckerService {
         SourceFeedStats.logSuccess(sf,start_time,new_entry_count);
       }
 
+      log.debug("Saving source feed");
       sf.save(flush:true, failOnError:true);
     }
+
+    log.debug("processFeed ${id} returning");
   }
 
 
