@@ -11,27 +11,33 @@ class NewEventService {
   
   def handleNewEvent(feed_id, entryNode) {
 
-    log.debug("NewEventService::handleNewEvent(${feed_id})");
+    Entry.withNewTransaction {
 
-    def entry = domNodeToString(entryNode)
+      log.debug("NewEventService::handleNewEvent(${feed_id})");
 
-    def entryHash = hashEntry(entry);
+      def entry = domNodeToString(entryNode)
 
-    def existingEntry = Entry.executeQuery('select e from Entry as e where e.ownerFeed.id = :owner_id and e.entryHash = :hash',[owner_id:feed_id, hash:entryHash])
+      def entryHash = hashEntry(entry);
 
-    if ( existingEntry.size() == 0 ) {
-      Entry.withNewTransaction {
-        log.debug("New Entry:: ${feed_id} ${entryHash}");
-        def owner_feed = SourceFeed.get(feed_id)
-        Entry e = new Entry ( ownerFeed: owner_feed,
-                              entryHash: entryHash,
-                              entry: entry,
-                              entryTs: System.currentTimeMillis()).save(flush:true, failOnError:true);
+      log.debug("Make sure that we don't already have an entry for feed/hash ${feed_id} ${entryHash}");
+
+      def existingEntries = Entry.executeQuery('select e.id from Entry as e where e.ownerFeed.id = :owner_id and e.entryHash = :hash',[owner_id:feed_id, hash:entryHash])
+
+      if ( existingEntries.size() == 0 ) {
+        log.debug("None found -- create");
+        Entry.withNewTransaction {
+          log.debug("New Entry:: ${feed_id} ${entryHash}");
+          def owner_feed = SourceFeed.get(feed_id)
+          Entry e = new Entry ( ownerFeed: owner_feed,
+                                entryHash: entryHash,
+                                entry: entry,
+                                entryTs: System.currentTimeMillis()).save(flush:true, failOnError:true);
+        }
+        publish(feed_id, entry)
       }
-      publish(feed_id, entry)
-    }
-    else {
-      log.debug("Entry is a repeated hash");
+      else {
+        log.debug("Entry is a repeated hash");
+      }
     }
   }
 

@@ -27,6 +27,14 @@ production jar. An embedded database is used for feed state.
 There are many deployment options, the initial goal was for a local facade, but projects may also use the
 service internally to poll RSS and turn feeds into event streams.
 
+### Dev Env
+
+    CREATE USER feedfacade WITH PASSWORD 'feedFacade';
+    DROP DATABASE feedfacadedev;
+    CREATE DATABASE feedfacadedev;
+    GRANT ALL PRIVILEGES ON DATABASE feedfacadedev to feedfacade;
+
+
 ### Production Deployment Postgresql Backed
 
     CREATE USER feedfacade WITH PASSWORD 'feedFacade';

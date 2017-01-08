@@ -11,6 +11,7 @@ class FeedCheckerService {
   def running = false;
   def error_count = 0;
   def newEventService
+  def statsService
 
   def possible_date_formats = [
     // new SimpleDateFormat('yyyy-MM-dd'), // Default format Owen is pushing ATM.
@@ -54,9 +55,9 @@ class FeedCheckerService {
 
         // Grab the next feed to examine -- do it in a transaction
         def feed_info = null
-        SourceFeed.withNewSession {
+        SourceFeed.withNewTransaction {
           log.debug("Lock next feed, and mark as running");
-          def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp from SourceFeed as sf where sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm order by (sf.lastCompleted + sf.pollInterval) asc',[paused:'paused',ctm:start_time],[lock:true])
+          def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp from SourceFeed as sf where sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm order by (sf.lastCompleted + sf.pollInterval) asc',[paused:'paused',ctm:start_time],[lock:false])
 
           if ( q.size() > 0 ) {
             def row = q.get(0)
@@ -84,7 +85,7 @@ class FeedCheckerService {
       e.printStackTrace()
     }
     finally {
-      log.error("processed ${processed_feed_counter} feeds");
+      log.info("processed ${processed_feed_counter} feeds");
     }
 
     running=false;
@@ -99,80 +100,93 @@ class FeedCheckerService {
     def error_message = null
     def new_entry_count = 0
 
-    SourceFeed.withNewSession {
+    def continue_processing = false;
+
+    SourceFeed.withNewTransaction {
       log.debug('Mark feed as in-process');
       def sf = SourceFeed.get(id)
       sf.lock()
-      sf.status = 'in-process'
-      sf.save(flush:true, failOnError:true);
-    }
-
-    try {
-      log.debug("Doing checking....${url} ${hash}");
-      def feed_info = fetchFeedPage(url);
-      if ( ( hash == null ) || ( feed_info.hash != hash ) ) {
-        newhash = feed_info.hash
-        log.debug("Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
-  
-        def processing_result = getNewEntries(id, new java.net.URL(url).openStream(), highestRecordedTimestamp)
-        new_entry_count = processing_result.numNewEntries
-        processing_result.newEntries.each { entry ->
-          newEventService.handleNewEvent(id,entry)
-        }
-  
-        if ( processing_result.highestSeenTimestamp ) {
-          highestSeenTimestamp = processing_result.highestSeenTimestamp
-        }
+      if ( sf.status == 'paused' ) {
+        log.debug("Feed really is paused -- mark it as in process and proceed");
+        sf.status = 'in-process'
+        continue_processing = true;
+        sf.save(flush:true, failOnError:true);
       }
       else {
-        log.debug("${url} unchanged");
+        log.debug("On more thorough inspection, someone else already grabbed the feed to process, so skip");
       }
     }
-    catch ( java.io.FileNotFoundException fnfe ) {
-      error=true
-      error_message = fnfe.toString()
-      log.error("Feed seems not to exist",fnfe.message);
-    }
-    catch ( java.io.IOException ioe ) {
-      error=true
-      error_message = ioe.toString()
-      log.error("IO Problem",ioe.message);
-    }
-    catch ( Exception e ) {
-      error=true
-      error_message = e.toString()
-      log.error("problem fetching feed",e);
-    }
 
-    log.debug("After processing entries, highest timestamp seen is ${highestSeenTimestamp}");
+    if ( continue_processing ) {
 
-    SourceFeed.withNewSession {
-      log.debug('Mark feed as paused');
-      def sf = SourceFeed.get(id)
-      sf.lock()
-      sf.status = 'paused'
-      if ( newhash ) {
-        log.debug("Updating hash to ${newhash}");
-        sf.lastHash = newhash
+      log.debug("Processing....feed ${id} :: ${url} ${hash}");
+      
+      try {
+        def feed_info = fetchFeedPage(url);
+        if ( ( hash == null ) || ( feed_info.hash != hash ) ) {
+          newhash = feed_info.hash
+          log.debug("Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
+    
+          def processing_result = getNewEntries(id, new java.net.URL(url).openStream(), highestRecordedTimestamp)
+          new_entry_count = processing_result.numNewEntries
+          processing_result.newEntries.each { entry ->
+            newEventService.handleNewEvent(id,entry)
+          }
+    
+          if ( processing_result.highestSeenTimestamp ) {
+            highestSeenTimestamp = processing_result.highestSeenTimestamp
+          }
+        }
+        else {
+          log.debug("${url} unchanged");
+        }
       }
-      if ( highestSeenTimestamp ) {
-        log.debug("Updating sf.highestTimestamp to be ${highestSeenTimestamp}");
-        sf.highestTimestamp = highestSeenTimestamp
+      catch ( java.io.FileNotFoundException fnfe ) {
+        error=true
+        error_message = fnfe.toString()
+        log.error("Feed seems not to exist",fnfe.message);
       }
-      sf.lastCompleted=start_time
-      sf.lastError=error_message
-
-      if ( error ) {
-        sf.feedStatus='ERROR'
-        SourceFeedStats.logFailure(sf,start_time);
+      catch ( java.io.IOException ioe ) {
+        error=true
+        error_message = ioe.toString()
+        log.error("IO Problem feed_id:${id} feed_url:${url}",ioe.message);
       }
-      else { 
-        sf.feedStatus='OK'
-        SourceFeedStats.logSuccess(sf,start_time,new_entry_count);
+      catch ( Exception e ) {
+        error=true
+        error_message = e.toString()
+        log.error("problem fetching feed",e);
       }
-
-      log.debug("Saving source feed");
-      sf.save(flush:true, failOnError:true);
+  
+      log.debug("After processing entries, highest timestamp seen is ${highestSeenTimestamp}");
+  
+      SourceFeed.withNewTransaction {
+        log.debug('Mark feed ${id} as paused');
+        def sf = SourceFeed.get(id)
+        sf.lock()
+        sf.status = 'paused'
+        if ( newhash ) {
+          log.debug("Updating hash to ${newhash}");
+          sf.lastHash = newhash
+        }
+        if ( highestSeenTimestamp ) {
+          log.debug("Updating sf.highestTimestamp to be ${highestSeenTimestamp}");
+          sf.highestTimestamp = highestSeenTimestamp
+        }
+        sf.lastCompleted=start_time
+        sf.lastError=error_message
+  
+        if ( error ) {
+          sf.feedStatus='ERROR'
+          statsService.logFailure(sf,start_time);
+        }
+        else { 
+          sf.feedStatus='OK'
+          statsService.logSuccess(sf,start_time,new_entry_count);
+        }
+  
+        log.debug("Saving source feed");
+        sf.save(flush:true, failOnError:true);
+      }
     }
 
     log.debug("processFeed ${id} returning");
