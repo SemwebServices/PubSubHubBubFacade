@@ -51,4 +51,8 @@ http://pubsubhubbub.github.io/PubSubHubbub/pubsubhubbub-core-0.4.html
 https://github.com/pubsubhubbub/PubSubHubbub
 https://en.wikibooks.org/wiki/WebObjects/Web_Services/How_to_Trust_Any_SSL_Certificate
 
+### Test Subscription Data
+
+https://s3-eu-west-1.amazonaws.com/alert-hub-subscriptions/json
+
 
