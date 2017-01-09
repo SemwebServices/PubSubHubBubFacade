@@ -185,7 +185,10 @@ class FeedCheckerService {
           log.debug("Updating sf.highestTimestamp to be ${highestSeenTimestamp}");
           sf.highestTimestamp = highestSeenTimestamp
         }
-        sf.lastCompleted=start_time
+        // sf.lastCompleted=start_time
+        // Use the actual last completed time to try and even out the feed checking over time - this will skew each feed
+        // So that all feeds become eligible over time, rather than being based on the start time of the batch
+        sf.lastCompleted=System.currentTimeMillis();
         sf.lastError=error_message
   
         if ( error ) {
@@ -198,6 +201,7 @@ class FeedCheckerService {
         }
   
         log.debug("Saving source feed");
+        feedCheckLog.add([timestamp:new Date(),message:"Processing completed on ${id}/${url} at ${sf.lastCompleted} / ${error_message}"]);
         sf.save(flush:true, failOnError:true);
       }
     }
