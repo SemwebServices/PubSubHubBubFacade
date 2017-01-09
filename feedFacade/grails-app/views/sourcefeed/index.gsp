@@ -16,14 +16,13 @@
           <thead>
             <tr>
               <th>Name</th>
+              <th>Feed Status</th>
               <th>Topics</th>
               <th>Tags</th>
               <th>Status</th>
               <th>Base Url</th>
               <th>Last Completed</th>
-              <th>processing Start Time</th>
               <th>Poll Interval</th>
-              <th>Feed Status</th>
               <th>Last Error Message</th>
             </tr>
           </thead>
@@ -31,13 +30,6 @@
             <g:each in="${feeds}" var="f" >
               <tr>
                 <td rowspan="2"><g:link controller="sourcefeed" action="feed" id="${f.id}">${f.uriname}</g:link></td>
-                <td><ul><g:each in="${f.topics}" var="topic"><li>${topic.topic.name}</li></g:each></ul></td>
-                <td><ul><g:each in="${f.tags}" var="tv"><li>${tv.tag.tag}: <strong>${tv.value}</strong></li></g:each></ul></td>
-                <td>${f.status}</td>
-                <td><a href="${f.baseUrl}">${f.baseUrl}</a></td>
-                <td><g:formatDate date="${new Date(f.lastCompleted)}" format="yyyy MM dd hh:mm:ss.SSS"/></td>
-                <td><g:formatDate date="${new Date(f.processingStartTime)}" format="yyyy MM dd hh:mm:ss.SSS"/></td>
-                <td>${f.pollInterval}</td>
                 <td>
                   <g:if test="${f.feedStatus=='ERROR'}">
                     <div class="alert alert-danger" role="alert">
@@ -55,6 +47,12 @@
                     ${f.feedStatus}
                   </g:if>
                 </td>
+                <td><ul><g:each in="${f.topics}" var="topic"><li>${topic.topic.name}</li></g:each></ul></td>
+                <td><ul><g:each in="${f.tags}" var="tv"><li>${tv.tag.tag}: <strong>${tv.value}</strong></li></g:each></ul></td>
+                <td>${f.status}</td>
+                <td><a href="${f.baseUrl}">${f.baseUrl}</a></td>
+                <td><g:formatDate date="${new Date(f.lastCompleted)}" format="yyyy MM dd hh:mm:ss.SSS"/></td>
+                <td>${f.pollInterval}</td>
                 <td>${f.lastError}</td>
               </tr>
               <tr>
