@@ -6,6 +6,7 @@ class BootStrap {
     [name:'admin',pass:'admin',display:'Admin',email:'admin@semweb.co', roles:['ROLE_ADMIN','ROLE_USER']]
   ]
 
+  // Definitive list here :: https://s3-eu-west-1.amazonaws.com/alert-hub-sources/json
   def feed_data = [
     [
       "source" : [

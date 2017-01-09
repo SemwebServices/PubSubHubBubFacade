@@ -206,7 +206,7 @@ class FeedCheckerService {
       }
     }
 
-    feedCheckLog.add([timestamp:new Date(),message:'Identified feed '+feed_info]);
+    feedCheckLog.add([timestamp:new Date(),message:"Process feed completed :: ${id} ${url} / error:${error} ${error_message}"]);
     log.debug("processFeed ${id} returning");
   }
 
