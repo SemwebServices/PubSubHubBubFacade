@@ -7,6 +7,6 @@
     <asset:link rel="icon" href="favicon.ico" type="image/x-ico" />
 </head>
 <body>
-  Public home
+  User home
 </body>
 </html>

@@ -32,6 +32,8 @@
               <a href="#" class="dropdown-toggle" data-toggle="dropdown"><sec:username/><b class="caret"></b></a>
               <ul class="dropdown-menu">
                 <li><g:link controller="home" action="profile">Profile</g:link></li>
+                <li class="divider"></li>
+                <li><g:link controller="home" action="logout">Logout</g:link></li>
               </ul>
             </li>
           </sec:ifLoggedIn>
@@ -45,6 +47,7 @@
       <div class="collapse navbar-collapse">
         <ul class="nav navbar-nav">
           <li class="${controllerName=='home' && actionName=='index' ? 'active' : ''}"><g:link controller="home" action="index">Home</g:link></li>
+          <sec:ifLoggedIn>
           <li class="${controllerName=='sourcefeed' && actionName=='index' ? 'active' : ''}"><g:link controller="sourcefeed" action="index">Feeds</g:link></li>
           <li class="${controllerName=='topics' && actionName=='index' ? 'active' : ''}"><g:link controller="topics" action="index">Topics</g:link></li>
           <li class="dropdown">
@@ -60,6 +63,7 @@
               -->
             </ul>
           </li>
+          </sec:ifLoggedIn>
         </ul>
       </div><!--/.nav-collapse -->
     </div>
