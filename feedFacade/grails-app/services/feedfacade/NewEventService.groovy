@@ -25,7 +25,7 @@ class NewEventService {
         entry_title = entry_title.substring(0,254);
       }
 
-      log.debug("title:\"${entry_title}\" summary:\"${entry_summary}\" desc:\"${entry_description}\" link:\"${entry_link}\"");
+      // log.debug("title:\"${entry_title}\" summary:\"${entry_summary}\" desc:\"${entry_description}\" link:\"${entry_link}\"");
 
       def entry = domNodeToString(entryNode)
 
@@ -115,6 +115,12 @@ class NewEventService {
           result=entry.entry
           break;
       }
+
+      SubscriptionEntry se = new SubscriptionEntry(
+                                                   subscription:sub, 
+                                                   entry:entry, 
+                                                   status:'pending', 
+                                                   reason:"Event published on feed ${feed_id} with matching topic").save(flush:true, failOnError:true);
 
       recent_notifications.add([targetMimetype:sub.targetMimetype, content:result, target: sub.callback, topic: sub.topic.name]);
 
