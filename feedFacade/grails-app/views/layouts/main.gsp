@@ -24,6 +24,24 @@
         </button>
         <a class="navbar-brand" href="#">FeedFaçade</a>
       </div>
+
+      <div class="collapse navbar-collapse pull-right">
+        <ul class="nav navbar-nav">
+          <sec:ifLoggedIn>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown"><sec:username/><b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><g:link controller="home" action="profile">Profile</g:link></li>
+              </ul>
+            </li>
+          </sec:ifLoggedIn>
+          <sec:ifNotLoggedIn>
+            <li class="${controllerName=='home' && actionName=='login' ? 'active' : ''}"><g:link controller="home" action="login">Login</g:link></li>
+          </sec:ifNotLoggedIn>
+        </ul>
+      </div>
+
+
       <div class="collapse navbar-collapse">
         <ul class="nav navbar-nav">
           <li class="${controllerName=='home' && actionName=='index' ? 'active' : ''}"><g:link controller="home" action="index">Home</g:link></li>
