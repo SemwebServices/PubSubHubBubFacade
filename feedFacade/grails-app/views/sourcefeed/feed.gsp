@@ -7,12 +7,12 @@
     <asset:link rel="icon" href="favicon.ico" type="image/x-ico" />
 </head>
 <body>
-  ${feed}
-  ${latestEntries?.size()}
   <div class="container-fluid">
     <div class="row">
       <div class="container-fluid">
-        <h1>Recent Feed Entries</h1>
+        <h1>[${feed.id}] <a href="${feed.baseUrl}">${feed.name}</a></h1>
+
+        <h2>Recent Entries</h2>
         <table class="table table-striped well">
           <thead>
             <tr>
@@ -23,8 +23,21 @@
           <tbody>
             <g:each in="${latestEntries}" var="f" >
               <tr>
-                <td>${f.entryTs}</td>
-                <td>${f.entry}</td>
+                <td><g:formatDate date="${new java.util.Date(f.entryTs)}" format="yyyy-MM-dd'T'HH:mm:ss.SSS" /></td>
+                <td>
+                  <strong><a href="${f.link}">${f.title}</a></strong>
+                  <p>${f.description}</p>
+                  <div class="container-fluid">
+                    <div class="row">
+                      <div class="col-md-6">
+                        ${f.entry}
+                      </div>
+                      <div class="col-md-6">
+                        ${f.entryAsJson}
+                      </div>
+                    </div>
+                  </div>
+                </td>
               </tr>
             </g:each>
           </tbody>

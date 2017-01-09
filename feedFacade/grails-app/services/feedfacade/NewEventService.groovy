@@ -15,28 +15,53 @@ class NewEventService {
 
       log.debug("NewEventService::handleNewEvent(${feed_id})");
 
+      def entry_title = entryNode.title.text()
+      def entry_summary = entryNode.summary.text()
+      def entry_description = entryNode.description.text()
+      def entry_link = entryNode.link.'@href'
+
+      log.debug("${entry_title} ${entry_summary} ${entry_description} ${entry_link}");
+
       def entry = domNodeToString(entryNode)
 
       def entryHash = hashEntry(entry);
 
       log.debug("Make sure that we don't already have an entry for feed/hash ${feed_id} ${entryHash}");
 
-      def existingEntries = Entry.executeQuery('select e.id from Entry as e where e.ownerFeed.id = :owner_id and e.entryHash = :hash',[owner_id:feed_id, hash:entryHash])
-
-      if ( existingEntries.size() == 0 ) {
-        log.debug("None found -- create");
-        Entry.withNewTransaction {
-          log.debug("New Entry:: ${feed_id} ${entryHash}");
-          def owner_feed = SourceFeed.get(feed_id)
-          Entry e = new Entry ( ownerFeed: owner_feed,
-                                entryHash: entryHash,
-                                entry: entry,
+      if ( entry?.length() > 0 ) {
+  
+        def existingEntries = Entry.executeQuery('select e.id from Entry as e where e.ownerFeed.id = :owner_id and e.entryHash = :hash',[owner_id:feed_id, hash:entryHash])
+  
+        if ( existingEntries.size() == 0 ) {
+          log.debug("None found -- create");
+  
+          Entry e = null
+  
+          Entry.withNewTransaction {
+            log.debug("New Entry:: ${feed_id} ${entryHash}");
+            def owner_feed = SourceFeed.get(feed_id)
+  
+            String json_text = feedfacade.Utils.XmlToJson(entry);
+  
+            e = new Entry ( 
+                              ownerFeed: owner_feed,
+                                  title: entry_title,
+                            description: entry_summary,
+                                   link: entry_link,
+                              entryHash: entryHash,
+                                  entry: entry,
+                            entryAsJson: json_text,
                                 entryTs: System.currentTimeMillis()).save(flush:true, failOnError:true);
+          }
+  
+          publish(feed_id, e)
         }
-        publish(feed_id, entry)
+        else {
+          log.debug("Entry is a repeated hash");
+        }
       }
       else {
-        log.debug("Entry is a repeated hash");
+        log.error("Result of domNodeToString was null");
       }
     }
   }
@@ -54,11 +79,14 @@ class NewEventService {
     xml_text
   }
 
-  def publish(feed_id, xml_text) {
+  def publish(feed_id, entry) {
 
     log.debug("NewEventService::publish(${feed_id},...)");
 
+    // Find all subscriptions where the sub has a topic which intersects with any of the topics for this feed
     def subscriptions = Subscription.executeQuery('select s from Subscription as s where exists ( select ft from FeedTopic as ft where ft.topic = s.topic and ft.ownerFeed.id = :id )',[id:feed_id]);
+
+    // Iterate through all subscriptions
     subscriptions.each { sub ->
 
       if ( sub?.trimNs?.equalsIgnoreCase('y') ) {
@@ -74,14 +102,12 @@ class NewEventService {
       switch ( sub.targetMimetype ) {
         case 'json':
           // See snippet here https://gist.github.com/ianibo/fe36ab6220f820b1cd49
-          log.debug("Notify via JSON");
-          String json_text = feedfacade.Utils.XmlToJson(xml_text);
-          result = xml_text+'\n\n'+json_text
+          result = entry.entryAsJson
           break;
 
         default:
           log.debug("Notify via XML");
-          result=xml_text
+          result=entry.entry
           break;
       }
 

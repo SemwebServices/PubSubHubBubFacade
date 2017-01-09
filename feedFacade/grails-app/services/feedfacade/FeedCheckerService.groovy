@@ -228,8 +228,11 @@ class FeedCheckerService {
     result.numNewEntries=0
     result.newEntries=[]
 
+    def atom_ns = new groovy.xml.Namespace("http://www.w3.org/2005/Atom", 'atom')
     // http://docs.groovy-lang.org/latest/html/api/groovy/util/XmlParser.html
+    // def rootNodeParser = new XmlParser(false,false,true)
     def rootNodeParser = new XmlParser()
+
     def bom_is = new BOMInputStream(feed_is)
     if (bom_is.hasBOM() == false) {
       log.debug("No BOM in input stream");
@@ -237,17 +240,21 @@ class FeedCheckerService {
     else {
       log.debug("BOM detected in input stream");
     }
+
     // rootNodeParser.setFeature('http://apache.org/xml/features/disallow-doctype-decl',false);
+    log.debug("Parse...");
     def rootNode = rootNodeParser.parse(bom_is)
 
+    // If using namespaces:: rootNode.[atom_ns.entry].each { entry ->
+    log.debug("Processing...");
     rootNode.entry.each { entry ->
+
       def entry_updated_time = parseDate(entry.updated.text()).getTime();
       
-      // log.debug("${entry.id.text()} :: ${entry_updated_time}");
+      log.debug("${entry.id.text()} :: ${entry_updated_time}");
 
       // Keep track of the highest timestamp we have seen in this pass over the changed feed
       if ( entry_updated_time && ( ( result.highestSeenTimestamp == null ) || ( result.highestSeenTimestamp < entry_updated_time ) ) ) {
-        // log.debug("Update result.highestTimestamp to ${result.highestTimestamp}");
         result.highestSeenTimestamp = entry_updated_time
       }
 
