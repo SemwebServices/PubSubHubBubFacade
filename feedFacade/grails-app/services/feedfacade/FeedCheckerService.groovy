@@ -201,6 +201,7 @@ class FeedCheckerService {
         }
   
         log.debug("Saving source feed");
+        feedCheckLog.add([timestamp:new Date(),message:"Processing completed on ${id}/${url} at ${sf.lastCompleted} / ${error_message}"]);
         sf.save(flush:true, failOnError:true);
       }
     }
