@@ -13,6 +13,8 @@ class FeedCheckerService {
   def newEventService
   def statsService
 
+  def feedCheckLog=[]
+
   def possible_date_formats = [
     // new SimpleDateFormat('yyyy-MM-dd'), // Default format Owen is pushing ATM.
     // new SimpleDateFormat('yyyy/MM/dd'),
@@ -23,6 +25,10 @@ class FeedCheckerService {
     new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX"),
     new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
   ];
+
+  def getLastLog() {
+    feedCheckLog
+  }
 
 
   def triggerFeedCheck() {
@@ -41,7 +47,10 @@ class FeedCheckerService {
   def doFeedCheck() {
     log.debug("FeedCheckerService::doFeedCheck");
     running=true;
+    feedCheckLog=[]
     def start_time = System.currentTimeMillis()
+
+    feedCheckLog.add([timestamp:new Date(),message:'Feed check started']);
 
     log.debug("Finding all feeds due on or after ${start_time}");
 
@@ -57,6 +66,7 @@ class FeedCheckerService {
         def feed_info = null
         SourceFeed.withNewTransaction {
           log.debug("Lock next feed, and mark as running");
+          
           def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp from SourceFeed as sf where sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm order by (sf.lastCompleted + sf.pollInterval) asc',[paused:'paused',ctm:start_time],[lock:false])
 
           if ( q.size() > 0 ) {
@@ -70,6 +80,7 @@ class FeedCheckerService {
         }
 
         if ( feed_info ) {
+          feedCheckLog.add([timestamp:new Date(),message:'Identified feed '+feed_info]);
           log.debug("Process feed");
           processFeed(start_time, feed_info.id,feed_info.url,feed_info.hash,feed_info.highesTimestamp);
         }
@@ -81,6 +92,7 @@ class FeedCheckerService {
       }
     }
     catch ( Exception e ) {
+      feedCheckLog.add([timestamp:new Date(),message:'Feed check error '+e.message]);
       log.error("Problem processing feeds",e);
       e.printStackTrace()
     }
@@ -88,6 +100,7 @@ class FeedCheckerService {
       log.info("processed ${processed_feed_counter} feeds");
     }
 
+    feedCheckLog.add([timestamp:new Date(),message:'Feed check finished']);
     running=false;
   }
 

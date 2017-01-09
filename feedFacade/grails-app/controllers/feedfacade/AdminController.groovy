@@ -5,6 +5,7 @@ import grails.plugin.springsecurity.annotation.Secured
 class AdminController {
 
   def newEventService
+  def feedCheckerService
 
   @Secured(['ROLE_USER', 'IS_AUTHENTICATED_FULLY'])
   def index() { 
@@ -19,5 +20,10 @@ class AdminController {
     def result = [:]
     result.log = newEventService.eventLog
     result
+  }
+
+  @Secured(['ROLE_USER', 'IS_AUTHENTICATED_FULLY'])
+  def feedCheckerLog() {
+    [feedCheckerLog:feedCheckerService.getLastLog()]
   }
 }

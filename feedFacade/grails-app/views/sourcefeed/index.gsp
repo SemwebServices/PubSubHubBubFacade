@@ -38,7 +38,23 @@
                 <td><g:formatDate date="${new Date(f.lastCompleted)}" format="yyyy MM dd hh:mm:ss.SSS"/></td>
                 <td><g:formatDate date="${new Date(f.processingStartTime)}" format="yyyy MM dd hh:mm:ss.SSS"/></td>
                 <td>${f.pollInterval}</td>
-                <td>${f.feedStatus}</td>
+                <td>
+                  <g:if test="${f.feedStatus=='ERROR'}">
+                    <div class="alert alert-danger" role="alert">
+                      <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                      <span class="sr-only">Error</span>
+                    </div>
+                  </g:if>
+                  <g:if test="${f.feedStatus=='OK'}">
+                    <div class="alert alert-success" role="alert">
+                      <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                      <span class="sr-only">OK</span>
+                    </div>
+                  </g:if>
+                  <g:if test="${f.feedStatus!='OK' && f.feedStatus!='ERROR'}">
+                    ${f.feedStatus}
+                  </g:if>
+                </td>
                 <td>${f.lastError}</td>
               </tr>
               <tr>
