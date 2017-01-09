@@ -20,7 +20,12 @@ class NewEventService {
       def entry_description = entryNode.description.text()
       def entry_link = entryNode.link.'@href'
 
-      log.debug("${entry_title} ${entry_summary} ${entry_description} ${entry_link}");
+      if ( entry_title?.length() > 255 ) {
+        log.debug("Trim title...");
+        entry_title = entry_title.substring(0,254);
+      }
+
+      log.debug("title:\"${entry_title}\" summary:\"${entry_summary}\" desc:\"${entry_description}\" link:\"${entry_link}\"");
 
       def entry = domNodeToString(entryNode)
 

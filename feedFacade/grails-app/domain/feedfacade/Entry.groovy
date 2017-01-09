@@ -30,7 +30,7 @@ class Entry {
       entryHash column: 'ent_hash'
           title column: 'ent_title'
     description type:'text',column: 'ent_description'
-           link column: 'ent_link'
+           link type:'text',column: 'ent_link'
   }
 
 }
