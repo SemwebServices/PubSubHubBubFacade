@@ -12,6 +12,11 @@
       <div class="container-fluid">
 
         <h1>Registered Feeds</h1>
+
+        <div class="pagination">
+          <g:paginate controller="sourcefeed" action="index" total="${totalFeeds}" next="Next" prev="Previous" omitNext="false" omitPrev="false" />
+        </div>
+
         <table class="table table-striped well">
           <thead>
             <tr>

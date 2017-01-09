@@ -11,7 +11,7 @@
     <div class="row">
 
       <div class="col-md-12">
-        <h1>Registered New Feed</h1>
+        <h1>Register New Feed</h1>
       </div>
     </div>
     <div class="row">

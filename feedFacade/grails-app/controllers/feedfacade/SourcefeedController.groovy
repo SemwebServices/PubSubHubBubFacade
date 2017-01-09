@@ -10,8 +10,16 @@ class SourcefeedController {
   def index() { 
     log.debug("SourcefeedController::index");
     def result = [:]
-    result.feeds = SourceFeed.findAll()
-    log.debug("found ${result.feeds.size()} feeds");
+
+    def qry_params = [:]
+    def base_feed_qry = ' from SourceFeed as sf'
+    def order_by_clause = ' order by sf.id'
+
+    result.totalFeeds = SourceFeed.executeQuery('select count(sf) '+base_feed_qry,qry_params)[0]
+    result.feeds = SourceFeed.executeQuery('select sf '+base_feed_qry+order_by_clause,qry_params,params)
+
+    log.debug("found ${result.totalFeeds} feeds");
+
     result
   }
 

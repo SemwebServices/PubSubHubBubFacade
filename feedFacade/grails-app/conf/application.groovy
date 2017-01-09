@@ -1,4 +1,5 @@
 
+grails.plugin.twitterbootstrap.fixtaglib = true
 
 // Added by the Spring Security Core plugin:
 grails.plugin.springsecurity.userLookup.userDomainClassName = 'feedfacade.User'

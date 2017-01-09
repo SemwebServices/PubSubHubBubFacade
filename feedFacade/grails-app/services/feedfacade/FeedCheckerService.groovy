@@ -202,6 +202,7 @@ class FeedCheckerService {
       }
     }
 
+    feedCheckLog.add([timestamp:new Date(),message:'Identified feed '+feed_info]);
     log.debug("processFeed ${id} returning");
   }
 
