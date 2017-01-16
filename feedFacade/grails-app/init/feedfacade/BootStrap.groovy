@@ -317,21 +317,31 @@ class BootStrap {
     feed_data.each { s ->
       // Array of maps containing a source elenment
       if ( s.source ) {
-        def source = SourceFeed.findByUriname(s.source.sourceId) ?: new SourceFeed( uriname: s.source.sourceId,
-                                                                                    name: s.source.sourceName,
-                                                                                    status:'paused',
-                                                                                    baseUrl:s.source.capAlertFeed,
-                                                                                    lastCompleted:new Long(0),
-                                                                                    processingStartTime:new Long(0),
-                                                                                    pollInterval:60*1000).save(flush:true, failOnError:true);
+        def source = SourceFeed.findByUriname(s.source.sourceId) 
+        if ( source == null ) {
+          source = new SourceFeed(   
+                                   uriname: s.source.sourceId,
+                                   name: s.source.sourceName,
+                                   status:'paused',
+                                   baseUrl:s.source.capAlertFeed,
+                                   lastCompleted:new Long(0),
+                                   processingStartTime:new Long(0),
+                                   pollInterval:60*1000).save(flush:true, failOnError:true);
 
-        source.addTag('sourceIsOfficial',"${s.source.sourceIsOfficial}");
-        source.addTag('sourceLanguage',"${s.source.sourceLanguage}");
-        source.addTag('authorityCountry',"${s.source.authorityCountry}");
-        source.addTag('authorityAbbrev',"${s.source.authorityAbbrev}");
-        source.addTag('author',"${s.source.author}");
-        source.addTag('guid',"${s.source.guid}");
-        source.addTopics("${s.source.sourceId},AllFeeds,${s.source.authorityCountry},${s.source.authorityAbbrev}")
+          source.addTag('sourceIsOfficial',"${s.source.sourceIsOfficial}");
+          source.addTag('sourceLanguage',"${s.source.sourceLanguage}");
+          source.addTag('authorityCountry',"${s.source.authorityCountry}");
+          source.addTag('authorityAbbrev',"${s.source.authorityAbbrev}");
+          source.addTag('author',"${s.source.author}");
+          source.addTag('guid',"${s.source.guid}");
+          source.addTopics("${s.source.sourceId},AllFeeds,${s.source.authorityCountry},${s.source.authorityAbbrev}")
+        }
+        else {
+          if ( source.baseUrl != s.capAlertFeed ) {
+            source.baseUrl = s.capAlertFeed;
+            source.save(flush:true, failOnError:true);
+          }
+        }
       }
     }
 
