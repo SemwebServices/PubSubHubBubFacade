@@ -8,6 +8,31 @@ class BootStrap {
 
   // Definitive list here :: https://s3-eu-west-1.amazonaws.com/alert-hub-sources/json
   def feed_data = [
+   [
+      "source" : [
+        "sourceId" : "mv-mms-en",
+        "sourceName" : "Maldives: Maldives Meteorological Service",
+        "guid" : "urn:oid:2.49.0.0.462.0",
+        "author" : "humaid@meteorology.gov.mv",
+        "sourceIsOfficial" : true,
+        "sourceLanguage" : "en",
+        "capAlertFeed" : "http://www.dhandhaana.gov.mv/eden/cap/public.rss",
+        "authorityCountry" : "mv",
+        "authorityAbbrev" : "mms"
+      ]
+    ], 
+    [ "source" : [
+        "sourceId" : "id-inatews-id",
+        "sourceName" : "Indonesia: InaTEWS BMKG, Earthquake with magnitude 5.0 above",
+        "guid" : "urn:oid:2.49.0.0.360.1",
+        "author" : "m.prabowo@gmail.com",
+        "sourceIsOfficial" : true,
+        "sourceLanguage" : "en",
+        "capAlertFeed" : "https://inatews.bmkg.go.id/rss/capatomlast40event.xml",
+        "authorityCountry" : "id",
+        "authorityAbbrev" : "inatews"
+      ]
+    ],
     [
       "source" : [
         "sourceId" : "nz-gns-en",
@@ -16,7 +41,7 @@ class BootStrap {
         "author" : "peter.kreft@metservice.com",
         "sourceIsOfficial" : true,
         "sourceLanguage" : "en",
-        "capAlertFeed" : "http://api.geonet.org.nz/cap/1.2/gpa1.0/feed/atom1.0/quake",
+        "capAlertFeed" : "http://api.geonet.org.nz/cap/1.2/GPA1.0/feed/atom1.0/quake",
         "authorityCountry" : "nz",
         "authorityAbbrev" : "geo"
       ]
