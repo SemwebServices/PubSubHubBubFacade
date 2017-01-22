@@ -317,6 +317,7 @@ class BootStrap {
     feed_data.each { s ->
       // Array of maps containing a source elenment
       if ( s.source ) {
+        log.debug("Validate source ${s.source.sourceId}");
         def source = SourceFeed.findByUriname(s.source.sourceId) 
         if ( source == null ) {
           source = new SourceFeed(   
@@ -337,7 +338,8 @@ class BootStrap {
           source.addTopics("${s.source.sourceId},AllFeeds,${s.source.authorityCountry},${s.source.authorityAbbrev}")
         }
         else {
-          if ( source.baseUrl != s.capAlertFeed ) {
+          if ( source.baseUrl != s.source.capAlertFeed ) {
+            log.debug("Detected a change in config feed url :: ${source.baseUrl} != ${s.capAlertFeed}. Update..");
             source.baseUrl = s.capAlertFeed;
             source.save(flush:true, failOnError:true);
           }

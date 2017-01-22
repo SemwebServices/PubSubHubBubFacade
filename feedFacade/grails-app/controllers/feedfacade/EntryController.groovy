@@ -5,6 +5,7 @@ import grails.plugin.springsecurity.annotation.Secured
 
 class EntryController {
 
+  @Secured(['ROLE_USER', 'IS_AUTHENTICATED_FULLY'])
   def index() { 
     log.debug("EntryController::index");
     def result = [:]
