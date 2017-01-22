@@ -33,4 +33,7 @@ class Entry {
            link type:'text',column: 'ent_link'
   }
 
+  transient def getNumSubscriptionEntries() {
+    SubscriptionEntry.executeQuery('select count(se.id) from SubscriptionEntry as se where se.entry.id=:entry_id',[entry_id:this.id])[0]
+  }
 }

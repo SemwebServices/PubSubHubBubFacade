@@ -23,6 +23,7 @@
               <th>id</th>
               <th>timestamp</th>
               <th>From Feed</th>
+              <th>Sub Matches</th>
               <th>Title/Description</th>
             </tr>
           </thead>
@@ -31,7 +32,12 @@
               <tr>
                 <td><g:link controller="entry" action="detail" id="${e.id}">${e.id}</g:link></td>
                 <td><g:formatDate date="${new Date(e.entryTs)}"/></td>
-                <td><g:link controller="sourcefeed" action="feed" id="${e.ownerFeed.id}">${e.ownerFeed.name}</g:link></td>
+                <td><g:link controller="sourcefeed" action="feed" id="${e.ownerFeed.id}">${e.ownerFeed.name}</g:link><br/>
+                  <g:each in="${e.ownerFeed.topics}" var="feedtopic"> 
+                    <span class="badge">${feedtopic.topic.name}</span>
+                  </g:each>
+                </td>
+                <td>${e.numSubscriptionEntries}</td>
                 <td><a href="${e.link}">${e.title}</a><br/>${e.description}</td>
               </tr>
             </g:each>

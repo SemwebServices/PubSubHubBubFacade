@@ -117,7 +117,7 @@ class NewEventService {
       }
 
       SubscriptionEntry se = new SubscriptionEntry(
-                                                   subscription:sub, 
+                                                   owner:sub, 
                                                    entry:entry, 
                                                    eventDate:new Date(), 
                                                    status:'pending', 
