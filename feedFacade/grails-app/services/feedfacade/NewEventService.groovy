@@ -119,10 +119,9 @@ class NewEventService {
       SubscriptionEntry se = new SubscriptionEntry(
                                                    subscription:sub, 
                                                    entry:entry, 
+                                                   eventDate:new Date(), 
                                                    status:'pending', 
                                                    reason:"Event published on feed ${feed_id} with matching topic").save(flush:true, failOnError:true);
-
-      recent_notifications.add([targetMimetype:sub.targetMimetype, content:result, target: sub.callback, topic: sub.topic.name]);
 
       log.debug("done");
     }

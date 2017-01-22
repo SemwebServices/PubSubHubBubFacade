@@ -7,6 +7,7 @@ class SubscriptionEntry {
   String reason
   String status
   String responseCode
+  Date eventDate
   Date deliveryDate
 
   static constraints = {
@@ -15,6 +16,7 @@ class SubscriptionEntry {
               reason blank:false, nullable:false
               status blank:false, nullable:false
         responseCode blank:false, nullable:true
+           eventDate blank:false, nullable:false
         deliveryDate blank:false, nullable:true
   }
 }
