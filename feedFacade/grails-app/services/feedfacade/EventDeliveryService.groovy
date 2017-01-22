@@ -34,7 +34,7 @@ class EventDeliveryService {
     running=true;
     log.debug("EventDeliveryService::sendPendingEvents");
 
-    long pending_event_count = SubscriptionEntry.executeQuery('select count(se) from SubscriptionEntry as se where se.status=:pending',[pending:'pending'],[readOnly:true]);
+    long pending_event_count = SubscriptionEntry.executeQuery('select count(se) from SubscriptionEntry as se where se.status=:pending',[pending:'pending'],[readOnly:true])[0];
 
     while ( pending_event_count ) {
       log.debug("sendPendingEvents iterating :: pending_event_count=${pending_event_count}");
@@ -46,7 +46,7 @@ class EventDeliveryService {
         attemptDelivery(pending_event_id);
       }
 
-      pending_event_count = SubscriptionEntry.executeQuery('select count(se) from SubscriptionEntry as se where se.status=:pending',[pending:'pending'],[readOnly:true]);
+      pending_event_count = SubscriptionEntry.executeQuery('select count(se) from SubscriptionEntry as se where se.status=:pending',[pending:'pending'],[readOnly:true])[0];
     }
 
     log.debug("sendPendingEvents completed");
