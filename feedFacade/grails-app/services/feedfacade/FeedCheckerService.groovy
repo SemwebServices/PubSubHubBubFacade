@@ -69,7 +69,10 @@ class FeedCheckerService {
           
           def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp from SourceFeed as sf where sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm order by (sf.lastCompleted + sf.pollInterval) asc',[paused:'paused',ctm:start_time],[lock:false])
 
-          if ( q.size() > 0 ) {
+          def num_paused_feeds = q.size();
+          log.debug("feedChecher detects ${num_paused_feeds} feeds paused that are overdue a check");
+
+          if ( num_paused_feeds > 0 ) {
             def row = q.get(0)
             feed_info = [:]
             feed_info.id = row[0]
@@ -77,6 +80,7 @@ class FeedCheckerService {
             feed_info.hash = row[2]
             feed_info.highesTimestamp = row[3]
           }
+         
         }
 
         if ( feed_info ) {
