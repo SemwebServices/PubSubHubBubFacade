@@ -84,4 +84,8 @@ class SourceFeed {
   def getTags() {
     SourceTag.findAllByOwner(this)
   }
+
+  def getTimeToNextPoll() {
+    return (lastCompleted?:0) + (pollInterval?:0) - System.currentTimeMillis()
+  }
 }

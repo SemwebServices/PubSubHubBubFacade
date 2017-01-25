@@ -13,6 +13,7 @@ class SourcefeedController {
 
     def qry_params = [:]
     def base_feed_qry = ' from SourceFeed as sf'
+    // def order_by_clause = ' order by (sf.lastCompleted + sf.pollInterval)'
     def order_by_clause = ' order by sf.id'
 
     result.totalFeeds = SourceFeed.executeQuery('select count(sf) '+base_feed_qry,qry_params)[0]

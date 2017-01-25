@@ -27,6 +27,7 @@
               <th>Status</th>
               <th>Base Url</th>
               <th>Last Completed</th>
+              <th>Next Due (MS)</th>
               <th>Poll Interval</th>
               <th>Last Error Message</th>
             </tr>
@@ -57,6 +58,7 @@
                 <td>${f.status}</td>
                 <td><a href="${f.baseUrl}">${f.baseUrl}</a></td>
                 <td><g:formatDate date="${new Date(f.lastCompleted)}" format="yyyy MM dd hh:mm:ss.SSS"/></td>
+                <td>${f.timeToNextPoll}</td>
                 <td>${f.pollInterval}</td>
                 <td>${f.lastError}</td>
               </tr>
