@@ -36,7 +36,7 @@
                   <g:each in="${e.ownerFeed.topics}" var="feedtopic"> 
                     <span class="badge">${feedtopic.topic.name}</span>
                   </g:each><br/>
-                  <span class="pull-right">Last checked <g:formatDate date="${new Date(e.ownerFeed.lastCompleted)}"/></span>
+                  <span class="pull-right"><em>Feed</em> Last checked <g:formatDate date="${new Date(e.ownerFeed.lastCompleted)}"/></span>
                 </td>
                 <td>${e.numSubscriptionEntries}</td>
                 <td><a href="${e.link}">${e.title}</a><br/>${e.description}</td>
