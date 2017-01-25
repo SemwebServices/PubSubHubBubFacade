@@ -86,6 +86,10 @@ class SourceFeed {
   }
 
   def getTimeToNextPoll() {
-    return (lastCompleted?:0) + (pollInterval?:0) - System.currentTimeMillis()
+    return getNextPollTime() - System.currentTimeMillis()
+  }
+
+  def getNextPollTime() {
+    lastCompleted + pollInterval
   }
 }
