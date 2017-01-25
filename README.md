@@ -42,6 +42,10 @@ service internally to poll RSS and turn feeds into event streams.
     CREATE DATABASE feedfacadedev;
     GRANT ALL PRIVILEGES ON DATABASE feedfacadedev to feedfacade;
 
+If you're hoping to develop CAPCollator alongside this component, it can be helpful to run this element on a different port with
+
+    grails run-app --port 8085
+
 
 ### Production Deployment Postgresql Backed
 
