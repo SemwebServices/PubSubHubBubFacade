@@ -100,7 +100,7 @@ class EventDeliveryService {
       def host_part = url_as_obj.protocol+'://'+url_as_obj.host+':'+url_as_obj.port;
       def path_part = url_as_obj.path + (url_as_obj.query?:'')
 
-      log.debug("attemptDelivery ${host_part} ${path_part} mode is ${evt.owner.deliveryMode}");
+      log.debug("attemptDelivery ${host_part} ${path_part} mode is ${evt.owner.targetMimetype}");
 
       try {
         
@@ -112,7 +112,7 @@ class EventDeliveryService {
 
 
           // set the xml body, e.g. <xml>...</xml>
-          if ( evt.owner.deliveryMode=='XML' ) {
+          if ( evt.owner.targetMimetype.equalsIgnoreCase('XML') ) {
             requestContentType = XML
             body = evt.entry.entry
           }
