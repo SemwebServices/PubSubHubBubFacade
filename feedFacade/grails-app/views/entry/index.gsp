@@ -20,11 +20,11 @@
         <table class="table table-striped well">
           <thead>
             <tr>
-              <th>id</th>
-              <th>timestamp</th>
-              <th>From Feed</th>
-              <th>Sub Matches</th>
-              <th>Title/Description</th>
+              <th class="col-md-1">Entry Id</th>
+              <th class="col-md-1">Entry Timestamp</th>
+              <th class="col-md-4">From Feed</th>
+              <th class="col-md-1">Sub Matches</th>
+              <th class="col-md-5">Title/Description</th>
             </tr>
           </thead>
           <tbody>
@@ -35,7 +35,8 @@
                 <td><g:link controller="sourcefeed" action="feed" id="${e.ownerFeed.id}">${e.ownerFeed.name}</g:link><br/>
                   <g:each in="${e.ownerFeed.topics}" var="feedtopic"> 
                     <span class="badge">${feedtopic.topic.name}</span>
-                  </g:each>
+                  </g:each><br/>
+                  <span class="pull-right">Last checked <g:formatDate date="${new Date(e.ownerFeed.lastCompleted)}"/></span>
                 </td>
                 <td>${e.numSubscriptionEntries}</td>
                 <td><a href="${e.link}">${e.title}</a><br/>${e.description}</td>
