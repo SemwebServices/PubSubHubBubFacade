@@ -54,6 +54,7 @@ dependencies {
 
     compile 'org.apache.commons:commons-collections4:4.1'
     compile 'commons-io:commons-io:2.5'
+    compile 'org.grails.plugins:http-builder-helper:1.0.2'
 
     profile "org.grails.profiles:web"
     runtime "com.bertramlabs.plugins:asset-pipeline-grails:2.11.6"

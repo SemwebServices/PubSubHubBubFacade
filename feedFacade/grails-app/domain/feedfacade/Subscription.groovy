@@ -8,6 +8,7 @@ class Subscription {
   String leaseSeconds
   String trimNs
   String targetMimetype
+  String deliveryMode
 
   static constraints = {
                 guid blank:false, nullable:false
@@ -16,5 +17,6 @@ class Subscription {
         leaseSeconds blank:false, nullable:true
               trimNs blank:false, nullable:true
       targetMimetype blank:false, nullable:true
+        deliveryMode blank:false, nullable:true
   }
 }
