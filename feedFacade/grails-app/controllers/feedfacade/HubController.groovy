@@ -6,12 +6,15 @@ import grails.plugin.springsecurity.annotation.Secured
 class HubController {
 
   def index() { 
-    log.debug("HubController::index");
+    log.debug("HubController::index ${params}");
     def result = [:]
 
     switch ( request.method ) {
       case 'POST':
-        handleSubscriptionRequest()
+        if ( ( params.hub.mode.trim().toLowerCase() == 'subscribe' ) ||
+             ( params.hub.mode.trim().toLowerCase() == 'unsubscribe' ) ) {
+          handleSubscriptionRequest()
+        }
         break;
       default:
         break;
@@ -48,6 +51,6 @@ class HubController {
         render(status: 400, text: 'hub.mode must be one of subscribe or unsubscribe')
       }
     }
-
   }
+
 }
