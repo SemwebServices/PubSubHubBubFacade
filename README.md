@@ -17,6 +17,11 @@ systems which don't want to implement Pubsubhubbub themselves into pubsubhubub c
 The vision is that services will install this facade or adapter on their own services to turn their static
 RSS into event streams.
 
+This project is a sister project to https://github.com/ianibo/CAPCollator - where this project contains the
+generic atom to push notification element, that project contains all the CAP specific indexing and alerting 
+functions. If you're here looking for information about the Common Alerting Protocol (CAP) see
+this link https://docs.oasis-open.org/emergency/cap/v1.2/CAP-v1.2-os.html and that project.
+
 ## Technology
 
 Currently implemented in Java using the groovy-on-grails framework, but runnable as a microservice using the
