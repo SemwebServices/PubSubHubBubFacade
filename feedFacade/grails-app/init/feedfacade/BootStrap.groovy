@@ -3,7 +3,13 @@ package feedfacade
 class BootStrap {
 
   def sysusers = [
-    [name:'admin',pass:'admin',display:'Admin',email:'admin@semweb.co', roles:['ROLE_ADMIN','ROLE_USER']]
+    [
+      name:'admin',
+      pass:System.getenv('YARM_ADM_PW')?:'ChangeMeImmediately',
+      display:'Admin',
+      email:'admin@semweb.co', 
+      roles:['ROLE_ADMIN','ROLE_USER']
+    ]
   ]
 
   // Definitive list here :: https://s3-eu-west-1.amazonaws.com/alert-hub-sources/json

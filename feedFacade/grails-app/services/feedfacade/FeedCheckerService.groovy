@@ -45,13 +45,11 @@ class FeedCheckerService {
   }
 
   def doFeedCheck() {
-    log.debug("FeedCheckerService::doFeedCheck");
+    def start_time = System.currentTimeMillis()
+    log.debug("FeedCheckerService::doFeedChecki ${start_time}");
     running=true;
     feedCheckLog=[]
-    def start_time = System.currentTimeMillis()
-
     feedCheckLog.add([timestamp:new Date(),message:'Feed check started']);
-
     log.debug("Finding all feeds due on or after ${start_time}");
 
     def processed_feed_counter = 0;
@@ -177,7 +175,7 @@ class FeedCheckerService {
       log.debug("After processing entries, highest timestamp seen is ${highestSeenTimestamp}");
   
       SourceFeed.withNewTransaction {
-        log.debug('Mark feed ${id} as paused');
+        log.debug("Mark feed ${id} as paused");
         def sf = SourceFeed.get(id)
         sf.lock()
         sf.status = 'paused'

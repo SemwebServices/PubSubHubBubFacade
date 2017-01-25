@@ -21,7 +21,7 @@
             <g:each in="${topics}" var="t" >
               <tr>
                 <td>${t.name}</td>
-                <td><ul><g:each in="${t.subscriptions}" var="sub"><li>${sub}</li></g:each></ul></td>
+                <td><ul><g:each in="${t.subscriptions}" var="sub"><li>${sub.callback}</li></g:each></ul></td>
               </tr>
             </g:each>
           </tbody>

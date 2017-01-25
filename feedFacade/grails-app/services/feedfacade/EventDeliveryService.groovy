@@ -123,7 +123,7 @@ class EventDeliveryService {
   
           // handle response
           response.success = { resp ->
-            log.error("OK calling ${evt.owner.callback}");
+            log.error("OK calling ${evt.owner.callback} :: ${resp.status}");
             evt.status='delivered'
             evt.responseCode = resp.status
             evt.deliveryDate = new Date()
