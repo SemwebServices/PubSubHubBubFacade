@@ -32,6 +32,8 @@ class HubController {
       if ( params.hub.mode.trim().toLowerCase() == 'subscribe' ) {
 
         def pending_request_uuid = java.util.UUID.randomUUID().toString()
+
+        
         def pr = new PendingRequest(guid:pending_request_uuid,
                                     requestTimestamp:new Date(),
                                     callback:params.hub.callback,
@@ -41,6 +43,7 @@ class HubController {
                                     leaseSeconds:params.hub.lease_seconds,
                                     trimNs:params.trimNs,
                                     targetMimetype:params.targetMimetype,
+                                    deliveryMode:(params.deliveryMode?.equalsIgnoreCase('JSON')) ? 'JSON' : 'XML',
                                     secret:params.hub.secret).save(flush:true, failOnError:true);
         render(status: 202, text: 'Subscription Request Accepted. Request ID is '+pending_request_uuid)
         // RequestVerifierJob will pick up this pending request and send the validation request

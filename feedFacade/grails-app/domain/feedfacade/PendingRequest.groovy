@@ -12,6 +12,7 @@ class PendingRequest {
   String status
   String trimNs
   String targetMimetype
+  String deliveryMode
 
   static constraints = {
                 guid blank:false, nullable:false
@@ -24,5 +25,6 @@ class PendingRequest {
               secret blank:false, nullable:true
               trimNs blank:false, nullable:true
       targetMimetype blank:false, nullable:true
+        deliveryMode blank:false, nullable:true
   }
 }
