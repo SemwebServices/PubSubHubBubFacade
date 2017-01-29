@@ -103,11 +103,10 @@ class NewEventService {
     def result = null;
 
     try {
-      result = rabbitMessagePublisher.rpc {
+      result = rabbitMessagePublisher.send {
               exchange = "CAPExchange"
               routingKey = entry.ownerFeed.uriname
               body = entry.entryAsJson
-              timeout = 5000
       }
       log.debug("Result of Rabbit RPC publish: ${result}");
     }

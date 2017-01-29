@@ -394,6 +394,9 @@ class BootStrap {
         }
       }
     }
+ 
+    SourceFeed.executeUpdate('update SourceFeed set status="pending" where status="in-process"');
+    
   }
 
 
