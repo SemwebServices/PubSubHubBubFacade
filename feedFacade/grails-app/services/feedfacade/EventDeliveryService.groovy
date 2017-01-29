@@ -1,4 +1,4 @@
-package feedfacade
+ackage feedfacade
 
 import grails.transaction.Transactional
 import java.security.MessageDigest
@@ -156,6 +156,7 @@ class EventDeliveryService {
           default:
             log.error("Unhandled sub type: ${evt.subscription.subType}");
             break;
+        }
       }
       catch(java.net.ConnectException ce) {
         log.debug("Unable to contact subscriber to deliver notification - event will remain pending");
