@@ -99,7 +99,7 @@ dataSource:
     driverClassName: org.h2.Driver
     username: sa
     password:
-
+---
 environments:
     development:
         dataSource:
@@ -157,3 +157,10 @@ environments:
                 testOnReturn: false
                 jdbcInterceptors: ConnectionState
                 defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
+---
+rabbitmq:
+    connections:
+      - name: localRMQ
+        host: localhost
+        username: guest
+        password: guest

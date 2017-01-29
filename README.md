@@ -65,3 +65,19 @@ https://en.wikibooks.org/wiki/WebObjects/Web_Services/How_to_Trust_Any_SSL_Certi
 https://s3-eu-west-1.amazonaws.com/alert-hub-subscriptions/json
 
 
+
+# RabbitMQ Setup
+
+Change according to local requirements
+
+
+    apt-get install rabbitmq-server
+    rabbitmqctl add_user cap cap
+    rabbitmq-plugins enable rabbitmq_management
+    wget http://127.0.0.1:15672/cli/rabbitmqadmin
+    chmod u+rx ./rabbitmqadmin
+    ./rabbitmqadmin declare exchange name=CAPExchange type=topic
+
+    rabbitmqctl list_exchanges
+
+

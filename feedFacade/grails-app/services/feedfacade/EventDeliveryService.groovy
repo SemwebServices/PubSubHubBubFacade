@@ -93,6 +93,9 @@ class EventDeliveryService {
       def evt = SubscriptionEntry.get(event_id)
       evt.lock()
 
+      if ( evt.deliveryFailureCount == null ) {
+        evt.deliveryFailureCount = 0;
+      }
 
       // Try and deliver
       // Delivery to evt.owner.callback
@@ -137,11 +140,24 @@ class EventDeliveryService {
         }
     
       }
+      catch(java.net.ConnectException ce) {
+        log.debug("Unable to contact subscriber to deliver notification - event will remain pending");
+        evt.deliveryFailureCount++;
+        evt.status='pending'
+        evt.responseCode = ce.message
+      }
       catch(Exception e ) {
         log.error("Problem trying to contact callback service",e);
+        evt.deliveryFailureCount++;
+        evt.status='pending'
+        evt.responseCode = e.message
       }
 
-      // If result of delivery is OK, set status to delivered, otherwise reset to pending and increment error count
+      if ( evt.deliveryFailureCount > 10 ) {
+        evt.status='failed'
+      }
+
+      // If result of delivery is OK, set status to delivered, otherwise reset to pending and save updated error count
       evt.save(flush:true, failOnError:true);
     }
   }
