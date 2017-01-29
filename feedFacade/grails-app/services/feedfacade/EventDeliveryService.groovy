@@ -100,17 +100,18 @@ class EventDeliveryService {
         evt.deliveryFailureCount = 0;
       }
 
-      // Try and deliver
-      // Delivery to evt.owner.callback
-      def url_as_obj = new java.net.URL(evt.owner.callback);
-      def host_part = url_as_obj.protocol+'://'+url_as_obj.host+':'+url_as_obj.port;
-      def path_part = url_as_obj.path + (url_as_obj.query?:'')
-
-      log.debug("attemptDelivery ${host_part} ${path_part} mode is ${evt.owner.targetMimetype}");
 
       try {
-        switch ( evt.subscription.subType ) {
+        switch ( evt.owner.subType ) {
           case 'pshb':
+            // Try and deliver
+            // Delivery to evt.owner.callback
+            def url_as_obj = new java.net.URL(evt.owner.callback);
+            def host_part = url_as_obj.protocol+'://'+url_as_obj.host+':'+url_as_obj.port;
+            def path_part = url_as_obj.path + (url_as_obj.query?:'')
+
+            log.debug("attemptDelivery pshb ${host_part} ${path_part} mode is ${evt.owner.targetMimetype}");
+
             HTTPBuilder builder = new HTTPBuilder( host_part )
             builder.request( POST ) { 
 
@@ -145,14 +146,15 @@ class EventDeliveryService {
             break;
           case 'rabbit':
             log.debug("Deliver to rabbit");
+            log.debug("attemptDelivery rabbit ${evt.owner.callback}");
             rabbitMessagePublisher.send {
-              routingKey = entry.subscription.callback
-              body = entry.entryAsJson
+              routingKey = evt.owner.callback
+              body = evt.entry.entryAsJson.getBytes(java.nio.charset.StandardCharsets.UTF_8)
             }
-
+            evt.status='delivered'
             break;
           default:
-            log.error("Unhandled sub type: ${evt.subscription.subType}");
+            log.error("Unhandled sub type: ${evt.owner.subType}");
             break;
         }
       }
@@ -168,9 +170,10 @@ class EventDeliveryService {
         evt.status='pending'
         evt.responseCode = e.message
       }
-
-      if ( evt.deliveryFailureCount > 10 ) {
-        evt.status='failed'
+      finally {
+        if ( evt.deliveryFailureCount > 10 ) {
+          evt.status='failed'
+        }
       }
 
       // If result of delivery is OK, set status to delivered, otherwise reset to pending and save updated error count

@@ -5,7 +5,8 @@ class FeedCheckerJob {
   def feedCheckerService 
 
     static triggers = {
-      simple repeatInterval: 60000l // execute job once in 5 seconds
+      // Wait 90 seconds after startup then poll every minute
+      simple startDelay:90000l,repeatInterval: 60000l
     }
 
     def execute() {
