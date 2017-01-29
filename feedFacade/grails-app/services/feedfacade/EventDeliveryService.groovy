@@ -1,4 +1,4 @@
-ackage feedfacade
+package feedfacade
 
 import grails.transaction.Transactional
 import java.security.MessageDigest
@@ -17,8 +17,6 @@ import static groovyx.net.http.ContentType.XML
 import static groovyx.net.http.ContentType.JSON
 
 import com.budjb.rabbitmq.publisher.RabbitMessagePublisher
-
-
 
 @Transactional
 class EventDeliveryService {
