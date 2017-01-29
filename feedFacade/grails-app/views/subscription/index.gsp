@@ -21,9 +21,9 @@
           <tbody>
             <g:each in="${subscriptions}" var="s" >
               <tr>
-                <td>${t.guid}</td>
-                <td>${t.subType}</td>
-                <td>${t.callback}</td>
+                <td>${s.guid}</td>
+                <td>${s.subType}</td>
+                <td>${s.callback}</td>
               </tr>
             </g:each>
           </tbody>

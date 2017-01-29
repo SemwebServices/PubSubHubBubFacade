@@ -10,6 +10,7 @@ class SubscriptionController {
   def index() { 
     log.debug("SourcefeedController::index");
     def result = [:]
+    result.subscriptions=Subscription.executeQuery('select s from Subscription as s');
     result
   }
 

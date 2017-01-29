@@ -14,32 +14,40 @@
           <thead>
             <tr>
               <th>Topic name</th>
-              <th>Subscriptions</th>
+              <th>Subscriptions (Add new rabbit sub)</th>
             </tr>
           </thead>
           <tbody>
             <g:each in="${topics}" var="t" >
               <tr>
                 <td>${t.name}</td>
-                <td><ul><g:each in="${t.subscriptions}" var="sub"><li>${sub.callback}</li></g:each></ul></td>
+                <td>
+                  <ul>
+                    <g:each in="${t.subscriptions}" var="sub">
+                      <li>${sub.callback}</li>
+                    </g:each>
+                  </ul>
+                  <g:form controller="subscription" action="newRabbitQueue">
+                    <input type="hidden" name="topicName" value="${t.name}"/>
+                    <div class="form-group col-sm-12 nopadding">
+                      <label for="queueName" class="col-sm-4 control-label">Add new Rabbit Sub for ${t.name} with Routing Key:</label>
+                      <div class="col-sm-8">
+                        <div class="input-group">
+                          <input name="queueName" class="form-control" id="queueName" placeholder="New Password" />
+                          <span class="input-group-btn">
+                            <button class="btn btn-secondary" type="submit">Add New Queue Subscription</button>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </g:form>
+                </td>
               </tr>
             </g:each>
           </tbody>
         </table>
-        <h2>Add RabbitMQ Queue for this topic</h2>
-        <g:form controller="subscription" action="newRabbitQueue">
-          <div class="form-group">
-            <label for="queueName" class="col-sm-2 control-label">Routing Key</label>
-            <div class="col-sm-10">
-              <div class="input-group">
-                <input name="queueName" class="form-control" id="newpass" placeholder="New Password" />
-                <span class="input-group-btn">
-                  <button class="btn btn-secondary" type="button">Add Queue</button>
-                </span>
-              </div>
-            </div>
-          </div>
-        </g:form>
+
+
       </div>
     </div>
   </div>
