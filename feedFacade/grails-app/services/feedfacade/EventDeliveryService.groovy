@@ -16,6 +16,9 @@ import static groovyx.net.http.ContentType.TEXT
 import static groovyx.net.http.ContentType.XML
 import static groovyx.net.http.ContentType.JSON
 
+import com.budjb.rabbitmq.publisher.RabbitMessagePublisher
+
+
 
 @Transactional
 class EventDeliveryService {
@@ -23,6 +26,7 @@ class EventDeliveryService {
   def sessionFactory
   boolean running = false;
   long error_count=0;
+  RabbitMessagePublisher rabbitMessagePublisher
 
   def triggerEventDelivery() {
     log.debug("EventDeliveryService::triggerEventDelivery");
@@ -93,6 +97,7 @@ class EventDeliveryService {
       def evt = SubscriptionEntry.get(event_id)
       evt.lock()
 
+
       if ( evt.deliveryFailureCount == null ) {
         evt.deliveryFailureCount = 0;
       }
@@ -106,39 +111,51 @@ class EventDeliveryService {
       log.debug("attemptDelivery ${host_part} ${path_part} mode is ${evt.owner.targetMimetype}");
 
       try {
-        
-        HTTPBuilder builder = new HTTPBuilder( host_part )
-        builder.request( POST ) { 
+        switch ( evt.subscription.subType ) {
+          case 'pshb':
+            HTTPBuilder builder = new HTTPBuilder( host_part )
+            builder.request( POST ) { 
 
-          // set uriPath, e.g. /rest/resource
-          uri.path = path_part
+              // set uriPath, e.g. /rest/resource
+              uri.path = path_part
 
 
-          // set the xml body, e.g. <xml>...</xml>
-          if ( evt.owner.targetMimetype.equalsIgnoreCase('XML') ) {
-            requestContentType = XML
-            body = evt.entry.entry
-          }
-          else {
-            requestContentType = JSON
-            body = evt.entry.entryAsJson
-          }
+              // set the xml body, e.g. <xml>...</xml>
+              if ( evt.owner.targetMimetype.equalsIgnoreCase('XML') ) {
+                requestContentType = XML
+                body = evt.entry.entry
+              }
+              else {
+                requestContentType = JSON
+                body = evt.entry.entryAsJson
+              }
   
-          // handle response
-          response.success = { resp ->
-            log.error("OK calling ${evt.owner.callback} :: ${resp.status}");
-            evt.status='delivered'
-            evt.responseCode = resp.status
-            evt.deliveryDate = new Date()
-          }
+              // handle response
+              response.success = { resp ->
+                log.error("OK calling ${evt.owner.callback} :: ${resp.status}");
+                evt.status='delivered'
+                evt.responseCode = resp.status
+                evt.deliveryDate = new Date()
+              }
 
-          response.error = { resp ->
-            log.error("Error code calling ${url}");
-            evt.status='pending'
-            evt.responseCode = resp.status
-          }
-        }
-    
+              response.error = { resp ->
+                log.error("Error code calling ${url}");
+                evt.status='pending'
+                evt.responseCode = resp.status
+              }
+            }
+            break;
+          case 'rabbit':
+            log.debug("Deliver to rabbit");
+            rabbitMessagePublisher.send {
+              routingKey = entry.subscription.callback
+              body = entry.entryAsJson
+            }
+
+            break;
+          default:
+            log.error("Unhandled sub type: ${evt.subscription.subType}");
+            break;
       }
       catch(java.net.ConnectException ce) {
         log.debug("Unable to contact subscriber to deliver notification - event will remain pending");

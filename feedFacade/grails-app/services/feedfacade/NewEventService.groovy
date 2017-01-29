@@ -90,13 +90,13 @@ class NewEventService {
   def publish(feed_id, entry) {
 
     // Here is where we may publish to RabbitMQ.
-    publishToRabbitMQ(feed_id, entry);
+    publishToRabbitMQExchange(feed_id, entry);
 
     // Publish down our traditional route.
-    publishToPubSubHubBub(feed_id, entry);
+    publishToSubscriptions(feed_id, entry);
   }
 
-  def publishToRabbitMQ(feed_id, entry) {
+  def publishToRabbitMQExchange(feed_id, entry) {
 
     log.debug("NewEventService::publishToRabbitMQ(${feed_id},...)");
 
@@ -117,9 +117,9 @@ class NewEventService {
     result
   }
 
-  def publishToPubSubHubBub(feed_id, entry) {
+  def publishToSubscriptions(feed_id, entry) {
 
-    log.debug("NewEventService::publishToPubSubHubBub(${feed_id},...)");
+    log.debug("NewEventService::publishToSubscriptions(${feed_id},...)");
 
     // Find all subscriptions where the sub has a topic which intersects with any of the topics for this feed
     def subscriptions = Subscription.executeQuery('select s from Subscription as s where exists ( select ft from FeedTopic as ft where ft.topic = s.topic and ft.ownerFeed.id = :id )',[id:feed_id]);

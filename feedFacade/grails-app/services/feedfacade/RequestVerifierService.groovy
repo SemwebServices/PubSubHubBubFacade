@@ -103,7 +103,8 @@ class RequestVerifierService {
                                    leaseSeconds:request_info.leaseSeconds,
                                    trimNs:request_info.trimNs,
                                    targetMimetype:request_info.targetMimetype,
-                                   deliveryMode:request_info.deliveryMode
+                                   deliveryMode:request_info.deliveryMode,
+                                   subType:'pshb'
                                   ).save(flush:true, failOnError:true);
           log.debug("Subscription created...");
         }

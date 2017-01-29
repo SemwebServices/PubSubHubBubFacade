@@ -10,6 +10,8 @@ class Subscription {
   String targetMimetype
   String deliveryMode
 
+  String subType
+
   static constraints = {
                 guid blank:false, nullable:false
             callback blank:false, nullable:false
@@ -18,5 +20,6 @@ class Subscription {
               trimNs blank:false, nullable:true
       targetMimetype blank:false, nullable:true
         deliveryMode blank:false, nullable:true
+             subType blank:false, nullable:true
   }
 }

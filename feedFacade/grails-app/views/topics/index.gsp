@@ -26,6 +26,20 @@
             </g:each>
           </tbody>
         </table>
+        <h2>Add RabbitMQ Queue for this topic</h2>
+        <g:form controller="subscription" action="newRabbitQueue">
+          <div class="form-group">
+            <label for="queueName" class="col-sm-2 control-label">Routing Key</label>
+            <div class="col-sm-10">
+              <div class="input-group">
+                <input name="queueName" class="form-control" id="newpass" placeholder="New Password" />
+                <span class="input-group-btn">
+                  <button class="btn btn-secondary" type="button">Add Queue</button>
+                </span>
+              </div>
+            </div>
+          </div>
+        </g:form>
       </div>
     </div>
   </div>

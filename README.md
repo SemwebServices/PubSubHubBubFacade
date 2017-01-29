@@ -77,7 +77,8 @@ Change according to local requirements
     wget http://127.0.0.1:15672/cli/rabbitmqadmin
     chmod u+rx ./rabbitmqadmin
     ./rabbitmqadmin declare exchange name=CAPExchange type=topic
-
+    ./rabbitmqadmin declare queue name=CAPCollatorQueue durable=true
     rabbitmqctl list_exchanges
+    rabbitmqctl list_queues
 
 
