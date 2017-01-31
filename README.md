@@ -78,6 +78,7 @@ Change according to local requirements
     chmod u+rx ./rabbitmqadmin
     ./rabbitmqadmin declare exchange name=CAPExchange type=topic
     ./rabbitmqadmin declare queue name=CAPCollatorQueue durable=true
+    ./rabbitmqadmin declare binding source="CAPExchange" destination_type="queue" destination="CAPCollatorQueue" routing_key="ATOMEntry.#"
     rabbitmqctl list_exchanges
     rabbitmqctl list_queues
 

@@ -105,7 +105,7 @@ class NewEventService {
     try {
       result = rabbitMessagePublisher.send {
               exchange = "CAPExchange"
-              routingKey = entry.ownerFeed.uriname
+              routingKey = 'ATOMEntry.'+entry.ownerFeed.uriname
               body = entry.entryAsJson
       }
       log.debug("Result of Rabbit RPC publish: ${result}");
