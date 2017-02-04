@@ -395,7 +395,7 @@ class BootStrap {
       }
     }
  
-    SourceFeed.executeUpdate('update SourceFeed set status=:pending where status=:inprocess',[pending:'pending',inprocess:'in-process']);
+    SourceFeed.executeUpdate('update SourceFeed set status=:paused',[paused:'paused']);
     
   }
 

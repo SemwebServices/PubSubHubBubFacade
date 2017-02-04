@@ -63,8 +63,8 @@ class FeedCheckerService {
         // Grab the next feed to examine -- do it in a transaction
         def feed_info = null
         SourceFeed.withNewTransaction {
-          log.debug("Lock next feed, and mark as running");
-          
+          log.debug("Searching for paused feeds where lastCompleted+pollInterval < now ${start_time}");
+
           def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp from SourceFeed as sf where sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm order by (sf.lastCompleted + sf.pollInterval) asc',[paused:'paused',ctm:start_time],[lock:false])
 
           def num_paused_feeds = q.size();
