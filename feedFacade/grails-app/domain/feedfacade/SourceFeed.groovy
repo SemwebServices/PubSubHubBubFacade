@@ -75,7 +75,7 @@ class SourceFeed {
   }
 
   def addTag(tag_txt,value) {
-    if ( value && ( value.length() > 0 ) ) {
+    if ( value && ( value.trim().length() > 0 ) ) {
       def tag = Tag.findByTag(tag_txt) ?: new Tag(tag:tag_txt).save(flush:true, failOnError:true);
       def source_tag = SourceTag.findByOwnerAndTagAndValue(this,tag,value) ?: new SourceTag(owner:this, tag:tag, value:value).save(flush:true, failOnError:true);
     }

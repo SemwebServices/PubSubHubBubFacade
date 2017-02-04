@@ -309,6 +309,22 @@ class BootStrap {
   ]
 
   def init = { servletContext ->
+    setUpSources()
+    setUpUserAccounts()
+  }
+
+  def setUpSources() {
+    try {
+      def live_json_data = new groovy.json.JsonSlurper().parse(new java.net.URL('https://s3-eu-west-1.amazonaws.com/alert-hub-sources/json'))
+      ingestCapFeeds(live_json_data.sources)
+    }
+    catch ( Exception e ) {
+      log.error("problem syncing cap feed list",e);
+    }
+  }
+
+
+  def setUpSourcesOld() {
     // See https://github.com/filtered-alert-hub/filtered-alert-hub/blob/master/feed-fetcher/alert-hub-sources-json-small.txt
     // N.B. Poll Interval is in milliseconds
     // def ca_msc_en = SourceFeed.findByUriname('ca_msc_en') ?: new SourceFeed( uriname:'ca_msc_en', 
@@ -319,41 +335,50 @@ class BootStrap {
     //                                                                          pollInterval:60*1000).save(flush:true, failOnError:true);
     // ca_msc_en.addTopics('ca_msc_en')
     // ca_msc_en.addTopics('AlertHub,TestFeed, NormalisationTest')
+    ingestCapFeeds(feed_data);
+  }
 
-    feed_data.each { s ->
-      // Array of maps containing a source elenment
-      if ( s.source ) {
-        log.debug("Validate source ${s.source.sourceId}");
-        def source = SourceFeed.findByUriname(s.source.sourceId) 
-        if ( source == null ) {
-          source = new SourceFeed(   
-                                   uriname: s.source.sourceId,
-                                   name: s.source.sourceName,
-                                   status:'paused',
-                                   baseUrl:s.source.capAlertFeed,
-                                   lastCompleted:new Long(0),
-                                   processingStartTime:new Long(0),
-                                   pollInterval:60*1000).save(flush:true, failOnError:true);
+  def ingestCapFeeds(fd) {
+    fd?.each { s ->
+      try {
+        // Array of maps containing a source elenment
+        if ( s.source ) {
+          log.debug("Validate source ${s.source.sourceId}");
+          def source = SourceFeed.findByUriname(s.source.sourceId) 
+          if ( source == null ) {
+            source = new SourceFeed(   
+                                     uriname: s.source.sourceId,
+                                     name: s.source.sourceName,
+                                     status:'paused',
+                                     baseUrl:s.source.capAlertFeed,
+                                     lastCompleted:new Long(0),
+                                     processingStartTime:new Long(0),
+                                     pollInterval:60*1000).save(flush:true, failOnError:true);
 
-          source.addTag('sourceIsOfficial',"${s.source.sourceIsOfficial}");
-          source.addTag('sourceLanguage',"${s.source.sourceLanguage}");
-          source.addTag('authorityCountry',"${s.source.authorityCountry}");
-          source.addTag('authorityAbbrev',"${s.source.authorityAbbrev}");
-          source.addTag('author',"${s.source.author}");
-          source.addTag('guid',"${s.source.guid}");
-          source.addTopics("${s.source.sourceId},AllFeeds,${s.source.authorityCountry},${s.source.authorityAbbrev}")
-        }
-        else {
-          if ( source.baseUrl != s.source.capAlertFeed ) {
-            log.debug("Detected a change in config feed url :: ${source.baseUrl} != ${s.capAlertFeed}. Update..");
-            source.baseUrl = s.capAlertFeed;
-            source.save(flush:true, failOnError:true);
+            source.addTag('sourceIsOfficial',"${s.source.sourceIsOfficial}");
+            source.addTag('sourceLanguage',"${s.source.sourceLanguage}");
+            source.addTag('authorityCountry',"${s.source.authorityCountry}");
+            source.addTag('authorityAbbrev',"${s.source.authorityAbbrev}");
+            source.addTag('registerUrl',"${s.source.registerUrl}");
+            source.addTag('logoUrl',"${s.source.logoUrl}");
+            source.addTag('author',"${s.source.author}");
+            source.addTag('guid',"${s.source.guid}");
+            source.addTopics("${s.source.sourceId},AllFeeds,${s.source.authorityCountry},${s.source.authorityAbbrev}")
+          }
+          else {
+            if ( ! source.baseUrl.equals(s.source.capAlertFeed) ) {
+              log.debug("Detected a change in config feed url :: (db)${source.baseUrl} != (new)${s.source.capAlertFeed}. Update..");
+              source.baseUrl = s.source.capAlertFeed;
+              source.save(flush:true, failOnError:true);
+            }
           }
         }
       }
+      catch ( Exception e ) {
+        log.error("Problem trying to add or update entry ${s.source}",e);
+      }
     }
 
-    setUpUserAccounts()
   }
 
   def setUpUserAccounts() {
