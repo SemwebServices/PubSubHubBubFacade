@@ -57,7 +57,7 @@
                 <td><ul><g:each in="${f.tags}" var="tv"><li>${tv.tag.tag}: <strong>${tv.value}</strong></li></g:each></ul></td>
                 <td>${f.status}</td>
                 <td><a href="${f.baseUrl}">${f.baseUrl}</a></td>
-                <td><g:formatDate date="${new Date(f.lastCompleted)}" format="yyyy MM dd HH:mm:ss.SSS"/></td>
+                <td><g:formatDate date="${new Date(f.lastCompleted)}" format="yyyy MM dd HH:mm:ss.SSS"/>(${f.lastElapsed})</td>
                 <td>${f.pollInterval}</td>
                 <td><g:formatDate date="${new Date(f.nextPollTime)}" format="yyyy MM dd HH:mm:ss.SSS"/></td>
                 <td>${f.lastError}</td>

@@ -179,10 +179,12 @@ class FeedCheckerService {
         def sf = SourceFeed.get(id)
         sf.lock()
         sf.status = 'paused'
+
         if ( newhash ) {
           log.debug("Updating hash to ${newhash}");
           sf.lastHash = newhash
         }
+
         if ( highestSeenTimestamp ) {
           log.debug("Updating sf.highestTimestamp to be ${highestSeenTimestamp}");
           sf.highestTimestamp = highestSeenTimestamp
@@ -191,6 +193,7 @@ class FeedCheckerService {
         // Use the actual last completed time to try and even out the feed checking over time - this will skew each feed
         // So that all feeds become eligible over time, rather than being based on the start time of the batch
         sf.lastCompleted=System.currentTimeMillis();
+        sf.lastElapsed=start_time-sf.lastCompleted
         sf.lastError=error_message
   
         if ( error ) {
@@ -217,7 +220,7 @@ class FeedCheckerService {
     log.debug("fetchFeedPage(${feed_address})");
     def result = [:]
     def feed_url = new java.net.URL(feed_address)
-    result.feed_text = feed_url.text
+    result.feed_text = feed_url.getText([connectTimeout: 2000, readTimeout: 3000])
     MessageDigest md5_digest = MessageDigest.getInstance("MD5");
     md5_digest.update(result.feed_text.getBytes())
     byte[] md5sum = md5_digest.digest();

@@ -25,6 +25,9 @@ class SourceFeed {
   // Highest timestamp seen on any entry
   Long highestTimestamp
 
+  // Time taken to process feed on last run
+  Long lastElapsed
+
   String feedStatus
 
   String lastError
@@ -46,6 +49,7 @@ class SourceFeed {
     highestTimestamp blank: false, nullable:true
           feedStatus blank: false, nullable:true
            lastError blank: false, nullable:true
+         lastElapsed blank: false, nullable:true
   }
 
   static mapping = {

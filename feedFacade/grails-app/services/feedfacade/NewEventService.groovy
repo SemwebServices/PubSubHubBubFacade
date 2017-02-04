@@ -105,6 +105,11 @@ class NewEventService {
     try {
       result = rabbitMessagePublisher.send {
               exchange = "CAPExchange"
+              headers = [
+                'feed-id':feed_id,
+                'entry-id':entry.id,
+                'feed-url':entry.ownerFeed.baseUrl
+              ]
               routingKey = 'ATOMEntry.'+entry.ownerFeed.uriname
               body = entry.entryAsJson
       }

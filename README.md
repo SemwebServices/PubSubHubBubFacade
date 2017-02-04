@@ -81,5 +81,6 @@ Change according to local requirements
     ./rabbitmqadmin declare binding source="CAPExchange" destination_type="queue" destination="CAPCollatorQueue" routing_key="ATOMEntry.#"
     rabbitmqctl list_exchanges
     rabbitmqctl list_queues
+    rabbitmqctl list_bindings
 
 
