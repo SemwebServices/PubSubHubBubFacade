@@ -8,6 +8,9 @@ class SourceFeed {
   // Status - 'in-process', 'paused'  -- in-process if being actively checked
   String status 
 
+  // CAP Community evaluation -- unusable, operating, testing
+  String capAlertFeedStatus
+
   String name
 
   // Base URL of the underlying feed which will be polled
@@ -44,12 +47,13 @@ class SourceFeed {
   String lastHash
 
   static constraints = {
-            lastHash blank: false, nullable:true
-                name blank: false, nullable:true
-    highestTimestamp blank: false, nullable:true
-          feedStatus blank: false, nullable:true
-           lastError blank: false, nullable:true
-         lastElapsed blank: false, nullable:true
+              lastHash blank: false, nullable:true
+                  name blank: false, nullable:true
+      highestTimestamp blank: false, nullable:true
+            feedStatus blank: false, nullable:true
+             lastError blank: false, nullable:true
+           lastElapsed blank: false, nullable:true
+    capAlertFeedStatus blank: false, nullable:true
   }
 
   static mapping = {

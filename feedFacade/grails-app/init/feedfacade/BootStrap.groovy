@@ -353,6 +353,7 @@ class BootStrap {
                                      baseUrl:s.source.capAlertFeed,
                                      lastCompleted:new Long(0),
                                      processingStartTime:new Long(0),
+                                     capAlertFeedStatus: s.source.capAlertFeedStatus,
                                      pollInterval:60*1000).save(flush:true, failOnError:true);
 
             source.addTag('sourceIsOfficial',"${s.source.sourceIsOfficial}");
@@ -366,9 +367,11 @@ class BootStrap {
             source.addTopics("${s.source.sourceId},AllFeeds,${s.source.authorityCountry},${s.source.authorityAbbrev}")
           }
           else {
-            if ( ! source.baseUrl.equals(s.source.capAlertFeed) ) {
+            if ( ( ! source.baseUrl.equals(s.source.capAlertFeed) ) ||
+                 ( ! (source.capAlertFeedStatus?:'').equals(s.source.capAlertFeedStatus?:'') ) ) {
               log.debug("Detected a change in config feed url :: (db)${source.baseUrl} != (new)${s.source.capAlertFeed}. Update..");
               source.baseUrl = s.source.capAlertFeed;
+              source.capAlertFeedStatus = s.source.capAlertFeedStatus;
               source.save(flush:true, failOnError:true);
             }
           }
