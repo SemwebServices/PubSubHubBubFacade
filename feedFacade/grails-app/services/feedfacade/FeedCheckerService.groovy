@@ -65,7 +65,8 @@ class FeedCheckerService {
         SourceFeed.withNewTransaction {
           log.debug("Searching for paused feeds where lastCompleted+pollInterval < now ${start_time}");
 
-          def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp from SourceFeed as sf where sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm order by (sf.lastCompleted + sf.pollInterval) asc',[paused:'paused',ctm:start_time],[lock:false])
+          def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp from SourceFeed as sf where sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm and ( sf.capAlertFeedStatus = :operating or capAlertFeedStatus = :testing ) order by (sf.lastCompleted + sf.pollInterval) asc',
+                                           [paused:'paused',ctm:start_time,operating:'operating',testing:'testing'],[lock:false])
 
           def num_paused_feeds = q.size();
           log.debug("feedChecher detects ${num_paused_feeds} feeds paused that are overdue a check");
