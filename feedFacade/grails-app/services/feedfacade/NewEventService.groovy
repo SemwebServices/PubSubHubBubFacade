@@ -44,11 +44,12 @@ class NewEventService {
           log.debug("None found -- create");
   
           Entry e = null
+          uriname = null;
   
           Entry.withNewTransaction {
             log.debug("New Entry:: ${feed_id} ${entryHash}");
             def owner_feed = SourceFeed.get(feed_id)
-  
+            uriname = owner_feed.uriname
             String json_text = feedfacade.Utils.XmlToJson(entry);
   
             e = new Entry ( 
@@ -62,7 +63,7 @@ class NewEventService {
                                 entryTs: System.currentTimeMillis()).save(flush:true, failOnError:true);
           }
   
-          publish(feed_id, e)
+          publish(feed_id, uriname, e)
         }
         else {
           log.debug("Entry is a repeated hash");
@@ -87,16 +88,16 @@ class NewEventService {
     xml_text
   }
 
-  def publish(feed_id, entry) {
+  def publish(feed_id, feed_code, entry) {
 
     // Here is where we may publish to RabbitMQ.
-    publishToRabbitMQExchange(feed_id, entry);
+    publishToRabbitMQExchange(feed_id, feed_code, entry);
 
     // Publish down our traditional route.
     publishToSubscriptions(feed_id, entry);
   }
 
-  def publishToRabbitMQExchange(feed_id, entry) {
+  def publishToRabbitMQExchange(feed_id, feed_code, entry) {
 
     log.debug("NewEventService::publishToRabbitMQ(${feed_id},...)");
 
@@ -107,6 +108,7 @@ class NewEventService {
               exchange = "CAPExchange"
               headers = [
                 'feed-id':feed_id,
+                'feed-code':feed_code,
                 'entry-id':entry.id,
                 'feed-url':entry.ownerFeed.baseUrl
               ]
