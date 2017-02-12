@@ -111,6 +111,7 @@ class NewEventService {
                 'feed-url':entry.ownerFeed.baseUrl
               ]
               routingKey = 'ATOMEntry.'+entry.ownerFeed.uriname
+              deliveryMode = 2  // Persistent
               body = entry.entryAsJson
       }
       log.debug("Result of Rabbit RPC publish: ${result}");
