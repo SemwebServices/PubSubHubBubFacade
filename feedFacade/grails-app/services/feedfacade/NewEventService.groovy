@@ -44,7 +44,7 @@ class NewEventService {
           log.debug("None found -- create");
   
           Entry e = null
-          uriname = null;
+          def uriname = null;
   
           Entry.withNewTransaction {
             log.debug("New Entry:: ${feed_id} ${entryHash}");
