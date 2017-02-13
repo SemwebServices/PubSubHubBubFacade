@@ -225,6 +225,7 @@ class FeedCheckerService {
     java.net.URLConnection url_connection = feed_url.openConnection()
     log.debug("${feed_address} [URLC]expires: ${url_connection.getExpiration()}");
     log.debug("${feed_address} [URLC]ifModifiedSince: ${url_connection.getIfModifiedSince()}");
+    log.debug("${feed_address} [URLC]lastModified: ${url_connection.getLastModified()}");
 
     result.feed_text = feed_url.getText([connectTimeout: 2000, readTimeout: 3000])
     MessageDigest md5_digest = MessageDigest.getInstance("MD5");
