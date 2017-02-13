@@ -229,10 +229,18 @@ class FeedCheckerService {
 
     java.net.URLConnection url_connection = feed_url.openConnection()
     // Set this to the time we last checked the feed. uc.setIfModifiedSince(System.currentTimeMillis());
+    // connection.setRequestProperty("If-Modified-Since", "Wed, 06 Oct 2010 02:53:46 GMT");
+   
     result.lastModified = url_connection.getLastModified()
     log.debug("${feed_address} [URLC]expires: ${url_connection.getExpiration()}");
     log.debug("${feed_address} [URLC]ifModifiedSince: ${url_connection.getIfModifiedSince()}");
     log.debug("${feed_address} [URLC]lastModified: ${result.lastModified}");
+
+    // If you get an Expires response header, then it just means that you don't need to request anything until the specified expire time. 
+    // If you get a Last-Modified response header, then it means that you should be able to use If-Modified-Since to test it. 
+    // If you get an ETag response header, then it means that you should be able to use If-None-Match to test it.
+
+
 
     result.feed_text = feed_url.getText([connectTimeout: 2000, readTimeout: 3000])
     MessageDigest md5_digest = MessageDigest.getInstance("MD5");
