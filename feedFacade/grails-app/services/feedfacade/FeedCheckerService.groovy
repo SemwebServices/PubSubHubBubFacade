@@ -223,9 +223,11 @@ class FeedCheckerService {
     java.net.URL feed_url = new java.net.URL(feed_address)
 
     java.net.URLConnection url_connection = feed_url.openConnection()
+    // Set this to the time we last checked the feed. uc.setIfModifiedSince(System.currentTimeMillis());
+    result.lastModified = url_connection.getLastModified()
     log.debug("${feed_address} [URLC]expires: ${url_connection.getExpiration()}");
     log.debug("${feed_address} [URLC]ifModifiedSince: ${url_connection.getIfModifiedSince()}");
-    log.debug("${feed_address} [URLC]lastModified: ${url_connection.getLastModified()}");
+    log.debug("${feed_address} [URLC]lastModified: ${result.lastModified}");
 
     result.feed_text = feed_url.getText([connectTimeout: 2000, readTimeout: 3000])
     MessageDigest md5_digest = MessageDigest.getInstance("MD5");
