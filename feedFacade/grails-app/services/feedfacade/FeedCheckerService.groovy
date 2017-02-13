@@ -220,7 +220,12 @@ class FeedCheckerService {
   def fetchFeedPage(feed_address) {
     log.debug("fetchFeedPage(${feed_address})");
     def result = [:]
-    def feed_url = new java.net.URL(feed_address)
+    java.net.URL feed_url = new java.net.URL(feed_address)
+
+    java.net.URLConnection url_connection = feed_url.openConnection()
+    log.debug("${feed_address} [URLC]expires: ${url_connection.getExpiration()}");
+    log.debug("${feed_address} [URLC]ifModifiedSince: ${url_connection.getIfModifiedSince()}");
+
     result.feed_text = feed_url.getText([connectTimeout: 2000, readTimeout: 3000])
     MessageDigest md5_digest = MessageDigest.getInstance("MD5");
     md5_digest.update(result.feed_text.getBytes())
