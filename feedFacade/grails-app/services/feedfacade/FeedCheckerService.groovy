@@ -217,6 +217,11 @@ class FeedCheckerService {
   }
 
 
+  /**
+   *
+   *
+   * @See http://stackoverflow.com/questions/7095897/im-trying-to-use-javas-httpurlconnection-to-do-a-conditional-get-but-i-neve
+   */
   def fetchFeedPage(feed_address) {
     log.debug("fetchFeedPage(${feed_address})");
     def result = [:]
