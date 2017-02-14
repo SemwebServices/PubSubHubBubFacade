@@ -30,6 +30,8 @@
               <th>Last Completed</th>
               <th>Poll Interval</th>
               <th>Next Due</th>
+              <th>HTTP Last Modified</th>
+              <th>HTTP Expires</th>
               <th>Last Error Message</th>
             </tr>
           </thead>
@@ -62,6 +64,8 @@
                 <td><g:formatDate date="${new Date(f.lastCompleted)}" format="yyyy MM dd HH:mm:ss.SSS"/>(${f.lastElapsed})</td>
                 <td>${f.pollInterval}</td>
                 <td><g:formatDate date="${new Date(f.nextPollTime)}" format="yyyy MM dd HH:mm:ss.SSS"/></td>
+                <td>${f.httpLastModified}</td>
+                <td>${f.httpExpires}</td>
                 <td>${f.lastError}</td>
               </tr>
               <tr>

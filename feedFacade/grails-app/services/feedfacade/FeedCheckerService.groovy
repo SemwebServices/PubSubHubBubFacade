@@ -96,9 +96,14 @@ class FeedCheckerService {
         }
 
         if ( feed_info ) {
-          feedCheckLog.add([timestamp:new Date(),message:'Identified feed '+feed_info]);
-          log.debug("Process feed");
-          processFeed(start_time, feed_info.id,feed_info.url,feed_info.hash,feed_info.highesTimestamp,feed_info.expires,feed_info.lastModified);
+          if ( feed_info.url.toLowerCase().startsWith('http') ) {
+            feedCheckLog.add([timestamp:new Date(),message:'Identified feed '+feed_info]);
+            log.debug("Process feed");
+            processFeed(start_time, feed_info.id,feed_info.url,feed_info.hash,feed_info.highesTimestamp,feed_info.expires,feed_info.lastModified);
+          }
+          else {
+            log.error("Not attempting to collect feed ${feed_info.id} because URL (${feed_info.url})doesn't start http.....");
+          }
         }
         else {  
           // nothing left in the queue
