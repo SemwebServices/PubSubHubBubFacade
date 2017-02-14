@@ -12,7 +12,7 @@ class FeedCheckerService {
   def error_count = 0;
   def newEventService
   def statsService
-  def feedCheckLog=new org.apache.commons.collections.buffer.CircularFifoBuffer(50);
+  def feedCheckLog=new org.apache.commons.collections.buffer.CircularFifoBuffer(100);
 
   private static int MAX_FEED_CHECKER_FAILURES=30
 
@@ -76,7 +76,7 @@ class FeedCheckerService {
         SourceFeed.withNewTransaction {
           log.debug("Searching for paused feeds where lastCompleted+pollInterval < now ${start_time}");
 
-          def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp, sf.httpExpires, sf.httpLastModified from SourceFeed as sf where sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm and ( sf.capAlertFeedStatus = :operating or capAlertFeedStatus = :testing ) order by (sf.lastCompleted + sf.pollInterval) asc',
+          def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp, sf.httpExpires, sf.httpLastModified from SourceFeed as sf where sf.baseUrl is not null and sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm and ( sf.capAlertFeedStatus = :operating or capAlertFeedStatus = :testing ) order by (sf.lastCompleted + sf.pollInterval) asc',
                                            [paused:'paused',ctm:start_time,operating:'operating',testing:'testing'],[lock:false])
 
           def num_paused_feeds = q.size();
@@ -108,7 +108,7 @@ class FeedCheckerService {
       }
     }
     catch ( Exception e ) {
-      feedCheckLog.add([timestamp:new Date(),message:'Feed check error '+e.message]);
+      feedCheckLog.add([type:'ERROR', timestamp:new Date(),message:'Feed check error '+e.message]);
       log.error("Problem processing feeds",e);
       e.printStackTrace()
     }
@@ -190,7 +190,7 @@ class FeedCheckerService {
       catch ( java.io.IOException ioe ) {
         error=true
         error_message = ioe.toString()
-        log.error("IO Problem feed_id:${id} feed_url:${url}",ioe.message);
+        log.error("IO Problem feed_id:${id} feed_url:${url} ${ioe.message}",ioe);
       }
       catch ( Exception e ) {
         error=true
