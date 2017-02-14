@@ -266,8 +266,8 @@ class FeedCheckerService {
     java.net.URL feed_url = new java.net.URL(feed_address)
 
     java.net.URLConnection url_connection = feed_url.openConnection()
-    url_connection.setConnectTimeout(2000)
-    url_connection.setReadTimeout(2000)
+    url_connection.setConnectTimeout(4000)
+    url_connection.setReadTimeout(4000)
     // Set this to the time we last checked the feed. uc.setIfModifiedSince(System.currentTimeMillis());
     if ( httpLastModified != null ) {
       log.debug("${feed_address} has last modified ${httpLastModified} so sending that in a If-Modified-Since header");
