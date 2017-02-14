@@ -35,6 +35,10 @@ class SourceFeed {
 
   String lastError
 
+  String httpExpires
+
+  String httpLastModified
+
   static hasMany = [
     topics:FeedTopic
   ]
@@ -54,6 +58,8 @@ class SourceFeed {
              lastError blank: false, nullable:true
            lastElapsed blank: false, nullable:true
     capAlertFeedStatus blank: false, nullable:true
+           httpExpires blank: false, nullable:true
+      httpLastModified blank: false, nullable:true
   }
 
   static mapping = {

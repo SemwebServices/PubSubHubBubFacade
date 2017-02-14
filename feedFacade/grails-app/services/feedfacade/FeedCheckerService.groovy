@@ -12,7 +12,8 @@ class FeedCheckerService {
   def error_count = 0;
   def newEventService
   def statsService
-  def feedCheckLog=[]
+  def feedCheckLog=new org.apache.commons.collections.buffer.CircularFifoBuffer(50);
+
   private static int MAX_FEED_CHECKER_FAILURES=30
 
   def possible_date_formats = [
@@ -27,6 +28,14 @@ class FeedCheckerService {
   ];
 
   def getLastLog() {
+    feedCheckLog
+  }
+
+  def isRunning() { 
+    running
+  }
+
+  def getFeedCheckLog() {
     feedCheckLog
   }
 
@@ -67,7 +76,7 @@ class FeedCheckerService {
         SourceFeed.withNewTransaction {
           log.debug("Searching for paused feeds where lastCompleted+pollInterval < now ${start_time}");
 
-          def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp from SourceFeed as sf where sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm and ( sf.capAlertFeedStatus = :operating or capAlertFeedStatus = :testing ) order by (sf.lastCompleted + sf.pollInterval) asc',
+          def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp, sf.httpExpires, sf.httpLastModified from SourceFeed as sf where sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm and ( sf.capAlertFeedStatus = :operating or capAlertFeedStatus = :testing ) order by (sf.lastCompleted + sf.pollInterval) asc',
                                            [paused:'paused',ctm:start_time,operating:'operating',testing:'testing'],[lock:false])
 
           def num_paused_feeds = q.size();
@@ -80,6 +89,8 @@ class FeedCheckerService {
             feed_info.url = row[1]
             feed_info.hash = row[2]
             feed_info.highesTimestamp = row[3]
+            feed_info.expires = row[4]
+            feed_info.lastModified = row[5]
           }
          
         }
@@ -87,7 +98,7 @@ class FeedCheckerService {
         if ( feed_info ) {
           feedCheckLog.add([timestamp:new Date(),message:'Identified feed '+feed_info]);
           log.debug("Process feed");
-          processFeed(start_time, feed_info.id,feed_info.url,feed_info.hash,feed_info.highesTimestamp);
+          processFeed(start_time, feed_info.id,feed_info.url,feed_info.hash,feed_info.highesTimestamp,feed_info.expires,feed_info.lastModified);
         }
         else {  
           // nothing left in the queue
@@ -109,7 +120,13 @@ class FeedCheckerService {
     running=false;
   }
 
-  def processFeed(start_time, id, url, hash, highestRecordedTimestamp) {
+  def processFeed(start_time, 
+                  id, 
+                  url, 
+                  hash, 
+                  highestRecordedTimestamp,
+                  httpExpires,
+                  httpLastModified) {
 
     log.debug("processFeed(${start_time},${id},${url},${hash},${highestRecordedTimestamp})");
     def newhash = null;
@@ -139,9 +156,15 @@ class FeedCheckerService {
 
       log.debug("Processing....feed ${id} :: ${url} ${hash}");
       
+      def feed_info = null;
+
       try {
-        def feed_info = fetchFeedPage(url);
-        if ( ( hash == null ) || ( feed_info.hash != hash ) ) {
+
+        feed_info = fetchFeedPage(url, httpExpires, httpLastModified);
+
+        // If we got a hash back from fetching the page AND the storred hash is different OR not set, then process the feed.
+        if ( ( feed_info.hash != null ) && 
+             ( ( hash == null ) || ( feed_info.hash != hash ) ) ) {
           newhash = feed_info.hash
           log.debug("Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
     
@@ -182,6 +205,8 @@ class FeedCheckerService {
         def sf = SourceFeed.get(id)
         sf.lock()
         sf.status = 'paused'
+        sf.httpExpires = feed_info?.expires
+        sf.httpLastModified = feed_info?.lastModified
 
         if ( newhash ) {
           log.debug("Updating hash to ${newhash}");
@@ -220,21 +245,30 @@ class FeedCheckerService {
 
 
   /**
-   *
+   * @Param feed_address
+   * @Param httpExpires expires header from the last time we fetched this page
+   * @Param httpLastModified last modified header from the last time we fetched this page
    *
    * @See http://stackoverflow.com/questions/7095897/im-trying-to-use-javas-httpurlconnection-to-do-a-conditional-get-but-i-neve
+   * 
    */
-  def fetchFeedPage(feed_address) {
+  def fetchFeedPage(feed_address,httpExpires, httpLastModified) {
     log.debug("fetchFeedPage(${feed_address})");
     def result = [:]
     java.net.URL feed_url = new java.net.URL(feed_address)
 
     java.net.URLConnection url_connection = feed_url.openConnection()
+    url_connection.setConnectTimeout(2000)
+    url_connection.setReadTimeout(2000)
     // Set this to the time we last checked the feed. uc.setIfModifiedSince(System.currentTimeMillis());
-    // connection.setRequestProperty("If-Modified-Since", "Wed, 06 Oct 2010 02:53:46 GMT");
+    if ( httpLastModified != null ) {
+      log.debug("${feed_address} has last modified ${httpLastModified} so sending that in a If-Modified-Since header");
+      url_connection.setRequestProperty("If-Modified-Since", httpLastModified);
+    }
    
     result.lastModified = url_connection.getLastModified()
-    log.debug("${feed_address} [URLC]expires: ${url_connection.getExpiration()}");
+    result.expires = url_connection.getExpiration()
+    log.debug("${feed_address} [URLC]expires: ${result.expires}");
     log.debug("${feed_address} [URLC]ifModifiedSince: ${url_connection.getIfModifiedSince()}");
     log.debug("${feed_address} [URLC]lastModified: ${result.lastModified}");
 
@@ -242,13 +276,22 @@ class FeedCheckerService {
     // If you get a Last-Modified response header, then it means that you should be able to use If-Modified-Since to test it. 
     // If you get an ETag response header, then it means that you should be able to use If-None-Match to test it.
 
+    log.debug("Connection response code: ${url_connection.getResponseCode()}");
 
+    // If we had no lastModified OR the last modified returned was different
+    if ( ( result.lastModified == null ) ||
+         ( result.lastModified != httpLastModified ) ) {
+      // result.feed_text = feed_url.getText([connectTimeout: 2000, readTimeout: 3000])
+      result.feed_text = url_connection.getInputStream().getText()
+      MessageDigest md5_digest = MessageDigest.getInstance("MD5");
+      md5_digest.update(result.feed_text.getBytes())
+      byte[] md5sum = md5_digest.digest();
+      result.hash = new BigInteger(1, md5sum).toString(16);
+    }
+    else {
+      
+    }
 
-    result.feed_text = feed_url.getText([connectTimeout: 2000, readTimeout: 3000])
-    MessageDigest md5_digest = MessageDigest.getInstance("MD5");
-    md5_digest.update(result.feed_text.getBytes())
-    byte[] md5sum = md5_digest.digest();
-    result.hash = new BigInteger(1, md5sum).toString(16);
     result
   }
 

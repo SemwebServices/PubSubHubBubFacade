@@ -22,6 +22,10 @@ generic atom to push notification element, that project contains all the CAP spe
 functions. If you're here looking for information about the Common Alerting Protocol (CAP) see
 this link https://docs.oasis-open.org/emergency/cap/v1.2/CAP-v1.2-os.html and that project.
 
+### Features
+
+* As of the version 2017-02-14 the server is much more observant of http-last-modified and uses the http if-modified-since header . This should greatly reduce polling traffic for servers that properly observe the general HTTP caching mechanics. The database also now tracks the expires header, although currently does not observe it.
+
 ## Technology
 
 Currently implemented in Java using the groovy-on-grails framework, but runnable as a microservice using the
