@@ -96,14 +96,9 @@ class FeedCheckerService {
         }
 
         if ( feed_info ) {
-          if ( feed_info.url.toLowerCase().startsWith('http') ) {
-            feedCheckLog.add([timestamp:new Date(),message:'Identified feed '+feed_info]);
-            log.debug("Process feed");
-            processFeed(start_time, feed_info.id,feed_info.url,feed_info.hash,feed_info.highesTimestamp,feed_info.expires,feed_info.lastModified);
-          }
-          else {
-            log.error("Not attempting to collect feed ${feed_info.id} because URL (${feed_info.url})doesn't start http.....");
-          }
+          feedCheckLog.add([timestamp:new Date(),message:'Identified feed '+feed_info]);
+          log.debug("Process feed");
+          processFeed(start_time, feed_info.id,feed_info.url,feed_info.hash,feed_info.highesTimestamp,feed_info.expires,feed_info.lastModified);
         }
         else {  
           // nothing left in the queue
@@ -147,9 +142,17 @@ class FeedCheckerService {
       def sf = SourceFeed.get(id)
       sf.lock()
       if ( sf.status == 'paused' ) {
-        log.debug("Feed really is paused -- mark it as in process and proceed");
-        sf.status = 'in-process'
-        continue_processing = true;
+
+        if ( url.toLowerCase().startsWith('http') ) {
+          log.debug("Feed really is paused -- mark it as in process and proceed");
+          sf.status = 'in-process'
+          continue_processing = true;
+        }
+        else {
+          sf.capAlertFeedStatus = 'error'
+          sf.lastError='Feed URL seems to be malformed - must start http:// or https:// feed status set to error'
+        }
+
         sf.save(flush:true, failOnError:true);
       }
       else {
