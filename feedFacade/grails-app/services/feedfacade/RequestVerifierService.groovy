@@ -14,8 +14,10 @@ class RequestVerifierService {
     log.debug("RequestVerifierService::triggerCheck");
     if ( running ) {
       log.debug("Request verifier already running - not launching another [${error_count++}]");
-      if ( error_count > 10 )
+      if ( error_count > 10 ) {
+        log.error("Request Verifier error count passed 10, exit");
         System.exit(0);
+      }
     }
     else {
       def error_count = 0;

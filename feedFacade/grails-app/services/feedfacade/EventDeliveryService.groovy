@@ -30,8 +30,10 @@ class EventDeliveryService {
     log.debug("EventDeliveryService::triggerEventDelivery");
     if ( running ) {
       log.debug("Event Delivery already running - not launching another [${error_count++}]");
-      if ( error_count > 10 )
+      if ( error_count > 10 ) {
+        log.error("Event Delivery Error Count passed 10 - EXIT");
         System.exit(0);
+      }
     }
     else {
       def error_count = 0;

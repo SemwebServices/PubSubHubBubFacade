@@ -12,8 +12,8 @@ class FeedCheckerService {
   def error_count = 0;
   def newEventService
   def statsService
-
   def feedCheckLog=[]
+  private static int MAX_FEED_CHECKER_FAILURES=30
 
   def possible_date_formats = [
     // new SimpleDateFormat('yyyy-MM-dd'), // Default format Owen is pushing ATM.
@@ -35,8 +35,10 @@ class FeedCheckerService {
     log.debug("FeedCheckerService::triggerFeedCheck");
     if ( running ) {
       log.debug("Feed checker already running - not launching another [${error_count++}]");
-      if ( error_count > 10 )
+      if ( error_count > MAX_FEED_CHECKER_FAILURES ) {
+        log.error("Feed checker error count passed ${MAX_FEED_CHECKER_FAILURES}, exit");
         System.exit(0);
+      }
     }
     else {
       def error_count = 0;
