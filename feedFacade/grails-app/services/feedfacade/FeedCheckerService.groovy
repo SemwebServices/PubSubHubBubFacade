@@ -290,7 +290,7 @@ class FeedCheckerService {
     // If we had no lastModified OR the last modified returned was different
     if ( ( result.lastModified == null ) ||
          ( result.lastModified != httpLastModified ) ) {
-      log.debug("${feed_address} **FEEDSTATUS** updated");
+      log.debug("${feed_address} **FEEDSTATUS** updated (req lm:${result.lastModified}/db lm:${httpLastModified})");
       // result.feed_text = feed_url.getText([connectTimeout: 2000, readTimeout: 3000])
       result.feed_text = url_connection.getInputStream().getText()
       MessageDigest md5_digest = MessageDigest.getInstance("MD5");
