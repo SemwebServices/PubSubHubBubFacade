@@ -422,6 +422,8 @@ class FeedCheckerService {
   def logEvent(key,evt) {
    try {
 
+      log.debug("logEvent(${key},${evt})");
+
       def evt_str = toJson(evt);
 
       def result = rabbitMessagePublisher.send {

@@ -8,7 +8,7 @@
 </head>
 <body>
   Public home
-  <table>
+  <table class="table table-striped">
     <thead>
       <tr>
         <th>Code</th>
@@ -18,7 +18,7 @@
     <tbody>
       <g:each in="${feeds}" var="feed">
         <tr>
-          <td>${feed.uriname}</td>
+          <td><g:link controller="sourcefeed" action="feed" id="${feed.id}">${feed.uriname}</g:link></td>
           <td>${feed.baseUrl}</td>
         </tr>
       </g:each>

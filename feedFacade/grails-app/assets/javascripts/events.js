@@ -32,18 +32,18 @@ function initEvents(exchange,topic_pattern) {
   client.heartbeat.outgoing = 0;
   
   client.debug = function(e) {
-    console.log("debug %o",e);
+    // console.log("debug %o",e);
     // $('#second div').append($("<code>").text(e));
   };
   
   // default receive callback to get message from temporary queues
   client.onreceive = function(m) {
-    console.log("message %o",m);
+    // console.log("message %o",m);
     // $('#first div').append($("<code>").text(m.body));
   }
   
   var on_connect = function(x) {
-    console.log("Connected - subscribe to /exchange/%s/CAPSubMatch.%s",exchange,topic_pattern);
+    console.log("Connected - subscribe to /exchange/%s/%s",exchange,topic_pattern);
 
     var id = client.subscribe("/exchange/"+exchange+"/"+topic_pattern, function(m) {
       // console.log("/exchange/%s/%s Got message %o",exchange,topic_pattern,m);
@@ -52,11 +52,11 @@ function initEvents(exchange,topic_pattern) {
   };
 
   var on_error =  function() {
-          console.log('error');
+    console.log('error');
   };
 
-  console.log("Connect...");
+  // console.log("Connect...");
   client.connect('cap', 'cap', on_connect, on_error, '/');
-  console.log("Connect complete...");
+  // console.log("Connect complete...");
 }
 
