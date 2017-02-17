@@ -8,21 +8,21 @@
 </head>
 <body>
   Public home
-
-  <h3>Feed Checker Log</h3>
-  <table class="table table-striped">
+  <table>
     <thead>
       <tr>
-        <th>
-        </th>
+        <th>Code</th>
+        <th>baseUrl</th>
       </tr>
     </thead>
     <tbody>
-      <g:each in="${feedCheckerLog}" var="logEntry">
+      <g:each in="${feeds}" var="feed">
         <tr>
-          <td>${logEntry}</td>
+          <td>${feed.uriname}</td>
+          <td>${feed.baseUrl}</td>
         </tr>
       </g:each>
-    </tbody
+    </tbody>
+  </table>
 </body>
 </html>

@@ -5,7 +5,6 @@ import grails.plugin.springsecurity.annotation.Secured
 class HomeController {
 
   def springSecurityService
-  def feedCheckerService
 
   def index() { 
     log.debug("HomeController::index");
@@ -17,7 +16,7 @@ class HomeController {
       redirect action:'home'
     }
     else {
-      result.feedCheckerLog = feedCheckerService.getFeedCheckLog()
+      result.feeds=SourceFeed.executeQuery('select sf from SourceFeed as sf');
     }
 
     result

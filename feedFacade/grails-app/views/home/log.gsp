@@ -8,11 +8,11 @@
 </head>
 <body>
   <h3>Feed Checker Live Log</h3>
-  <table id="feed-watcher" data-exchange="FeedFetcher" data-feedid="#.#" class="table table-striped">
+  <table id="feed-watcher" data-exchange="FeedFetcher" data-feedid="#" class="table table-striped">
     <thead>
       <tr>
-        <th>
-        </th>
+        <th>Timestamp</th>
+        <th>Message</th>
       </tr>
     </thead>
     <tbody id="FeedFetcherLiveLogTable">
@@ -22,7 +22,8 @@
   <asset:script>
     function capEvent(exchange,pattern,evt) {
       console.log("Log message %s %s %o",exchange, pattern, evt);
-
+      var evt_obj = $.parseJSON(evt.body);
+      $("#FeedFetcherLiveLogTable").prepend("<tr><td>"+evt_obj.timestamp+"</td><td>"+evt_obj.message+"</td><tr>");
     }
     console.log("Created cap event handler");
   </asset:script>

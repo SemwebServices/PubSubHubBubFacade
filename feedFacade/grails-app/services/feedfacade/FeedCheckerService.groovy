@@ -71,6 +71,7 @@ class FeedCheckerService {
     def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
 
     logEvent('System.notification',[
+        timestamp:new Date(),
         message:"Feed Check Started at ${start_time} ${sdf.format(start_time_as_date)}"
     ]);
 
@@ -87,7 +88,7 @@ class FeedCheckerService {
         SourceFeed.withNewTransaction {
           log.debug("Searching for paused feeds where lastCompleted+pollInterval < now ${start_time}");
 
-          def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp, sf.httpExpires, sf.httpLastModified from SourceFeed as sf where sf.baseUrl is not null and sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm and ( sf.capAlertFeedStatus = :operating or capAlertFeedStatus = :testing ) order by (sf.lastCompleted + sf.pollInterval) asc',
+          def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp, sf.httpExpires, sf.httpLastModified, sf.uriname from SourceFeed as sf where sf.baseUrl is not null and sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm and ( sf.capAlertFeedStatus = :operating or capAlertFeedStatus = :testing ) order by (sf.lastCompleted + sf.pollInterval) asc',
                                            [paused:'paused',ctm:start_time,operating:'operating',testing:'testing'],[lock:false])
 
           def num_paused_feeds = q.size();
@@ -102,6 +103,7 @@ class FeedCheckerService {
             feed_info.highesTimestamp = row[3]
             feed_info.expires = row[4]
             feed_info.lastModified = row[5]
+            feed_info.uriname = row[6]
           }
          
         }
@@ -135,6 +137,7 @@ class FeedCheckerService {
     }
 
     logEvent('System.notification',[
+        timestamp:new Date(),
         message:"Feed Check Ended at ${sdf.format(new Date())}"
     ]);
 
@@ -159,6 +162,7 @@ class FeedCheckerService {
     def new_entry_count = 0
 
     logEvent('Feed.'+uriname,[
+      timestamp:new Date(),
       message:"Considering feed ${uriname} / ${url}"
     ]);
 
@@ -180,6 +184,7 @@ class FeedCheckerService {
           sf.capAlertFeedStatus = 'error'
           sf.lastError='Feed URL seems to be malformed - must start http:// or https:// feed status set to error'
           logEvent('Feed.'+uriname,[
+            timestamp:new Date(),
             message:"Invalud URL - must start http: or https: for ${uriname} - ${url}"
           ]);
         }
@@ -212,15 +217,19 @@ class FeedCheckerService {
           processing_result.newEntries.each { entry ->
 
             logEvent('Feed.'+uriname,[
+              timestamp:new Date(),
               message:"Detected new entry ${entry.id.text()}"
             ]);
 
             newEventService.handleNewEvent(id,entry)
           }
     
-          logEvent('Feed.'+uriname,[
-            message:"Processing complete - ${new_entry_count} new entries"
-          ]);
+          if ( new_entry_count > 0 ) {
+            logEvent('Feed.'+uriname,[
+              timestamp:new Date(),
+              message:"${uriname} Processing complete (${url}) - ${new_entry_count} new entries"
+            ]);
+          }
 
           if ( processing_result.highestSeenTimestamp ) {
             highestSeenTimestamp = processing_result.highestSeenTimestamp
@@ -287,9 +296,6 @@ class FeedCheckerService {
       }
     }
 
-    logEvent('Feed.'+uriname,[
-      message:"Processing complete"
-    ]);
 
     feedCheckLog.add([timestamp:new Date(),message:"Process feed completed :: ${id} ${url} / error:${error} ${error_message}"]);
     log.debug("processFeed ${id} returning");
