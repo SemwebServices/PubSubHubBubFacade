@@ -4,6 +4,9 @@ import grails.transaction.Transactional
 import java.security.MessageDigest
 import org.apache.commons.io.input.BOMInputStream
 import java.text.SimpleDateFormat
+import static groovy.json.JsonOutput.*
+import java.text.SimpleDateFormat
+import com.budjb.rabbitmq.publisher.RabbitMessagePublisher
 
 @Transactional
 class FeedCheckerService {
@@ -13,6 +16,8 @@ class FeedCheckerService {
   def newEventService
   def statsService
   def feedCheckLog=new org.apache.commons.collections.buffer.CircularFifoBuffer(100);
+  RabbitMessagePublisher rabbitMessagePublisher
+
 
   private static int MAX_FEED_CHECKER_FAILURES=30
 
@@ -57,11 +62,17 @@ class FeedCheckerService {
 
   def doFeedCheck() {
     def start_time = System.currentTimeMillis()
+    def start_time_as_date = new Date(start_time)
     log.debug("FeedCheckerService::doFeedChecki ${start_time}");
     running=true;
     feedCheckLog=[]
     feedCheckLog.add([timestamp:new Date(),message:'Feed check started']);
     log.debug("Finding all feeds due on or after ${start_time}");
+    def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+
+    logEvent('System.notification',[
+        message:"Feed Check Started at ${start_time} ${sdf.format(start_time_as_date)}"
+    ]);
 
     def processed_feed_counter = 0;
 
@@ -98,7 +109,14 @@ class FeedCheckerService {
         if ( feed_info ) {
           feedCheckLog.add([timestamp:new Date(),message:'Identified feed '+feed_info]);
           log.debug("Process feed");
-          processFeed(start_time, feed_info.id,feed_info.url,feed_info.hash,feed_info.highesTimestamp,feed_info.expires,feed_info.lastModified);
+          processFeed(start_time, 
+                      feed_info.id,
+                      feed_info.uriname,
+                      feed_info.url,
+                      feed_info.hash,
+                      feed_info.highesTimestamp,
+                      feed_info.expires,
+                      feed_info.lastModified);
         }
         else {  
           // nothing left in the queue
@@ -116,12 +134,17 @@ class FeedCheckerService {
       log.info("processed ${processed_feed_counter} feeds");
     }
 
+    logEvent('System.notification',[
+        message:"Feed Check Ended at ${sdf.format(new Date())}"
+    ]);
+
     feedCheckLog.add([timestamp:new Date(),message:'Feed check finished']);
     running=false;
   }
 
   def processFeed(start_time, 
                   id, 
+                  uriname, 
                   url, 
                   hash, 
                   highestRecordedTimestamp,
@@ -135,11 +158,16 @@ class FeedCheckerService {
     def error_message = null
     def new_entry_count = 0
 
+    logEvent('Feed.'+uriname,[
+      message:"Considering feed ${uriname} / ${url}"
+    ]);
+
     def continue_processing = false;
 
     SourceFeed.withNewTransaction {
       log.debug('Mark feed as in-process');
       def sf = SourceFeed.get(id)
+
       sf.lock()
       if ( sf.status == 'paused' ) {
 
@@ -151,6 +179,9 @@ class FeedCheckerService {
         else {
           sf.capAlertFeedStatus = 'error'
           sf.lastError='Feed URL seems to be malformed - must start http:// or https:// feed status set to error'
+          logEvent('Feed.'+uriname,[
+            message:"Invalud URL - must start http: or https: for ${uriname} - ${url}"
+          ]);
         }
 
         sf.save(flush:true, failOnError:true);
@@ -179,9 +210,18 @@ class FeedCheckerService {
           def processing_result = getNewEntries(id, new java.net.URL(url).openStream(), highestRecordedTimestamp)
           new_entry_count = processing_result.numNewEntries
           processing_result.newEntries.each { entry ->
+
+            logEvent('Feed.'+uriname,[
+              message:"Detected new entry ${entry.id.text()}"
+            ]);
+
             newEventService.handleNewEvent(id,entry)
           }
     
+          logEvent('Feed.'+uriname,[
+            message:"Processing complete - ${new_entry_count} new entries"
+          ]);
+
           if ( processing_result.highestSeenTimestamp ) {
             highestSeenTimestamp = processing_result.highestSeenTimestamp
           }
@@ -246,6 +286,10 @@ class FeedCheckerService {
         sf.save(flush:true, failOnError:true);
       }
     }
+
+    logEvent('Feed.'+uriname,[
+      message:"Processing complete"
+    ]);
 
     feedCheckLog.add([timestamp:new Date(),message:"Process feed completed :: ${id} ${url} / error:${error} ${error_message}"]);
     log.debug("processFeed ${id} returning");
@@ -369,4 +413,19 @@ class FeedCheckerService {
     parsed_date
   }
 
+  def logEvent(key,evt) {
+   try {
+
+      def evt_str = toJson(evt);
+
+      def result = rabbitMessagePublisher.send {
+                      exchange = "FeedFetcher"
+                      routingKey = key
+                      body = toJson(evt)
+                   }
+    }
+    catch ( Exception e ) {
+      log.error("Problem trying to publish to rabbit",e);
+    }
+  }
 }

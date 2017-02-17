@@ -80,10 +80,11 @@ Change according to local requirements
     rabbitmq-plugins enable rabbitmq_management
     wget http://127.0.0.1:15672/cli/rabbitmqadmin
     chmod u+rx ./rabbitmqadmin
+    ./rabbitmqadmin declare exchange name=FeedFetcher type=topic
     ./rabbitmqadmin declare exchange name=CAPExchange type=topic
     ./rabbitmqadmin declare queue name=CAPCollatorQueue durable=true
     ./rabbitmqadmin declare binding source="CAPExchange" destination_type="queue" destination="CAPCollatorQueue" routing_key="ATOMEntry.#"
-    rabbitmqctl set_permissions cap "stomp-subscription-.*" "stomp-subscription-.*" "(CAPExchange|stomp-subscription-.*)"
+    rabbitmqctl set_permissions cap "stomp-subscription-.*" "stomp-subscription-.*" "(FeedFetcher|CAPExchange|stomp-subscription-.*)"
     rabbitmqctl list_exchanges
     rabbitmqctl list_queues
     rabbitmqctl list_bindings

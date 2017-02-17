@@ -23,6 +23,11 @@ class HomeController {
     result
   }
 
+  def log() {
+    def result = [:]
+    result
+  }
+
   @Secured(['ROLE_USER', 'IS_AUTHENTICATED_FULLY'])
   def home() {
     log.debug("HomeController::home");
