@@ -6,7 +6,6 @@ import grails.plugin.springsecurity.annotation.Secured
 
 class SourcefeedController {
 
-  @Secured(['ROLE_USER', 'IS_AUTHENTICATED_FULLY'])
   def index() { 
     log.debug("SourcefeedController::index");
     def result = [:]
@@ -64,11 +63,10 @@ class SourcefeedController {
     result
   }
 
-  @Secured(['ROLE_USER', 'IS_AUTHENTICATED_FULLY'])
   def feed() {
     log.debug("SourcefeedController::feed ${params.id}");
     def result = [:]
-    result.feed = SourceFeed.get(params.id)
+    result.feed = SourceFeed.findByUriname(params.id)
 
     def entries_base_qry = 'from Entry as e where e.ownerFeed.id = :owner'
 

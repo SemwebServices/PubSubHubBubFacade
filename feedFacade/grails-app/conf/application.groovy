@@ -7,20 +7,22 @@ grails.plugin.springsecurity.userLookup.authorityJoinClassName = 'feedfacade.Use
 grails.plugin.springsecurity.authority.className = 'feedfacade.Role'
 
 grails.plugin.springsecurity.controllerAnnotations.staticRules = [
-	[pattern: '/',               access: ['permitAll']],
-	[pattern: '/error',          access: ['permitAll']],
-	[pattern: '/index',          access: ['permitAll']],
-	[pattern: '/index.gsp',      access: ['permitAll']],
-	[pattern: '/shutdown',       access: ['permitAll']],
-	[pattern: '/assets/**',      access: ['permitAll']],
-	[pattern: '/home/**',        access: ['permitAll']],
-	[pattern: '/hub/**',         access: ['permitAll']],
-	[pattern: '/hubClient/**',   access: ['permitAll']],
-	[pattern: '/**/js/**',       access: ['permitAll']],
-	[pattern: '/**/css/**',      access: ['permitAll']],
-	[pattern: '/**/fonts/**',    access: ['permitAll']],
-	[pattern: '/**/images/**',   access: ['permitAll']],
-	[pattern: '/**/favicon.ico', access: ['permitAll']]
+	[pattern: '/',                      access: ['permitAll']],
+	[pattern: '/error',                 access: ['permitAll']],
+	[pattern: '/index',                 access: ['permitAll']],
+	[pattern: '/index.gsp',             access: ['permitAll']],
+	[pattern: '/shutdown',              access: ['permitAll']],
+	[pattern: '/assets/**',             access: ['permitAll']],
+	[pattern: '/home/**',               access: ['permitAll']],
+	[pattern: '/hub/**',                access: ['permitAll']],
+	[pattern: '/hubClient/**',          access: ['permitAll']],
+	[pattern: '/sourcefeed/index',      access: ['permitAll']],
+	[pattern: '/sourcefeed/feed',       access: ['permitAll']],
+	[pattern: '/**/js/**',              access: ['permitAll']],
+	[pattern: '/**/css/**',             access: ['permitAll']],
+	[pattern: '/**/fonts/**',           access: ['permitAll']],
+	[pattern: '/**/images/**',          access: ['permitAll']],
+	[pattern: '/**/favicon.ico',        access: ['permitAll']]
 ]
 
 grails.plugin.springsecurity.filterChain.chainMap = [

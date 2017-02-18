@@ -47,6 +47,7 @@
       <div class="collapse navbar-collapse">
         <ul class="nav navbar-nav">
           <li class="${controllerName=='home' && actionName=='index' ? 'active' : ''}"><g:link controller="home" action="index">Home</g:link></li>
+          <li class="${controllerName=='sourcefeed' && actionName=='index' ? 'active' : ''}"><g:link controller="sourcefeed" action="index">Alert Sources</g:link></li>
           <li class="${controllerName=='home' && actionName=='log' ? 'active' : ''}"><g:link controller="home" action="log">Live Log</g:link></li>
           <sec:ifLoggedIn>
           <li class="${controllerName=='sourcefeed' && actionName=='index' ? 'active' : ''}"><g:link controller="sourcefeed" action="index">Feeds</g:link></li>

@@ -163,7 +163,9 @@ class FeedCheckerService {
 
     logEvent('Feed.'+uriname,[
       timestamp:new Date(),
-      message:"Considering feed ${uriname} / ${url}"
+      message:"Checking feed ${uriname} / ${url}",
+      relatedType:"feed",
+      relatedId:uriname
     ]);
 
     def continue_processing = false;
@@ -185,7 +187,9 @@ class FeedCheckerService {
           sf.lastError='Feed URL seems to be malformed - must start http:// or https:// feed status set to error'
           logEvent('Feed.'+uriname,[
             timestamp:new Date(),
-            message:"Invalud URL - must start http: or https: for ${uriname} - ${url}"
+            message:"Invalud URL - must start http: or https: for ${uriname} - ${url}",
+            relatedType:"feed",
+            relatedId:uriname
           ]);
         }
 
@@ -218,7 +222,9 @@ class FeedCheckerService {
 
             logEvent('Feed.'+uriname,[
               timestamp:new Date(),
-              message:"Detected new entry ${entry.id.text()}"
+              message:"Detected new entry ${entry.id.text()}",
+              relatedType:"entry",
+              relatedId:uriname+'/'+entry.id.text()
             ]);
 
             newEventService.handleNewEvent(id,entry)
@@ -227,7 +233,9 @@ class FeedCheckerService {
           if ( new_entry_count > 0 ) {
             logEvent('Feed.'+uriname,[
               timestamp:new Date(),
-              message:"${uriname} Processing complete (${url}) - ${new_entry_count} new entries"
+              message:"${uriname} Processing complete (${url}) - ${new_entry_count} new entries",
+              relatedType:"feed",
+              relatedId:uriname
             ]);
           }
 
@@ -243,16 +251,34 @@ class FeedCheckerService {
         error=true
         error_message = fnfe.toString()
         log.error("Feed seems not to exist",fnfe.message);
+        logEvent('Feed.'+uriname,[
+          timestamp:new Date(),
+          message:fnfe.toString(),
+          relatedType:"feed",
+          relatedId:uriname
+        ]);
       }
       catch ( java.io.IOException ioe ) {
         error=true
         error_message = ioe.toString()
         log.error("IO Problem feed_id:${id} feed_url:${url} ${ioe.message}",ioe);
+        logEvent('Feed.'+uriname,[
+          timestamp:new Date(),
+          message:ioe.toString(),
+          relatedType:"feed",
+          relatedId:uriname
+        ]);
       }
       catch ( Exception e ) {
         error=true
         error_message = e.toString()
         log.error("problem fetching feed",e);
+        logEvent('Feed.'+uriname,[
+          timestamp:new Date(),
+          message:e.toString(),
+          relatedType:"feed",
+          relatedId:uriname
+        ]);
       }
   
       log.debug("After processing entries, highest timestamp seen is ${highestSeenTimestamp}");
@@ -282,8 +308,16 @@ class FeedCheckerService {
         sf.lastError=error_message
   
         if ( error ) {
+
           sf.feedStatus='ERROR'
           statsService.logFailure(sf,start_time);
+
+          logEvent('Feed.'+uriname,[
+            timestamp:new Date(),
+            message:'Feed status : ERROR '+error_message,
+            relatedType:"feed",
+            relatedId:uriname
+          ]);
         }
         else { 
           sf.feedStatus='OK'

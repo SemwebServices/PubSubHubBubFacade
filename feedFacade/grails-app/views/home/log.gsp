@@ -21,11 +21,13 @@
 
   <asset:script>
     function capEvent(exchange,pattern,evt) {
-      console.log("Log message %s %s %o",exchange, pattern, evt);
+      // if we have more than 100 rows in the table, trim the last one off
+      if ( $('#FeedFetcherLiveLogTable tr').length > 100) {
+        $('#FeedFetcherLiveLogTable tr:last').remove();
+      }
       var evt_obj = $.parseJSON(evt.body);
       $("#FeedFetcherLiveLogTable").prepend("<tr><td>"+evt_obj.timestamp+"</td><td>"+evt_obj.message+"</td><tr>");
     }
-    console.log("Created cap event handler");
   </asset:script>
 
   <asset:javascript src="application.js"/>

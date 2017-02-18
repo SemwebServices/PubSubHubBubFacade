@@ -38,7 +38,7 @@
           <tbody>
             <g:each in="${feeds}" var="f" >
               <tr>
-                <td rowspan="2"><g:link controller="sourcefeed" action="feed" id="${f.id}">${f.uriname}</g:link></td>
+                <td rowspan="2"><g:link controller="sourcefeed" action="feed" id="${f.uriname}">${f.uriname}</g:link></td>
                 <td>
                   <g:if test="${f.feedStatus=='ERROR'}">
                     <div class="alert alert-danger" role="alert">
@@ -61,7 +61,7 @@
                 <td>${f.status}</td>
                 <td>${f.capAlertFeedStatus}</td>
                 <td><a href="${f.baseUrl}">${f.baseUrl}</a></td>
-                <td><g:formatDate date="${new Date(f.lastCompleted)}" format="yyyy MM dd HH:mm:ss.SSS"/>(${f.lastElapsed})</td>
+                <td><g:formatDate date="${new Date(f.lastCompleted)}" format="yyyy MM dd HH:mm:ss.SSS"/> (${f.lastElapsed})</td>
                 <td>${f.pollInterval}</td>
                 <td><g:formatDate date="${new Date(f.nextPollTime)}" format="yyyy MM dd HH:mm:ss.SSS"/></td>
                 <td>${f.httpLastModified}</td>

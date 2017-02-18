@@ -13,12 +13,14 @@
       <tr>
         <th>Code</th>
         <th>baseUrl</th>
+        <th>last checked</th>
+        <th>Status</th>
       </tr>
     </thead>
     <tbody>
       <g:each in="${feeds}" var="feed">
         <tr>
-          <td><g:link controller="sourcefeed" action="feed" id="${feed.id}">${feed.uriname}</g:link></td>
+          <td><g:link controller="sourcefeed" action="feed" id="${feed.uriname}">${feed.uriname}</g:link></td>
           <td>${feed.baseUrl}</td>
         </tr>
       </g:each>
