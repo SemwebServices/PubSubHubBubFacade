@@ -22,9 +22,13 @@ if (typeof jQuery !== 'undefined') {
 
 function initEvents(exchange,topic_pattern) {
 
-  console.log("Connect to http://"+ window.location.hostname + "/rabbitws/stomp");
-  var ws = new SockJS('http://' + window.location.hostname + '/rabbitws/stomp');
   
+  // var stomp_addr = "ws://"+ window.location.hostname + ":15674/stomp"
+  // var stomp_addr = "/rabbitws/stomp"
+  var stomp_addr = 'http://' + window.location.hostname + '/rabbitws/stomp';
+  console.log("Connect to %s",stomp_addr);
+
+  var ws = new SockJS(stomp_addr);
   var client = Stomp.over(ws);
 
   // SockJS does not support heart-beat: disable heart-beats
