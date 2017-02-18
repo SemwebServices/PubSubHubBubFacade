@@ -78,6 +78,7 @@ Change according to local requirements
     apt-get install rabbitmq-server
     rabbitmqctl add_user cap cap
     rabbitmq-plugins enable rabbitmq_management
+    rabbitmq-plugins enable rabbitmq_web_stomp
     wget http://127.0.0.1:15672/cli/rabbitmqadmin
     chmod u+rx ./rabbitmqadmin
     ./rabbitmqadmin declare exchange name=FeedFetcher type=topic
