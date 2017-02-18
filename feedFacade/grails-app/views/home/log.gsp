@@ -12,6 +12,7 @@
     <thead>
       <tr>
         <th>Timestamp</th>
+        <th>Linked Item</th>
         <th>Message</th>
       </tr>
     </thead>
@@ -26,7 +27,12 @@
         $('#FeedFetcherLiveLogTable tr:last').remove();
       }
       var evt_obj = $.parseJSON(evt.body);
-      $("#FeedFetcherLiveLogTable").prepend("<tr><td>"+evt_obj.timestamp+"</td><td>"+evt_obj.message+"</td><tr>");
+      var obj_link = ''
+      if ( evt_obj.relatedType==='feed' ) {
+        obj_link='<a href="/sourcefeed/feed/'+evt_obj.relatedId+'">'+evt_obj.relatedId+'</a>';
+      }
+     
+      $("#FeedFetcherLiveLogTable").prepend("<tr><td>"+evt_obj.timestamp+"</td><td>"+obj_link+"</td><td>"+evt_obj.message+"</td><tr>");
     }
   </asset:script>
 

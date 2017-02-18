@@ -12,6 +12,35 @@
       <div class="container-fluid">
         <h1>[${feed.id}] <a href="${feed.baseUrl}">${feed.name}</a></h1>
 
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Feed Info</h3>
+          </div>
+          <div class="panel-body form-horizontal">
+            <div class="form-group">
+              <label class="col-sm-2 control-label">URL</label>
+              <div class="col-sm-10"><p class="form-control-static">${feed.baseUrl}</p></div>
+            </div>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Semantic Status</label>
+              <div class="col-sm-10"><p class="form-control-static"><strong>${feed.capAlertFeedStatus}</strong> (operating|testing|OTHER) - only operating and testing feeds will be harvested</p></div>
+            </div>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Harvester Control Status</label>
+              <div class="col-sm-10"><p class="form-control-static"><strong>${feed.status}</strong> (in-process|paused)</p></div>
+            </div>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Last fetch status</label>
+              <div class="col-sm-10"><p class="form-control-static"><strong>${feed.feedStatus}</strong></p></div>
+            </div>
+            <div class="form-group">
+              <label class="col-sm-2 control-label">Last Error (If any)</label>
+              <div class="col-sm-10"><p class="form-control-static"><strong>${feed.lastError}</strong></p></div>
+            </div>
+          </div>
+        </div>
+
+
         <h2>Recent Entries</h2>
         <table class="table table-striped well">
           <thead>
