@@ -11,6 +11,7 @@ import com.budjb.rabbitmq.publisher.RabbitMessagePublisher
 @Transactional
 class FeedCheckerService {
 
+  def executorService
   def running = false;
   def error_count = 0;
   def newEventService
@@ -46,7 +47,7 @@ class FeedCheckerService {
 
 
   def triggerFeedCheck() {
-    log.debug("FeedCheckerService::triggerFeedCheck");
+    log.debug("FeedCheckerService::triggerFeedCheck thread pool count ${executorService.executor.getActiveCount()}");
     if ( running ) {
       log.debug("Feed checker already running - not launching another [${error_count++}]");
       if ( error_count > MAX_FEED_CHECKER_FAILURES ) {
@@ -111,14 +112,16 @@ class FeedCheckerService {
         if ( feed_info ) {
           feedCheckLog.add([timestamp:new Date(),message:'Identified feed '+feed_info]);
           log.debug("Process feed");
-          processFeed(start_time, 
-                      feed_info.id,
-                      feed_info.uriname,
-                      feed_info.url,
-                      feed_info.hash,
-                      feed_info.highesTimestamp,
-                      feed_info.expires,
-                      feed_info.lastModified);
+          runAsync {
+            processFeed(start_time, 
+                        feed_info.id,
+                        feed_info.uriname,
+                        feed_info.url,
+                        feed_info.hash,
+                        feed_info.highesTimestamp,
+                        feed_info.expires,
+                        feed_info.lastModified);
+          }
         }
         else {  
           // nothing left in the queue
@@ -138,10 +141,10 @@ class FeedCheckerService {
 
     logEvent('System.notification',[
         timestamp:new Date(),
-        message:"Feed Check Ended at ${sdf.format(new Date())}"
+        message:"Feed Check Ended at ${sdf.format(new Date())} tpc:${executorService.executor.getActiveCount()}"
     ]);
 
-    feedCheckLog.add([timestamp:new Date(),message:'Feed check finished']);
+    feedCheckLog.add([timestamp:new Date(),message:'Feed check finished tpc:'+executorService.executor.getActiveCount()]);
     running=false;
   }
 
