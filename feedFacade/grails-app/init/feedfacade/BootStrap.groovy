@@ -58,7 +58,7 @@ class BootStrap {
           else {
             if ( ( ! source.baseUrl.equals(s.source.capAlertFeed) ) ||
                  ( ! (source.capAlertFeedStatus?:'').equals(s.source.capAlertFeedStatus?:'') ) ) {
-              log.debug("Detected a change in config feed url :: (db)${source.baseUrl} != (new)${s.source.capAlertFeed}. Update..");
+              log.debug("Detected a change in config feed url or status :: (db)${source.baseUrl}/${source.capAlertFeedStatus}  != (new)${s.source.capAlertFeed}/${s.source.capAlertFeedStatus}. Update..");
               source.baseUrl = s.source.capAlertFeed;
               source.capAlertFeedStatus = s.source.capAlertFeedStatus?.toLowerCase();
               source.save(flush:true, failOnError:true);
