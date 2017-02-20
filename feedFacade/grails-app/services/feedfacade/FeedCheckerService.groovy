@@ -112,7 +112,6 @@ class FeedCheckerService {
         if ( feed_info ) {
           feedCheckLog.add([timestamp:new Date(),message:'Identified feed '+feed_info]);
           log.debug("Process feed");
-          runAsync {
             processFeed(start_time, 
                         feed_info.id,
                         feed_info.uriname,
@@ -121,7 +120,6 @@ class FeedCheckerService {
                         feed_info.highesTimestamp,
                         feed_info.expires,
                         feed_info.lastModified);
-          }
         }
         else {  
           // nothing left in the queue
@@ -166,7 +164,7 @@ class FeedCheckerService {
 
     logEvent('Feed.'+uriname,[
       timestamp:new Date(),
-      message:"Checking feed ${uriname} / ${url}",
+      message:"Checking feed ${uriname} / ${url} (${Thread.currentThread().getName()})",
       relatedType:"feed",
       relatedId:uriname
     ]);
@@ -205,131 +203,133 @@ class FeedCheckerService {
 
     if ( continue_processing ) {
 
-      log.debug("Processing....feed ${id} :: ${url} ${hash}");
+      runAsync {
+        log.debug("Processing....feed ${id} :: ${url} ${hash}");
+        
+        def feed_info = null;
+  
+        try {
+  
+          feed_info = fetchFeedPage(url, httpExpires, httpLastModified);
+  
+          // If we got a hash back from fetching the page AND the storred hash is different OR not set, then process the feed.
+          if ( ( feed_info.hash != null ) && 
+               ( ( hash == null ) || ( feed_info.hash != hash ) ) ) {
+            newhash = feed_info.hash
+            log.debug("Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
       
-      def feed_info = null;
-
-      try {
-
-        feed_info = fetchFeedPage(url, httpExpires, httpLastModified);
-
-        // If we got a hash back from fetching the page AND the storred hash is different OR not set, then process the feed.
-        if ( ( feed_info.hash != null ) && 
-             ( ( hash == null ) || ( feed_info.hash != hash ) ) ) {
-          newhash = feed_info.hash
-          log.debug("Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
-    
-          def processing_result = getNewEntries(id, new java.net.URL(url).openStream(), highestRecordedTimestamp)
-          new_entry_count = processing_result.numNewEntries
-          processing_result.newEntries.each { entry ->
-
-            logEvent('Feed.'+uriname,[
-              timestamp:new Date(),
-              message:"Detected new entry ${entry.id.text()}",
-              relatedType:"entry",
-              relatedId:uriname+'/'+entry.id.text()
-            ]);
-
-            newEventService.handleNewEvent(id,entry)
+            def processing_result = getNewEntries(id, new java.net.URL(url).openStream(), highestRecordedTimestamp)
+            new_entry_count = processing_result.numNewEntries
+            processing_result.newEntries.each { entry ->
+  
+              logEvent('Feed.'+uriname,[
+                timestamp:new Date(),
+                message:"Detected new entry ${entry.id.text()}",
+                relatedType:"entry",
+                relatedId:uriname+'/'+entry.id.text()
+              ]);
+  
+              newEventService.handleNewEvent(id,entry)
+            }
+      
+            if ( new_entry_count > 0 ) {
+              logEvent('Feed.'+uriname,[
+                timestamp:new Date(),
+                message:"${uriname} Processing complete (${url}) - ${new_entry_count} new entries",
+                relatedType:"feed",
+                relatedId:uriname
+              ]);
+            }
+  
+            if ( processing_result.highestSeenTimestamp ) {
+              highestSeenTimestamp = processing_result.highestSeenTimestamp
+            }
           }
-    
-          if ( new_entry_count > 0 ) {
-            logEvent('Feed.'+uriname,[
-              timestamp:new Date(),
-              message:"${uriname} Processing complete (${url}) - ${new_entry_count} new entries",
-              relatedType:"feed",
-              relatedId:uriname
-            ]);
-          }
-
-          if ( processing_result.highestSeenTimestamp ) {
-            highestSeenTimestamp = processing_result.highestSeenTimestamp
+          else {
+            log.debug("${url} unchanged");
           }
         }
-        else {
-          log.debug("${url} unchanged");
-        }
-      }
-      catch ( java.io.FileNotFoundException fnfe ) {
-        error=true
-        error_message = fnfe.toString()
-        log.error("Feed seems not to exist",fnfe.message);
-        logEvent('Feed.'+uriname,[
-          timestamp:new Date(),
-          message:fnfe.toString(),
-          relatedType:"feed",
-          relatedId:uriname
-        ]);
-      }
-      catch ( java.io.IOException ioe ) {
-        error=true
-        error_message = ioe.toString()
-        log.error("IO Problem feed_id:${id} feed_url:${url} ${ioe.message}",ioe);
-        logEvent('Feed.'+uriname,[
-          timestamp:new Date(),
-          message:ioe.toString(),
-          relatedType:"feed",
-          relatedId:uriname
-        ]);
-      }
-      catch ( Exception e ) {
-        error=true
-        error_message = e.toString()
-        log.error("problem fetching feed",e);
-        logEvent('Feed.'+uriname,[
-          timestamp:new Date(),
-          message:e.toString(),
-          relatedType:"feed",
-          relatedId:uriname
-        ]);
-      }
-  
-      log.debug("After processing entries, highest timestamp seen is ${highestSeenTimestamp}");
-  
-      SourceFeed.withNewTransaction {
-        log.debug("Mark feed ${id} as paused");
-        def sf = SourceFeed.get(id)
-        sf.lock()
-        sf.status = 'paused'
-        sf.httpExpires = feed_info?.expires
-        sf.httpLastModified = feed_info?.lastModified
-
-        if ( newhash ) {
-          log.debug("Updating hash to ${newhash}");
-          sf.lastHash = newhash
-        }
-
-        if ( highestSeenTimestamp ) {
-          log.debug("Updating sf.highestTimestamp to be ${highestSeenTimestamp}");
-          sf.highestTimestamp = highestSeenTimestamp
-        }
-        // sf.lastCompleted=start_time
-        // Use the actual last completed time to try and even out the feed checking over time - this will skew each feed
-        // So that all feeds become eligible over time, rather than being based on the start time of the batch
-        sf.lastCompleted=System.currentTimeMillis();
-        sf.lastElapsed=start_time-sf.lastCompleted
-        sf.lastError=error_message
-  
-        if ( error ) {
-
-          sf.feedStatus='ERROR'
-          statsService.logFailure(sf,start_time);
-
+        catch ( java.io.FileNotFoundException fnfe ) {
+          error=true
+          error_message = fnfe.toString()
+          log.error("Feed seems not to exist",fnfe.message);
           logEvent('Feed.'+uriname,[
             timestamp:new Date(),
-            message:'Feed status : ERROR '+error_message,
+            message:fnfe.toString(),
             relatedType:"feed",
             relatedId:uriname
           ]);
         }
-        else { 
-          sf.feedStatus='OK'
-          statsService.logSuccess(sf,start_time,new_entry_count);
+        catch ( java.io.IOException ioe ) {
+          error=true
+          error_message = ioe.toString()
+          log.error("IO Problem feed_id:${id} feed_url:${url} ${ioe.message}",ioe);
+          logEvent('Feed.'+uriname,[
+            timestamp:new Date(),
+            message:ioe.toString(),
+            relatedType:"feed",
+            relatedId:uriname
+          ]);
         }
+        catch ( Exception e ) {
+          error=true
+          error_message = e.toString()
+          log.error("problem fetching feed",e);
+          logEvent('Feed.'+uriname,[
+            timestamp:new Date(),
+            message:e.toString(),
+            relatedType:"feed",
+            relatedId:uriname
+          ]);
+        }
+    
+        log.debug("After processing entries, highest timestamp seen is ${highestSeenTimestamp}");
+    
+        SourceFeed.withNewTransaction {
+          log.debug("Mark feed ${id} as paused");
+          def sf = SourceFeed.get(id)
+          sf.lock()
+          sf.status = 'paused'
+          sf.httpExpires = feed_info?.expires
+          sf.httpLastModified = feed_info?.lastModified
   
-        log.debug("Saving source feed");
-        feedCheckLog.add([timestamp:new Date(),message:"Processing completed on ${id}/${url} at ${sf.lastCompleted} / ${error_message}"]);
-        sf.save(flush:true, failOnError:true);
+          if ( newhash ) {
+            log.debug("Updating hash to ${newhash}");
+            sf.lastHash = newhash
+          }
+  
+          if ( highestSeenTimestamp ) {
+            log.debug("Updating sf.highestTimestamp to be ${highestSeenTimestamp}");
+            sf.highestTimestamp = highestSeenTimestamp
+          }
+          // sf.lastCompleted=start_time
+          // Use the actual last completed time to try and even out the feed checking over time - this will skew each feed
+          // So that all feeds become eligible over time, rather than being based on the start time of the batch
+          sf.lastCompleted=System.currentTimeMillis();
+          sf.lastElapsed=start_time-sf.lastCompleted
+          sf.lastError=error_message
+    
+          if ( error ) {
+  
+            sf.feedStatus='ERROR'
+            statsService.logFailure(sf,start_time);
+  
+            logEvent('Feed.'+uriname,[
+              timestamp:new Date(),
+              message:'Feed status : ERROR '+error_message,
+              relatedType:"feed",
+              relatedId:uriname
+            ]);
+          }
+          else { 
+            sf.feedStatus='OK'
+            statsService.logSuccess(sf,start_time,new_entry_count);
+          }
+    
+          log.debug("Saving source feed");
+          feedCheckLog.add([timestamp:new Date(),message:"Processing completed on ${id}/${url} at ${sf.lastCompleted} / ${error_message}"]);
+          sf.save(flush:true, failOnError:true);
+        }
       }
     }
 
