@@ -19,9 +19,6 @@ class FeedCheckerService {
   def feedCheckLog=new org.apache.commons.collections.buffer.CircularFifoBuffer(100);
   RabbitMessagePublisher rabbitMessagePublisher
 
-
-  private static int MAX_FEED_CHECKER_FAILURES=30
-
   def possible_date_formats = [
     // new SimpleDateFormat('yyyy-MM-dd'), // Default format Owen is pushing ATM.
     // new SimpleDateFormat('yyyy/MM/dd'),
@@ -50,10 +47,6 @@ class FeedCheckerService {
     log.debug("FeedCheckerService::triggerFeedCheck thread pool count ${executorService.executor.getActiveCount()}");
     if ( running ) {
       log.debug("Feed checker already running - not launching another [${error_count++}]");
-      if ( error_count > MAX_FEED_CHECKER_FAILURES ) {
-        log.error("Feed checker error count passed ${MAX_FEED_CHECKER_FAILURES}, exit");
-        System.exit(0);
-      }
     }
     else {
       def error_count = 0;
