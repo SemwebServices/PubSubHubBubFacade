@@ -79,6 +79,12 @@ Change according to local requirements
     rabbitmqctl add_user cap cap
     rabbitmq-plugins enable rabbitmq_management
     rabbitmq-plugins enable rabbitmq_web_stomp
+
+N.B. Sometimes, after enabling this step, we were not able to access the management server on 15672. service restart didn't fix this,
+but a reboot of the machine is reported as fixinig this in some scenarios. Some helpful notes here:: https://stackoverflow.com/questions/23669780/rabbitmq-3-3-1-can-not-login-with-guest-guest. Turns out that
+this is problematic if you are using a proxy server. One workaround is to unset http_proxy before issuing the wget command.
+
+
     wget http://127.0.0.1:15672/cli/rabbitmqadmin
     chmod u+rx ./rabbitmqadmin
     ./rabbitmqadmin declare exchange name=FeedFetcher type=topic
