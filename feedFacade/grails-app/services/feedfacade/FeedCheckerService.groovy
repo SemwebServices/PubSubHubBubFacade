@@ -148,7 +148,7 @@ class FeedCheckerService {
                   httpExpires,
                   httpLastModified) {
 
-    log.debug("processFeed(${start_time},${id},${url},${hash},${highestRecordedTimestamp})");
+    log.debug("processFeed[${id}] (${start_time},${id},${url},${hash},${highestRecordedTimestamp})");
     def newhash = null;
     def highestSeenTimestamp = null;
     def error = false
@@ -165,20 +165,20 @@ class FeedCheckerService {
     def continue_processing = false;
 
     SourceFeed.withNewTransaction {
-      log.debug('Mark feed as in-process');
+      log.debug("processFeed[${id}] Mark feed as in-process");
       def sf = SourceFeed.get(id)
 
       sf.lock()
       if ( sf.status == 'paused' ) {
 
         if ( url.toLowerCase().startsWith('http') ) {
-          log.debug("Feed really is paused -- mark it as in process and proceed");
+          log.debug("processFeed[${id}] Feed really is paused -- mark it as in process and proceed");
           sf.status = 'in-process'
           continue_processing = true;
         }
         else {
           sf.capAlertFeedStatus = 'error'
-          sf.lastError='Feed URL seems to be malformed - must start http:// or https:// feed status set to error'
+          sf.lastError="processFeed[${id}] Feed URL seems to be malformed - must start http:// or https:// feed status set to error"
           logEvent('Feed.'+uriname,[
             timestamp:new Date(),
             message:"Invalud URL - must start http: or https: for ${uriname} - ${url}",
@@ -190,14 +190,14 @@ class FeedCheckerService {
         sf.save(flush:true, failOnError:true);
       }
       else {
-        log.debug("On more thorough inspection, someone else already grabbed the feed to process, so skip");
+        log.debug("processFeed[${id}] On more thorough inspection, someone else already grabbed the feed to process, so skip");
       }
     }
 
     if ( continue_processing ) {
 
       runAsync {
-        log.debug("Processing....feed ${id} :: ${url} ${hash}");
+        log.debug("processFeed[${id}] continue_processing.... :: ${url} ${hash}");
         
         def feed_info = null;
   
@@ -206,12 +206,12 @@ class FeedCheckerService {
           feed_info = fetchFeedPage(url, httpExpires, httpLastModified);
   
           // If we got a hash back from fetching the page AND the storred hash is different OR not set, then process the feed.
-          if ( ( feed_info.hash != null ) && 
-               ( ( hash == null ) || ( feed_info.hash != hash ) ) ) {
+          if ( ( feed_info.hash != null ) && ( ( hash == null ) || ( feed_info.hash != hash ) ) ) {
             newhash = feed_info.hash
-            log.debug("Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
+            log.debug("processFeed[${id}] Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
       
             def processing_result = getNewEntries(id, new java.net.URL(url).openStream(), highestRecordedTimestamp)
+
             new_entry_count = processing_result.numNewEntries
             processing_result.newEntries.each { entry ->
   
@@ -222,10 +222,12 @@ class FeedCheckerService {
                 relatedId:uriname+'/'+entry.id.text()
               ]);
   
+              log.debug("processFeed[${id}] Calling newEventService.handleNewEvent()");
               newEventService.handleNewEvent(id,entry)
             }
       
             if ( new_entry_count > 0 ) {
+              log.debug("processFeed[${id}] Complete having processed ${new_entry_count} new entries");
               logEvent('Feed.'+uriname,[
                 timestamp:new Date(),
                 message:"${uriname} Processing complete (${url}) - ${new_entry_count} new entries",
@@ -234,7 +236,7 @@ class FeedCheckerService {
               ]);
             }
             else {
-              log.debug("Although hash change detected, we found no new entries... this seems unlikely");
+              log.debug("processFeed[${id}] Although hash change detected, we found no new entries... this seems unlikely");
             }
   
             if ( processing_result.highestSeenTimestamp ) {
@@ -242,13 +244,13 @@ class FeedCheckerService {
             }
           }
           else {
-            log.debug("${url} unchanged");
+            log.debug("processFeed[${id}] ${url} unchanged");
           }
         }
         catch ( java.io.FileNotFoundException fnfe ) {
           error=true
           error_message = fnfe.toString()
-          log.error("Feed seems not to exist",fnfe.message);
+          log.error("processFeed[${id}] Feed seems not to exist",fnfe.message);
           logEvent('Feed.'+uriname,[
             timestamp:new Date(),
             message:fnfe.toString(),
@@ -259,7 +261,7 @@ class FeedCheckerService {
         catch ( java.io.IOException ioe ) {
           error=true
           error_message = ioe.toString()
-          log.error("IO Problem feed_id:${id} feed_url:${url} ${ioe.message}",ioe);
+          log.error("processFeed[${id}] IO Problem feed_id:${id} feed_url:${url} ${ioe.message}",ioe);
           logEvent('Feed.'+uriname,[
             timestamp:new Date(),
             message:ioe.toString(),
@@ -270,7 +272,7 @@ class FeedCheckerService {
         catch ( Exception e ) {
           error=true
           error_message = e.toString()
-          log.error("problem fetching feed",e);
+          log.error("processFeed[${id}] problem fetching feed",e);
           logEvent('Feed.'+uriname,[
             timestamp:new Date(),
             message:e.toString(),
@@ -282,7 +284,7 @@ class FeedCheckerService {
         log.debug("After processing entries, highest timestamp seen is ${highestSeenTimestamp}");
     
         SourceFeed.withNewTransaction {
-          log.debug("Mark feed ${id} as paused");
+          log.debug("processFeed[${id}] Mark feed as paused");
           def sf = SourceFeed.get(id)
           sf.lock()
           sf.status = 'paused'
@@ -295,7 +297,7 @@ class FeedCheckerService {
           }
   
           if ( highestSeenTimestamp ) {
-            log.debug("Updating sf.highestTimestamp to be ${highestSeenTimestamp}");
+            log.debug("processFeed[${id}] Updating sf.highestTimestamp to be ${highestSeenTimestamp}");
             sf.highestTimestamp = highestSeenTimestamp
           }
           // sf.lastCompleted=start_time
@@ -322,7 +324,7 @@ class FeedCheckerService {
             statsService.logSuccess(sf,start_time,new_entry_count);
           }
     
-          log.debug("Saving source feed");
+          log.debug("processFeed[${id}] Saving source feed");
           feedCheckLog.add([timestamp:new Date(),message:"Processing completed on ${id}/${url} at ${sf.lastCompleted} / ${error_message}"]);
           sf.save(flush:true, failOnError:true);
         }
@@ -331,7 +333,7 @@ class FeedCheckerService {
 
 
     feedCheckLog.add([timestamp:new Date(),message:"Process feed completed :: ${id} ${url} / error:${error} ${error_message}"]);
-    log.debug("processFeed ${id} returning");
+    log.debug("processFeed[${id}] returning");
   }
 
 
