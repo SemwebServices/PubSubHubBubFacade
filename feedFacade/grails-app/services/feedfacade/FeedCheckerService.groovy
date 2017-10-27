@@ -261,10 +261,21 @@ class FeedCheckerService {
         catch ( java.io.IOException ioe ) {
           error=true
           error_message = ioe.toString()
-          log.error("processFeed[${id}] IO Problem feed_id:${id} feed_url:${url} ${ioe.message}",ioe);
+          log.error("processFeed[${id}] IO Problem feed_id:${id} feed_url:${url} ${ioe.message}",ioe.message);
           logEvent('Feed.'+uriname,[
             timestamp:new Date(),
             message:ioe.toString(),
+            relatedType:"feed",
+            relatedId:uriname
+          ]);
+        }
+        catch ( java.net.SocketTimeoutException ste ) {
+          error=true
+          error_message = ste.toString()
+          log.error("processFeed[${id}] timeout feed_id:${id} feed_url:${url} ${ste.message}",ste.message);
+          logEvent('Feed.'+uriname,[
+            timestamp:new Date(),
+            message:ste.toString(),
             relatedType:"feed",
             relatedId:uriname
           ]);
@@ -421,16 +432,16 @@ class FeedCheckerService {
 
       def entry_updated_time = parseDate(entry.updated.text()).getTime();
       
-      log.debug("getNewEntries[${id}] -> processing entry node ${entry.id.text()} :: ${entry_updated_time}");
+      log.debug("getNewEntries[${id}] -> processing entry node id:${entry.id.text()} :: ts:${entry_updated_time}");
 
       // See if this entry has a timestamp greater than any we have seen so far
       if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
-        log.debug("    -> ${entry.id.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
+        log.debug("getNewEntries[${id}]    -> ${entry.id.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
         result.numNewEntries++
         result.newEntries.add(entry)
       }
       else {
-        log.debug("Timestamp of entry ${entry.id.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
+        log.debug("getNewEntries[${id}]    -> Timestamp of entry ${entry.id.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
       }
 
       // Keep track of the highest timestamp we have seen in this pass over the changed feed
