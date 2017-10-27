@@ -233,6 +233,9 @@ class FeedCheckerService {
                 relatedId:uriname
               ]);
             }
+            else {
+              log.debug("Although hash change detected, we found no new entries... this seems unlikely");
+            }
   
             if ( processing_result.highestSeenTimestamp ) {
               highestSeenTimestamp = processing_result.highestSeenTimestamp
@@ -408,17 +411,15 @@ class FeedCheckerService {
     def rootNode = rootNodeParser.parse(bom_is)
 
     // If using namespaces:: rootNode.[atom_ns.entry].each { entry ->
-    log.debug("Processing...");
+    log.debug("getNewEntries[${id}] Processing...");
+    def entry_count = 0;
+
     rootNode.entry.each { entry ->
+      entry_count++;
 
       def entry_updated_time = parseDate(entry.updated.text()).getTime();
       
-      log.debug("${entry.id.text()} :: ${entry_updated_time}");
-
-      // Keep track of the highest timestamp we have seen in this pass over the changed feed
-      if ( entry_updated_time && ( ( result.highestSeenTimestamp == null ) || ( result.highestSeenTimestamp < entry_updated_time ) ) ) {
-        result.highestSeenTimestamp = entry_updated_time
-      }
+      log.debug("getNewEntries[${id}] -> processing entry node ${entry.id.text()} :: ${entry_updated_time}");
 
       // See if this entry has a timestamp greater than any we have seen so far
       if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
@@ -426,9 +427,17 @@ class FeedCheckerService {
         result.numNewEntries++
         result.newEntries.add(entry)
       }
+      else {
+        log.debug("Timestamp of entry ${entry.id.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
+      }
+
+      // Keep track of the highest timestamp we have seen in this pass over the changed feed
+      if ( entry_updated_time && ( ( result.highestSeenTimestamp == null ) || ( result.highestSeenTimestamp < entry_updated_time ) ) ) {
+        result.highestSeenTimestamp = entry_updated_time
+      }
     }
 
-    log.debug("Found ${result.numNewEntries} new entries, highest timestamp seen ${result.highestSeenTimestamp}, highest timestamp recorded ${highestRecordedTimestamp}");
+    log.debug("getNewEntries[${id}] Found ${result.numNewEntries} new entries (checked ${entry_count}), highest timestamp seen ${result.highestSeenTimestamp}, highest timestamp recorded ${highestRecordedTimestamp}");
     result
   }
 
