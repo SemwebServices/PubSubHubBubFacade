@@ -32,6 +32,7 @@ logger ('grails.app.controllers', DEBUG)
 logger ('grails.app.domains', DEBUG)
 logger ('grails.app.jobs', DEBUG)
 logger ('grails.app.services', DEBUG)
+logger ('grails.app.services.feedfacade.FeedCheckerService', WARN)
 logger ('com.k_int', DEBUG)
 logger ('grails.gorm.multitenancy.Tenants', DEBUG)
 
