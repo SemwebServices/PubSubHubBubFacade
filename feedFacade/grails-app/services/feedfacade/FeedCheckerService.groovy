@@ -250,7 +250,7 @@ class FeedCheckerService {
         catch ( java.io.FileNotFoundException fnfe ) {
           error=true
           error_message = fnfe.toString()
-          log.error("processFeed[${id}] Feed seems not to exist",fnfe.message);
+          log.error("processFeed[${id}] ${url} Feed seems not to exist",fnfe.message);
           logEvent('Feed.'+uriname,[
             timestamp:new Date(),
             message:fnfe.toString(),
@@ -261,7 +261,7 @@ class FeedCheckerService {
         catch ( java.io.IOException ioe ) {
           error=true
           error_message = ioe.toString()
-          log.error("processFeed[${id}] IO Problem feed_id:${id} feed_url:${url} ${ioe.message}",ioe.message);
+          log.error("processFeed[${id}] ${url} IO Problem feed_id:${id} feed_url:${url} ${ioe.message}",ioe.message);
           logEvent('Feed.'+uriname,[
             timestamp:new Date(),
             message:ioe.toString(),
@@ -283,7 +283,7 @@ class FeedCheckerService {
         catch ( Exception e ) {
           error=true
           error_message = e.toString()
-          log.error("processFeed[${id}] problem fetching feed",e);
+          log.error("processFeed[${id}] ${url} problem fetching feed",e);
           logEvent('Feed.'+uriname,[
             timestamp:new Date(),
             message:e.toString(),
@@ -292,7 +292,7 @@ class FeedCheckerService {
           ]);
         }
     
-        log.debug("After processing entries, highest timestamp seen is ${highestSeenTimestamp}");
+        log.debug("After processing ${url} entries, highest timestamp seen is ${highestSeenTimestamp}");
     
         SourceFeed.withNewTransaction {
           log.debug("processFeed[${id}] Mark feed as paused");
