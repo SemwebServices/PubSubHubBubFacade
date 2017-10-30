@@ -457,7 +457,7 @@ class FeedCheckerService {
                                   ])
           }
           else {
-            log.debug("getNewRSSEntries[${id}]    -> Timestamp of entry ${entry.id.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
+            log.debug("getNewRSSEntries[${id}]    -> Timestamp of entry ${item.guid.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
           }
 
           // Keep track of the highest timestamp we have seen in this pass over the changed feed
