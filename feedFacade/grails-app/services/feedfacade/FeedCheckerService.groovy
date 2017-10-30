@@ -26,8 +26,9 @@ class FeedCheckerService {
     // new SimpleDateFormat('dd/MM/yy'),
     // new SimpleDateFormat('yyyy/MM'),
     // new SimpleDateFormat('yyyy')
-    new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX"),
-    new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX")
+    new SimpleDateFormat('yyyy-MM-dd\'T\'HH:mm:ssX'),
+    new SimpleDateFormat('yyyy-MM-dd\'T\'HH:mm:ss.SSSX'),
+    new SimpleDateFormat('EEE, d MMM yyyy HH:mm:ss Z')
   ];
 
   def getLastLog() {
@@ -412,7 +413,11 @@ class FeedCheckerService {
     result.numNewEntries=0
     result.newEntries=[]
 
-    def atom_ns = new groovy.xml.Namespace("http://www.w3.org/2005/Atom", 'atom')
+    def atom_ns = new groovy.xml.Namespace('http://www.w3.org/2005/Atom', 'atom')
+    def georss_ns = new groovy.xml.Namespace('http://www.georss.org/georss', 'georss')
+    def cap_11_ns = new groovy.xml.Namespace('urn:oasis:names:tc:emergency:cap:1.1', 'cap')
+    def ha_ns = new groovy.xml.Namespace('http://www.alerting.net/namespace/index_1.0','ha');
+
     // http://docs.groovy-lang.org/latest/html/api/groovy/util/XmlParser.html
     // def rootNodeParser = new XmlParser(false,false,true)
     def rootNodeParser = new XmlParser(false, false)
@@ -436,27 +441,34 @@ class FeedCheckerService {
     if ( rootNode.name().toString() == 'rss' ) { // It's RSS
       rootNode.channel.item.each { item ->
         entry_count++;
-        def entry_updated_time = parseDate(item.pubDate.text()).getTime();
-        if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
-          log.debug("getNewRSSEntries[${id}]    -> ${item.guid.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
-          result.numNewEntries++
-          result.newEntries.add([
-                                 id:item.guid.text(),
-                                 title:item.title.text(),
-                                 summary:item.summary.text(),
-                                 description:item.description.text(),
-                                 link:item.link.text(),
-                                 sourceDoc:item
-                                ])
+        def entry_updated_time = parseDate(item.pubDate.text())?.getTime();
+
+        if ( entry_updated_time ) {
+          if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
+            log.debug("getNewRSSEntries[${id}]    -> ${item.guid.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
+            result.numNewEntries++
+            result.newEntries.add([
+                                   id:item.guid.text(),
+                                   title:item.title.text(),
+                                   summary:item.summary.text(),
+                                   description:item.description.text(),
+                                   link:item.link.text(),
+                                   sourceDoc:item
+                                  ])
+          }
+          else {
+            log.debug("getNewRSSEntries[${id}]    -> Timestamp of entry ${entry.id.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
+          }
+
+          // Keep track of the highest timestamp we have seen in this pass over the changed feed
+          if ( entry_updated_time && ( ( result.highestSeenTimestamp == null ) || ( result.highestSeenTimestamp < entry_updated_time ) ) ) {
+            result.highestSeenTimestamp = entry_updated_time
+          }
         }
         else {
-          log.debug("getNewRSSEntries[${id}]    -> Timestamp of entry ${entry.id.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
+          log.warn("FAILED to parse pubDate in RSS feed [${id}]");
         }
 
-        // Keep track of the highest timestamp we have seen in this pass over the changed feed
-        if ( entry_updated_time && ( ( result.highestSeenTimestamp == null ) || ( result.highestSeenTimestamp < entry_updated_time ) ) ) {
-          result.highestSeenTimestamp = entry_updated_time
-        }
       }
     }
     else if ( rootNode.name().toString() == 'feed' ) {  // IT's ATOM
