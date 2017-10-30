@@ -204,22 +204,25 @@ class FeedCheckerService {
         try {
   
           feed_info = fetchFeedPage(url, httpExpires, httpLastModified);
+          log.debug(feed_info.toString())
   
           // If we got a hash back from fetching the page AND the storred hash is different OR not set, then process the feed.
           if ( ( feed_info.hash != null ) && ( ( hash == null ) || ( feed_info.hash != hash ) ) ) {
             newhash = feed_info.hash
             log.debug("processFeed[${id}] Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
       
-            def processing_result = getNewEntries(id, new java.net.URL(url).openStream(), highestRecordedTimestamp)
+            def processing_result = null;
+            log.debug("Processing as ATOM (${feed_info.contentType})");
+            processing_result = getNewAtomEntries(id, new java.net.URL(url).openStream(), highestRecordedTimestamp)
 
             new_entry_count = processing_result.numNewEntries
             processing_result.newEntries.each { entry ->
   
               logEvent('Feed.'+uriname,[
                 timestamp:new Date(),
-                message:"Detected new entry ${entry.id.text()}",
+                message:"Detected new entry ${entry.id}",
                 relatedType:"entry",
-                relatedId:uriname+'/'+entry.id.text()
+                relatedId:uriname+'/'+entry.id
               ]);
   
               log.debug("processFeed[${id}] Calling newEventService.handleNewEvent()");
@@ -373,9 +376,12 @@ class FeedCheckerService {
    
     result.lastModified = url_connection.getLastModified()
     result.expires = url_connection.getExpiration()
+    result.contentType = url_connection.getContentType()
+
     log.debug("${feed_address} [URLC]expires: ${result.expires}");
     log.debug("${feed_address} [URLC]ifModifiedSince: ${url_connection.getIfModifiedSince()}");
     log.debug("${feed_address} [URLC]lastModified: ${result.lastModified}");
+    log.debug("${feed_address} [URLC]contentType: ${result.contentType}");
 
     // If you get an Expires response header, then it just means that you don't need to request anything until the specified expire time. 
     // If you get a Last-Modified response header, then it means that you should be able to use If-Modified-Since to test it. 
@@ -401,7 +407,7 @@ class FeedCheckerService {
     result
   }
 
-  def getNewEntries(id, feed_is, highestRecordedTimestamp) {
+  def getNewAtomEntries(id, feed_is, highestRecordedTimestamp) {
     def result = [:]
     result.numNewEntries=0
     result.newEntries=[]
@@ -409,7 +415,7 @@ class FeedCheckerService {
     def atom_ns = new groovy.xml.Namespace("http://www.w3.org/2005/Atom", 'atom')
     // http://docs.groovy-lang.org/latest/html/api/groovy/util/XmlParser.html
     // def rootNodeParser = new XmlParser(false,false,true)
-    def rootNodeParser = new XmlParser()
+    def rootNodeParser = new XmlParser(false, false)
 
     def bom_is = new BOMInputStream(feed_is)
     if (bom_is.hasBOM() == false) {
@@ -424,33 +430,73 @@ class FeedCheckerService {
     def rootNode = rootNodeParser.parse(bom_is)
 
     // If using namespaces:: rootNode.[atom_ns.entry].each { entry ->
-    log.debug("getNewEntries[${id}] Processing...");
+    log.debug("getNewAtomEntries[${id}] Processing...");
     def entry_count = 0;
 
-    rootNode.entry.each { entry ->
-      entry_count++;
+    if ( rootNode.name().toString() == 'rss' ) { // It's RSS
+      rootNode.channel.item.each { item ->
+        entry_count++;
+        def entry_updated_time = parseDate(entry.pubDate.text()).getTime();
+        if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
+          log.debug("getNewRSSEntries[${id}]    -> ${entry.id.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
+          result.numNewEntries++
+          result.newEntries.add([
+                                 title:item.title.text(),
+                                 summary:item.summary.text(),
+                                 description:item.description.text(),
+                                 link:item.link.text(),
+                                 sourceDoc:item
+                                ])
+        }
+        else {
+          log.debug("getNewRSSEntries[${id}]    -> Timestamp of entry ${entry.id.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
+        }
 
-      def entry_updated_time = parseDate(entry.updated.text()).getTime();
-      
-      log.debug("getNewEntries[${id}] -> processing entry node id:${entry.id.text()} :: ts:${entry_updated_time}");
-
-      // See if this entry has a timestamp greater than any we have seen so far
-      if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
-        log.debug("getNewEntries[${id}]    -> ${entry.id.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
-        result.numNewEntries++
-        result.newEntries.add(entry)
-      }
-      else {
-        log.debug("getNewEntries[${id}]    -> Timestamp of entry ${entry.id.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
-      }
-
-      // Keep track of the highest timestamp we have seen in this pass over the changed feed
-      if ( entry_updated_time && ( ( result.highestSeenTimestamp == null ) || ( result.highestSeenTimestamp < entry_updated_time ) ) ) {
-        result.highestSeenTimestamp = entry_updated_time
+        // Keep track of the highest timestamp we have seen in this pass over the changed feed
+        if ( entry_updated_time && ( ( result.highestSeenTimestamp == null ) || ( result.highestSeenTimestamp < entry_updated_time ) ) ) {
+          result.highestSeenTimestamp = entry_updated_time
+        }
       }
     }
+    else if ( rootNode.name().toString() == 'feed' ) {  // IT's ATOM
+      rootNode.entry.each { entry ->
+        entry_count++;
 
-    log.debug("getNewEntries[${id}] Found ${result.numNewEntries} new entries (checked ${entry_count}), highest timestamp seen ${result.highestSeenTimestamp}, highest timestamp recorded ${highestRecordedTimestamp}");
+        def entry_updated_time = parseDate(entry.updated.text()).getTime();
+      
+        log.debug("getNewAtomEntries[${id}] -> processing entry node id:${entry.id.text()} :: ts:${entry_updated_time}");
+
+        // See if this entry has a timestamp greater than any we have seen so far
+        if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
+          log.debug("getNewAtomEntries[${id}]    -> ${entry.id.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
+          result.numNewEntries++
+
+          def feed_link = entry.link.find {it.type=='application/cap+xml'}
+
+          result.newEntries.add([
+                                 id:entry.id.text(),
+                                 title:entry.title.text(),
+                                 summary:entry.summary?.text(),
+                                 description:entry.description?.text(),
+                                 link:entry.feed_link?.'@href',
+                                 sourceDoc:entry
+                                ])
+        }
+        else {
+          log.debug("getNewAtomEntries[${id}]    -> Timestamp of entry ${entry.id.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
+        }
+  
+        // Keep track of the highest timestamp we have seen in this pass over the changed feed
+        if ( entry_updated_time && ( ( result.highestSeenTimestamp == null ) || ( result.highestSeenTimestamp < entry_updated_time ) ) ) {
+          result.highestSeenTimestamp = entry_updated_time
+        }
+      }
+    }
+    else {
+      log.error("Unable to handle root element : ${rootNode.name().toString()}");
+    }
+
+    log.debug("getNewAtomEntries[${id}] Found ${result.numNewEntries} new entries (checked ${entry_count}), highest timestamp seen ${result.highestSeenTimestamp}, highest timestamp recorded ${highestRecordedTimestamp}");
     result
   }
 

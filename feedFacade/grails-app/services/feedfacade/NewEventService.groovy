@@ -12,16 +12,16 @@ class NewEventService {
   def recent_notifications = new org.apache.commons.collections4.queue.CircularFifoQueue(100);
   RabbitMessagePublisher rabbitMessagePublisher
   
-  def handleNewEvent(feed_id, entryNode) {
+  def handleNewEvent(feed_id, entryInfo) {
 
     Entry.withNewTransaction {
 
       log.debug("NewEventService::handleNewEvent(${feed_id})");
 
-      def entry_title = entryNode.title.text()
-      def entry_summary = entryNode.summary.text()
-      def entry_description = entryNode.description.text()
-      def entry_link = entryNode.link.'@href'
+      def entry_title = entryInfo.title
+      def entry_summary = entryInfo.summary
+      def entry_description = entryInfo.description
+      def entry_link = entryInfo.link
 
       if ( entry_title?.length() > 255 ) {
         log.debug("Trim title...");
@@ -30,7 +30,7 @@ class NewEventService {
 
       // log.debug("title:\"${entry_title}\" summary:\"${entry_summary}\" desc:\"${entry_description}\" link:\"${entry_link}\"");
 
-      def entry = domNodeToString(entryNode)
+      def entry = domNodeToString(entryInfo.sourceDoc)
 
       def entryHash = hashEntry(entry);
 
