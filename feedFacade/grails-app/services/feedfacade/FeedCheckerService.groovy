@@ -436,11 +436,12 @@ class FeedCheckerService {
     if ( rootNode.name().toString() == 'rss' ) { // It's RSS
       rootNode.channel.item.each { item ->
         entry_count++;
-        def entry_updated_time = parseDate(entry.pubDate.text()).getTime();
+        def entry_updated_time = parseDate(item.pubDate.text()).getTime();
         if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
-          log.debug("getNewRSSEntries[${id}]    -> ${entry.id.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
+          log.debug("getNewRSSEntries[${id}]    -> ${item.guid.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
           result.numNewEntries++
           result.newEntries.add([
+                                 id:item.guid.text(),
                                  title:item.title.text(),
                                  summary:item.summary.text(),
                                  description:item.description.text(),
