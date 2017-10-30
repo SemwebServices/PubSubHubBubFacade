@@ -420,7 +420,7 @@ class FeedCheckerService {
 
     // http://docs.groovy-lang.org/latest/html/api/groovy/util/XmlParser.html
     // def rootNodeParser = new XmlParser(false,false,true)
-    def rootNodeParser = new XmlParser(false, false)
+    def rootNodeParser = new XmlParser();
 
     def bom_is = new BOMInputStream(feed_is)
     if (bom_is.hasBOM() == false) {
