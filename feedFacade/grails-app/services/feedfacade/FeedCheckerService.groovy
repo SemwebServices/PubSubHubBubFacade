@@ -485,17 +485,27 @@ class FeedCheckerService {
           log.debug("getNewAtomEntries[${id}]    -> ${entry.id.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
           result.numNewEntries++
 
-          def feed_link = entry.link.find {it.type=='application/cap+xml'}
+          def feed_link = null;
+          entry.link.each { el ->
+            if ( el.'@type' == 'application/cap+xml' ) {
+              feed_link = el.'@href'.text();
+            }
+          }
 
-          result.newEntries.add([
-                                 id:entry.id.text(),
-                                 title:entry.title.text(),
-                                 summary:entry.summary?.text(),
-                                 description:entry.description?.text(),
-                                 link:entry.feed_link?.'@href',
-                                 sourceDoc:entry,
-                                 type:'ATOMEntry'
-                                ])
+          if ( feed_link ) {
+            result.newEntries.add([
+                                   id:entry.id.text(),
+                                   title:entry.title.text(),
+                                   summary:entry.summary?.text(),
+                                   description:entry.description?.text(),
+                                   link:feed_link,
+                                   sourceDoc:entry,
+                                   type:'ATOMEntry'
+                                  ])
+          }
+          else {
+            log.warn("unable to extract feed link for ${rootNode}");
+          }
         }
         else {
           log.debug("getNewAtomEntries[${id}]    -> Timestamp of entry ${entry.id.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");

@@ -16,7 +16,7 @@ class NewEventService {
 
     Entry.withNewTransaction {
 
-      log.debug("NewEventService::handleNewEvent(${feed_id})");
+      log.debug("NewEventService::handleNewEvent(${feed_id}) ${entryInfo}");
 
       def entry_title = entryInfo.title
       def entry_summary = entryInfo.summary
@@ -29,7 +29,7 @@ class NewEventService {
         entry_title = entry_title.substring(0,254);
       }
 
-      // log.debug("title:\"${entry_title}\" summary:\"${entry_summary}\" desc:\"${entry_description}\" link:\"${entry_link}\"");
+      log.debug("title:\"${entry_title}\" summary:\"${entry_summary}\" desc:\"${entry_description}\" link:\"${entry_link}\"");
 
       def entry = domNodeToString(entryInfo.sourceDoc)
 
