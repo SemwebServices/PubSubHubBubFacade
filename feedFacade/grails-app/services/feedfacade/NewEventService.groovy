@@ -114,7 +114,7 @@ class NewEventService {
                 'feed-url':entry.ownerFeed.baseUrl
               ]
               // routingKey = 'ATOMEntry.'+entry.ownerFeed.uriname
-              routingKey = entry_type'.'+entry.ownerFeed.uriname
+              routingKey = entry_type+'.'+entry.ownerFeed.uriname
               deliveryMode = 2  // Persistent
               body = entry.entryAsJson
       }
