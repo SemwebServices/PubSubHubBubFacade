@@ -488,7 +488,7 @@ class FeedCheckerService {
           def feed_link = null;
           entry.link.each { el ->
             if ( el.'@type' == 'application/cap+xml' ) {
-              feed_link = el.'@href'.text();
+              feed_link = el.'@href'
             }
           }
 
