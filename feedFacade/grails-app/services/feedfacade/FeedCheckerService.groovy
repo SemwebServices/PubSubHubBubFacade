@@ -472,7 +472,7 @@ class FeedCheckerService {
 
       }
     }
-    else if ( rootNode.name().toString() == 'feed' ) {  // IT's ATOM
+    else if ( ( rootNode.name().toString() == 'feed' ) || ( rootNode.name().toString() == '{http://www.w3.org/2005/Atom}feed' ) ) {  // IT's ATOM
       rootNode.entry.each { entry ->
         entry_count++;
 
