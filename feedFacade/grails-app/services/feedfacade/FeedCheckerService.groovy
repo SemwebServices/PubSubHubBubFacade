@@ -453,7 +453,8 @@ class FeedCheckerService {
                                    summary:item.summary.text(),
                                    description:item.description.text(),
                                    link:item.link.text(),
-                                   sourceDoc:item
+                                   sourceDoc:item,
+                                   type:'RSSEntry'
                                   ])
           }
           else {
@@ -492,7 +493,8 @@ class FeedCheckerService {
                                  summary:entry.summary?.text(),
                                  description:entry.description?.text(),
                                  link:entry.feed_link?.'@href',
-                                 sourceDoc:entry
+                                 sourceDoc:entry,
+                                 type:'ATOMEntry'
                                 ])
         }
         else {

@@ -22,6 +22,7 @@ class NewEventService {
       def entry_summary = entryInfo.summary
       def entry_description = entryInfo.description
       def entry_link = entryInfo.link
+      def entry_type = entryInfo.type
 
       if ( entry_title?.length() > 255 ) {
         log.debug("Trim title...");
@@ -63,7 +64,7 @@ class NewEventService {
                                 entryTs: System.currentTimeMillis()).save(flush:true, failOnError:true);
           }
   
-          publish(feed_id, uriname, e)
+          publish(entry_type, feed_id, uriname, e)
         }
         else {
           log.debug("Entry is a repeated hash");
@@ -88,16 +89,16 @@ class NewEventService {
     xml_text
   }
 
-  def publish(feed_id, feed_code, entry) {
+  def publish(entry_type, feed_id, feed_code, entry) {
 
     // Here is where we may publish to RabbitMQ.
-    publishToRabbitMQExchange(feed_id, feed_code, entry);
+    publishToRabbitMQExchange(entry_type, feed_id, feed_code, entry);
 
     // Publish down our traditional route.
     publishToSubscriptions(feed_id, entry);
   }
 
-  def publishToRabbitMQExchange(feed_id, feed_code, entry) {
+  def publishToRabbitMQExchange(entry_type, feed_id, feed_code, entry) {
 
     log.debug("NewEventService::publishToRabbitMQ(${feed_id},...)");
 
@@ -112,7 +113,8 @@ class NewEventService {
                 'entry-id':entry.id,
                 'feed-url':entry.ownerFeed.baseUrl
               ]
-              routingKey = 'ATOMEntry.'+entry.ownerFeed.uriname
+              // routingKey = 'ATOMEntry.'+entry.ownerFeed.uriname
+              routingKey = entry_type'.'+entry.ownerFeed.uriname
               deliveryMode = 2  // Persistent
               body = entry.entryAsJson
       }
