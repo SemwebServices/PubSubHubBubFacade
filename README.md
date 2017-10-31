@@ -90,7 +90,10 @@ this is problematic if you are using a proxy server. One workaround is to unset 
     ./rabbitmqadmin declare exchange name=FeedFetcher type=topic
     ./rabbitmqadmin declare exchange name=CAPExchange type=topic
     ./rabbitmqadmin declare queue name=CAPCollatorQueue durable=true
-    ./rabbitmqadmin declare binding source="CAPExchange" destination_type="queue" destination="CAPCollatorQueue" routing_key="ATOMEntry.#"
+    ./rabbitmqadmin declare queue name=CAPCollatorATOMQueue durable=true
+    ./rabbitmqadmin declare queue name=CAPCollatorRSSQueue durable=true
+    ./rabbitmqadmin declare binding source="CAPExchange" destination_type="queue" destination="CAPCollatorATOMQueue" routing_key="ATOMEntry.#"
+    ./rabbitmqadmin declare binding source="CAPExchange" destination_type="queue" destination="CAPCollatorRSSQueue" routing_key="RSSEntry.#"
     rabbitmqctl set_permissions cap "stomp-subscription-.*" "stomp-subscription-.*" "(FeedFetcher|CAPExchange|stomp-subscription-.*)"
     rabbitmqctl list_exchanges
     rabbitmqctl list_queues
