@@ -89,7 +89,6 @@ this is problematic if you are using a proxy server. One workaround is to unset 
     chmod u+rx ./rabbitmqadmin
     ./rabbitmqadmin declare exchange name=FeedFetcher type=topic
     ./rabbitmqadmin declare exchange name=CAPExchange type=topic
-    ./rabbitmqadmin declare queue name=CAPCollatorQueue durable=true
     ./rabbitmqadmin declare queue name=CAPCollatorATOMQueue durable=true
     ./rabbitmqadmin declare queue name=CAPCollatorRSSQueue durable=true
     ./rabbitmqadmin declare binding source="CAPExchange" destination_type="queue" destination="CAPCollatorATOMQueue" routing_key="ATOMEntry.#"
@@ -98,5 +97,10 @@ this is problematic if you are using a proxy server. One workaround is to unset 
     rabbitmqctl list_exchanges
     rabbitmqctl list_queues
     rabbitmqctl list_bindings
+
+Clean up the old config (which was)
+    ./rabbitmqadmin declare queue name=CAPCollatorQueue durable=true
+With
+    ./rabbitmqadmin delete queue name='CAPCollatorQueue'
 
 
