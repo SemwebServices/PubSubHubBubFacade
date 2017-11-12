@@ -39,6 +39,8 @@ class SourceFeed {
 
   String httpLastModified
 
+  boolean enabled = false;
+
   static hasMany = [
     topics:FeedTopic
   ]
@@ -60,6 +62,7 @@ class SourceFeed {
     capAlertFeedStatus blank: false, nullable:true
            httpExpires blank: false, nullable:true
       httpLastModified blank: false, nullable:true
+               enabled blank: false, nullable:true
   }
 
   static mapping = {
