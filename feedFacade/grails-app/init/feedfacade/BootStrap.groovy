@@ -19,12 +19,18 @@ class BootStrap {
 
   def setUpSources() {
     try {
+      // We add an enabled flag which defaults to true, but a sysadmin can set to false to prevent processing from
+      // this source. Mostly useful for debugging specific feeds when we want to turn off everything but one offending
+      // source.
+      SourceFeed.executeUpdate('update SourceFeed set enabled = :enabled where enabled is null',[enabled:true]);
+
       def live_json_data = new groovy.json.JsonSlurper().parse(new java.net.URL('https://s3-eu-west-1.amazonaws.com/alert-hub-sources/json'))
       ingestCapFeeds(live_json_data.sources)
     }
     catch ( Exception e ) {
       log.error("problem syncing cap feed list",e);
     }
+
   }
 
   def ingestCapFeeds(fd) {
@@ -43,7 +49,8 @@ class BootStrap {
                                      lastCompleted:new Long(0),
                                      processingStartTime:new Long(0),
                                      capAlertFeedStatus: s.source.capAlertFeedStatus?.toLowerCase(),
-                                     pollInterval:60*1000).save(flush:true, failOnError:true);
+                                     pollInterval:60*1000,
+                                     enabled:true).save(flush:true, failOnError:true);
 
             source.addTag('sourceIsOfficial',"${s.source.sourceIsOfficial}");
             source.addTag('sourceLanguage',"${s.source.sourceLanguage}");
