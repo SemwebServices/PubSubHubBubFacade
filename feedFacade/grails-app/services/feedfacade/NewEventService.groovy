@@ -16,7 +16,7 @@ class NewEventService {
 
     Entry.withNewTransaction {
 
-      log.debug("NewEventService::handleNewEvent(${feed_id})"); //  ${entryInfo}");
+      log.debug("NewEventService::handleNewEvent(${feed_id}) type=${entryInfo.type}"); //  ${entryInfo}");
 
       def entry_title = entryInfo.title
       def entry_summary = entryInfo.summary

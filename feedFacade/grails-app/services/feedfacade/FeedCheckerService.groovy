@@ -214,7 +214,7 @@ class FeedCheckerService {
       
             def processing_result = null;
             log.debug("Processing as ATOM (${feed_info.contentType})");
-            processing_result = getNewAtomEntries(id, new java.net.URL(url).openStream(), highestRecordedTimestamp)
+            processing_result = getNewFeedEntries(id, new java.net.URL(url).openStream(), highestRecordedTimestamp)
 
             new_entry_count = processing_result.numNewEntries
             processing_result.newEntries.each { entry ->
@@ -408,7 +408,7 @@ class FeedCheckerService {
     result
   }
 
-  def getNewAtomEntries(id, feed_is, highestRecordedTimestamp) {
+  def getNewFeedEntries(id, feed_is, highestRecordedTimestamp) {
     def result = [:]
     result.numNewEntries=0
     result.newEntries=[]
@@ -435,7 +435,7 @@ class FeedCheckerService {
     def rootNode = rootNodeParser.parse(bom_is)
 
     // If using namespaces:: rootNode.[atom_ns.entry].each { entry ->
-    log.debug("getNewAtomEntries[${id}] Processing...");
+    log.debug("getNewFeedEntries[${id}] Processing...");
     def entry_count = 0;
 
     if ( rootNode.name().toString() == 'rss' ) { // It's RSS
@@ -445,7 +445,7 @@ class FeedCheckerService {
 
         if ( entry_updated_time ) {
           if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
-            log.debug("getNewRSSEntries[${id}]    -> ${item.guid.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
+            log.debug("getNewFeedEntries[${id}: RSS    -> ${item.guid.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
             result.numNewEntries++
             result.newEntries.add([
                                    id:item.guid.text(),
@@ -458,7 +458,7 @@ class FeedCheckerService {
                                   ])
           }
           else {
-            log.debug("getNewRSSEntries[${id}]    -> Timestamp of entry ${item.guid.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
+            log.debug("getNewFeedEntries[${id}]    -> Timestamp of entry ${item.guid.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
           }
 
           // Keep track of the highest timestamp we have seen in this pass over the changed feed
@@ -478,11 +478,11 @@ class FeedCheckerService {
 
         def entry_updated_time = parseDate(entry.updated.text()).getTime();
       
-        log.debug("getNewAtomEntries[${id}] -> processing entry node id:${entry.id.text()} :: ts:${entry_updated_time}");
+        log.debug("getNewFeedEntries[${id}] -> processing entry node id:${entry.id.text()} :: ts:${entry_updated_time}");
 
         // See if this entry has a timestamp greater than any we have seen so far
         if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
-          log.debug("getNewAtomEntries[${id}]    -> ${entry.id.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
+          log.debug("getNewFeedEntries[${id}] ATOM   -> ${entry.id.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
           result.numNewEntries++
 
           def feed_link = null;
@@ -508,7 +508,7 @@ class FeedCheckerService {
           }
         }
         else {
-          log.debug("getNewAtomEntries[${id}]    -> Timestamp of entry ${entry.id.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
+          log.debug("getNewFeedEntries[${id}]    -> Timestamp of entry ${entry.id.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
         }
   
         // Keep track of the highest timestamp we have seen in this pass over the changed feed
@@ -521,7 +521,7 @@ class FeedCheckerService {
       log.error("Unable to handle root element : ${rootNode.name().toString()}");
     }
 
-    log.debug("getNewAtomEntries[${id}] Found ${result.numNewEntries} new entries (checked ${entry_count}), highest timestamp seen ${result.highestSeenTimestamp}, highest timestamp recorded ${highestRecordedTimestamp}");
+    log.debug("getNewFeedEntries[${id}] Found ${result.numNewEntries} new entries (checked ${entry_count}), highest timestamp seen ${result.highestSeenTimestamp}, highest timestamp recorded ${highestRecordedTimestamp}");
     result
   }
 
