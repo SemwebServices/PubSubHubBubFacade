@@ -39,6 +39,7 @@ class BootStrap {
           log.debug("Validate source ${s.source.sourceId}");
           def source = SourceFeed.findByUriname(s.source.sourceId) 
           if ( source == null ) {
+            log.debug("  --> Create (enabled:false)");
             source = new SourceFeed(   
                                      uriname: s.source.sourceId,
                                      name: s.source.sourceName,
@@ -61,12 +62,16 @@ class BootStrap {
             source.addTopics("${s.source.sourceId},AllFeeds,${s.source.authorityCountry},${s.source.authorityAbbrev}")
           }
           else {
+
             if ( ( ! source.baseUrl.equals(s.source.capAlertFeed) ) ||
                  ( ! (source.capAlertFeedStatus?:'').equals(s.source.capAlertFeedStatus?:'') ) ) {
-              log.debug("Detected a change in config feed url or status :: (db)${source.baseUrl}/${source.capAlertFeedStatus}  != (new)${s.source.capAlertFeed}/${s.source.capAlertFeedStatus}. Update..");
+              log.debug("  --> changed :: (db)${source.baseUrl}/${source.capAlertFeedStatus}  != (new)${s.source.capAlertFeed}/${s.source.capAlertFeedStatus}. Update.. (enabled:${source.enabled})");
               source.baseUrl = s.source.capAlertFeed;
               source.capAlertFeedStatus = s.source.capAlertFeedStatus?.toLowerCase();
               source.save(flush:true, failOnError:true);
+            }
+            else {
+              log.debug("  --> unchanged (enabled:${source.enabled})");
             }
           }
         }
@@ -80,10 +85,10 @@ class BootStrap {
 
   def setUpUserAccounts() {
     sysusers.each { su ->
-      log.debug("test ${su.name} ${su.pass} ${su.display} ${su.roles}");
+      log.debug("user name:${su.name} ${su.pass} display-as:${su.display} roles:${su.roles}");
       def user = User.findByUsername(su.name)
       if ( user ) {
-        if ( user.password != su.pass ) {
+        if ( user.password == null ) {
           log.debug("Hard change of user password from config ${user.password} -> ${su.pass}");
           user.password = su.pass;
           user.save(failOnError: true)
