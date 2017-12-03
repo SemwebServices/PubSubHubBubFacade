@@ -9,18 +9,33 @@
 <body>
   <div class="container-fluid">
     <div class="row">
-      <div class="container-fluid">
+      <div class="container-fluid" style="vertical-align: middle; text-align:center;">
 
         <h1>Registered Feeds</h1>
+
+        <g:form controller="sourcefeed" action="index" method="get" class="container">
+          <div class="input-group">
+              <input type="text" name="q" class="form-control " placeholder="Text input" value="${params.q}">
+              <span class="input-group-btn">
+                  <button type="submit" class="btn btn-search">Search</button>
+              </span>
+          </div>
+        </g:form>
 
         <div class="pagination">
           <g:paginate controller="sourcefeed" action="index" total="${totalFeeds}" next="Next" prev="Previous" omitNext="false" omitPrev="false" />
         </div>
 
+      </div>
+    </div>
+    <div class="row">
+      <div class="container-fluid">
+      
         <table class="table table-striped well">
           <thead>
             <tr>
               <th>Name</th>
+              <th>Enabled</th>
               <th>Feed Status</th>
               <th>Topics</th>
               <th>Tags</th>
@@ -40,6 +55,12 @@
               <tr>
                 <td rowspan="2"><g:link controller="sourcefeed" action="feed" id="${f.uriname}">${f.uriname}</g:link></td>
                 <td>
+                  ${f.enabled?'Yes':'No'}
+                  <sec:ifAllGranted roles='ROLE_ADMIN'>
+                    <br/><g:link controller="sourcefeed" action="toggleSourceEnabled" id="${f.uriname}">toggle</g:link>
+                  </sec:ifAllGranted>
+                </td>
+                <td>
                   <g:if test="${f.feedStatus=='ERROR'}">
                     <div class="alert alert-danger" role="alert">
                       <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
@@ -53,7 +74,7 @@
                     </div>
                   </g:if>
                   <g:if test="${f.feedStatus!='OK' && f.feedStatus!='ERROR'}">
-                    ${f.feedStatus}
+                    ${f.feedStatus?:'Unset'}
                   </g:if>
                 </td>
                 <td><ul><g:each in="${f.topics}" var="topic"><li>${topic.topic.name}</li></g:each></ul></td>

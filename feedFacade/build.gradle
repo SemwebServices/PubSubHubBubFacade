@@ -43,6 +43,14 @@ dependencies {
     compile "org.springframework.boot:spring-boot-starter-tomcat"
     compile 'org.grails.plugins:spring-security-core:3.2.0'
 
+    compile "org.grails:grails-logging"
+    compile "org.grails:grails-plugin-rest"
+    compile "org.grails:grails-plugin-databinding"
+    compile "org.grails:grails-plugin-i18n"
+    compile "org.grails:grails-plugin-services"
+    compile "org.grails:grails-plugin-url-mappings"
+    compile "org.grails:grails-plugin-interceptors"
+
     compile "org.grails:grails-dependencies"
     compile "org.grails:grails-web-boot"
     compile "org.grails.plugins:cache"
@@ -58,6 +66,9 @@ dependencies {
     compile 'org.grails.plugins:quartz:2.0.9'
     compile 'net.sf.json-lib:json-lib:2.4:jdk15'
     compile 'org.grails.plugins:rabbitmq-native:3.3.2'
+
+    runtime "com.bertramlabs.plugins:asset-pipeline-grails:2.14.6"
+    runtime "org.apache.tomcat:tomcat-jdbc"
     compile group: 'xom', name: 'xom', version: '1.2.5'
 
     compile 'org.apache.commons:commons-collections4:4.1'

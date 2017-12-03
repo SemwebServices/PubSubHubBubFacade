@@ -13,6 +13,10 @@ class SourcefeedController {
     def qry_params = [:]
     def base_feed_qry = ' from SourceFeed as sf'
     // def order_by_clause = ' order by (sf.lastCompleted + sf.pollInterval)'
+    if ( ( params.q != null ) && ( params.q.length() > 0 ) ) {
+      base_feed_qry += ' where lower(sf.uriname) like :a or lower(sf.name) like :a or lower(baseUrl) like :a'
+      qry_params.a = "%${params.q.toLowerCase()}%".toString()
+    }
     def order_by_clause = ' order by sf.id'
 
     result.totalFeeds = SourceFeed.executeQuery('select count(sf) '+base_feed_qry,qry_params)[0]
@@ -73,5 +77,16 @@ class SourcefeedController {
     result.totalEntries = Entry.executeQuery('select count(e) '+entries_base_qry,[owner:result.feed.id])[0]
     result.latestEntries = Entry.executeQuery('select e '+entries_base_qry+' order by entryTs desc',[owner:result.feed.id],[max:50])
     result
+  }
+
+  @Secured(['ROLE_ADMIN', 'IS_AUTHENTICATED_FULLY'])
+  def toggleSourceEnabled() {
+    log.debug("SourcefeedController::feed ${params.id}");
+    def feed = SourceFeed.findByUriname(params.id)
+    feed.enabled = !feed.enabled
+    feed.save(flush:true, failOnError:true);
+    request.getHeader('referer')
+
+    redirect(url: request.getHeader('referer'))
   }
 }

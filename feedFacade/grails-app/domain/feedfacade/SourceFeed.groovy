@@ -75,7 +75,7 @@ class SourceFeed {
     topics.each { raw_topic ->
       def normalised_topic = raw_topic.trim().toLowerCase()
       if ( normalised_topic.length() > 0 ) {
-        log.debug(normalised_topic);
+        log.debug("    Adding topic ${normalised_topic} to feed ${this.id}");
         def topic = Topic.findByName(normalised_topic) ?: new Topic(name:normalised_topic).save(flush:true, failOnError:true);
         def feed_topic = FeedTopic.findByOwnerFeedAndTopic(this, topic) ?: new FeedTopic(ownerFeed:this, topic:topic).save(flush:true, failOnError:true);
       }
