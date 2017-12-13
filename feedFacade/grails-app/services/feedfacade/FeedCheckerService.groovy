@@ -213,7 +213,7 @@ class FeedCheckerService {
             log.debug("processFeed[${id}] Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
       
             def processing_result = null;
-            log.debug("Processing as ATOM (${feed_info.contentType})");
+            log.debug("Processing feed (contentType::${feed_info.contentType}) - Extract entries");
             processing_result = getNewFeedEntries(id, new java.net.URL(url).openStream(), highestRecordedTimestamp)
 
             new_entry_count = processing_result.numNewEntries
@@ -435,13 +435,26 @@ class FeedCheckerService {
     def rootNode = rootNodeParser.parse(bom_is)
 
     // If using namespaces:: rootNode.[atom_ns.entry].each { entry ->
-    log.debug("getNewFeedEntries[${id}] Processing...");
+    log.debug("getNewFeedEntries[${id}] Processing...(root node is ${rootNode.name().toString()})");
     def entry_count = 0;
 
     if ( rootNode.name().toString() == 'rss' ) { // It's RSS
+
+      def feed_pubdate = null;
+      if ( rootNode.channel.pubDate.size() == 1 ) {
+        feed_pubdate = parseDate(rootNode.channel.pubDate.text())
+      }
+      else {
+        // Default to NOW
+        feed_pubdate = new Date()
+      }
+
       rootNode.channel.item.each { item ->
+
         entry_count++;
-        def entry_updated_time = parseDate(item.pubDate.text())?.getTime();
+     
+       
+        def entry_updated_time = item.pubDate.size() == 1 ? parseDate(item.pubDate.text())?.getTime() : feed_pubdate.getTime();
 
         if ( entry_updated_time ) {
           if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
@@ -508,7 +521,7 @@ class FeedCheckerService {
           }
         }
         else {
-          log.debug("getNewFeedEntries[${id}]    -> Timestamp of entry ${entry.id.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
+          log.debug("getNewFeedEntries[${id}]    -> Timestamp of entry ${entry.id.text()} (${entry_updated_time}) is <= highest timestamp (${highestRecordedTimestamp})");
         }
   
         // Keep track of the highest timestamp we have seen in this pass over the changed feed
