@@ -31,7 +31,7 @@
             </div>
             <div class="form-group">
               <label class="col-sm-2 control-label">Last fetch status</label>
-              <div class="col-sm-10"><p class="form-control-static"><strong>${feed.feedStatus}</strong></p></div>
+              <div class="col-sm-10"><p class="form-control-static"><strong>${feed.feedStatus}</strong>(Last completed=<g:formatDate date="${new Date(feed.lastCompleted)}"/>, highest timestamp=<g:formatDate date="${new Date(feed.highestTimestamp)}"/>)</p></div>
             </div>
             <div class="form-group">
               <label class="col-sm-2 control-label">Last Error (If any)</label>
