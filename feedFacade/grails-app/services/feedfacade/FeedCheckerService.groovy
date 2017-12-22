@@ -517,7 +517,7 @@ class FeedCheckerService {
                                   ])
           }
           else {
-            log.warn("unable to extract feed link for ${rootNode}");
+            log.warn("unable to extract feed link"); // for ${rootNode}");
           }
         }
         else {
