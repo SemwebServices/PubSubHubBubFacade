@@ -10,7 +10,7 @@
   <div class="container-fluid">
     <div class="row">
       <div class="container-fluid">
-        <h1>[${feed.id}] <a href="${feed.baseUrl}">${feed.name}</a></h1>
+        <h1>[${feed.id}] <a href="${feed.baseUrl}">${feed.uriname} / ${feed.name}</a></h1>
 
         <div class="panel panel-default">
           <div class="panel-heading">

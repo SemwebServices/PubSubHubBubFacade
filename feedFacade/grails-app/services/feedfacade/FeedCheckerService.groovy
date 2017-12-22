@@ -45,9 +45,9 @@ class FeedCheckerService {
 
 
   def triggerFeedCheck() {
-    log.debug("FeedCheckerService::triggerFeedCheck thread pool count ${executorService.executor.getActiveCount()}");
+    // log.debug("FeedCheckerService::triggerFeedCheck thread pool count ${executorService.executor.getActiveCount()}");
     if ( running ) {
-      log.debug("Feed checker already running - not launching another [${error_count++}]");
+      log.warn("Feed checker already running - not launching another [${error_count++}]");
     }
     else {
       def error_count = 0;
@@ -58,11 +58,11 @@ class FeedCheckerService {
   def doFeedCheck() {
     def start_time = System.currentTimeMillis()
     def start_time_as_date = new Date(start_time)
-    log.debug("FeedCheckerService::doFeedChecki ${start_time}");
+    // log.debug("FeedCheckerService::doFeedChecki ${start_time}");
     running=true;
     feedCheckLog=[]
     feedCheckLog.add([timestamp:new Date(),message:'Feed check started']);
-    log.debug("Finding all feeds due on or after ${start_time}");
+    // log.debug("Finding all feeds due on or after ${start_time}");
     def sdf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
 
     logEvent('System.notification',[
@@ -76,12 +76,12 @@ class FeedCheckerService {
       def cont = true
       while ( cont ) {
 
-        log.debug("Processing feed ${++processed_feed_counter}");
+        // log.debug("Processing feed ${++processed_feed_counter}");
 
         // Grab the next feed to examine -- do it in a transaction
         def feed_info = null
         SourceFeed.withNewTransaction {
-          log.debug("Searching for paused feeds where lastCompleted+pollInterval < now ${start_time}");
+          // log.debug("Searching for paused feeds where lastCompleted+pollInterval < now ${start_time}");
 
           def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp, sf.httpExpires, sf.httpLastModified, sf.uriname from SourceFeed as sf where sf.baseUrl is not null and sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm and ( sf.capAlertFeedStatus = :operating or capAlertFeedStatus = :testing ) and sf.enabled = :enabled order by (sf.lastCompleted + sf.pollInterval) asc',
                                            [paused:'paused',ctm:start_time,operating:'operating',testing:'testing', enabled:true],[lock:false])
@@ -105,7 +105,7 @@ class FeedCheckerService {
 
         if ( feed_info ) {
           feedCheckLog.add([timestamp:new Date(),message:'Identified feed '+feed_info]);
-          log.debug("Process feed");
+          // log.debug("Process feed");
             processFeed(start_time, 
                         feed_info.id,
                         feed_info.uriname,
@@ -117,7 +117,7 @@ class FeedCheckerService {
         }
         else {  
           // nothing left in the queue
-          log.debug("Nothing left to process.. Continue");
+          // log.debug("Nothing left to process.. Continue");
           cont = false
         }
       }
@@ -149,7 +149,7 @@ class FeedCheckerService {
                   httpExpires,
                   httpLastModified) {
 
-    log.debug("processFeed[${id}] (${start_time},${id},${url},${hash},${highestRecordedTimestamp})");
+    // log.debug("processFeed[${id}] (${start_time},${id},${url},${hash},${highestRecordedTimestamp})");
     def newhash = null;
     def highestSeenTimestamp = null;
     def error = false
@@ -166,14 +166,14 @@ class FeedCheckerService {
     def continue_processing = false;
 
     SourceFeed.withNewTransaction {
-      log.debug("processFeed[${id}] Mark feed as in-process");
+      // log.debug("processFeed[${id}] Mark feed as in-process");
       def sf = SourceFeed.get(id)
 
       sf.lock()
       if ( sf.status == 'paused' ) {
 
         if ( url.toLowerCase().startsWith('http') ) {
-          log.debug("processFeed[${id}] Feed really is paused -- mark it as in process and proceed");
+          // log.debug("processFeed[${id}] Feed really is paused -- mark it as in process and proceed");
           sf.status = 'in-process'
           continue_processing = true;
         }
@@ -191,21 +191,21 @@ class FeedCheckerService {
         sf.save(flush:true, failOnError:true);
       }
       else {
-        log.debug("processFeed[${id}] On more thorough inspection, someone else already grabbed the feed to process, so skip");
+        log.info("processFeed[${id}] On more thorough inspection, someone else already grabbed the feed to process, so skip");
       }
     }
 
     if ( continue_processing ) {
 
       runAsync {
-        log.debug("processFeed[${id}] continue_processing.... :: ${url} ${hash}");
+        // log.debug("processFeed[${id}] continue_processing.... :: ${url} ${hash}");
         
         def feed_info = null;
   
         try {
   
           feed_info = fetchFeedPage(url, httpExpires, httpLastModified);
-          log.debug(feed_info.toString())
+          // log.debug(feed_info.toString())
   
           // If we got a hash back from fetching the page AND the storred hash is different OR not set, then process the feed.
           if ( ( feed_info.hash != null ) && ( ( hash == null ) || ( feed_info.hash != hash ) ) ) {
@@ -213,7 +213,7 @@ class FeedCheckerService {
             log.debug("processFeed[${id}] Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
       
             def processing_result = null;
-            log.debug("Processing feed (contentType::${feed_info.contentType}) - Extract entries");
+            // log.debug("Processing feed (contentType::${feed_info.contentType}) - Extract entries");
             processing_result = getNewFeedEntries(id, new java.net.URL(url).openStream(), highestRecordedTimestamp)
 
             new_entry_count = processing_result.numNewEntries
@@ -226,12 +226,12 @@ class FeedCheckerService {
                 relatedId:uriname+'/'+entry.id
               ]);
   
-              log.debug("processFeed[${id}] Calling newEventService.handleNewEvent()");
+              // log.debug("processFeed[${id}] Calling newEventService.handleNewEvent()");
               newEventService.handleNewEvent(id,entry)
             }
       
             if ( new_entry_count > 0 ) {
-              log.debug("processFeed[${id}] Complete having processed ${new_entry_count} new entries");
+              // log.debug("processFeed[${id}] Complete having processed ${new_entry_count} new entries");
               logEvent('Feed.'+uriname,[
                 timestamp:new Date(),
                 message:"${uriname} Processing complete (${url}) - ${new_entry_count} new entries",
@@ -240,7 +240,7 @@ class FeedCheckerService {
               ]);
             }
             else {
-              log.debug("processFeed[${id}] Although hash change detected, we found no new entries... this seems unlikely");
+              log.warn("processFeed[${id}] Although hash change detected, we found no new entries... this seems unlikely");
             }
   
             if ( processing_result.highestSeenTimestamp ) {
@@ -248,7 +248,7 @@ class FeedCheckerService {
             }
           }
           else {
-            log.debug("processFeed[${id}] ${url} unchanged");
+            // log.debug("processFeed[${id}] ${url} unchanged");
           }
         }
         catch ( java.io.FileNotFoundException fnfe ) {
@@ -296,10 +296,10 @@ class FeedCheckerService {
           ]);
         }
     
-        log.debug("After processing ${url} entries, highest timestamp seen is ${highestSeenTimestamp}");
+        // log.debug("After processing ${url} entries, highest timestamp seen is ${highestSeenTimestamp}");
     
         SourceFeed.withNewTransaction {
-          log.debug("processFeed[${id}] Mark feed as paused");
+          // log.debug("processFeed[${id}] Mark feed as paused");
           def sf = SourceFeed.get(id)
           sf.lock()
           sf.status = 'paused'
@@ -307,12 +307,12 @@ class FeedCheckerService {
           sf.httpLastModified = feed_info?.lastModified
   
           if ( newhash ) {
-            log.debug("Updating hash to ${newhash}");
+            // log.debug("Updating hash to ${newhash}");
             sf.lastHash = newhash
           }
   
           if ( highestSeenTimestamp ) {
-            log.debug("processFeed[${id}] Updating sf.highestTimestamp to be ${highestSeenTimestamp}");
+            // log.debug("processFeed[${id}] Updating sf.highestTimestamp to be ${highestSeenTimestamp}");
             sf.highestTimestamp = highestSeenTimestamp
           }
           // sf.lastCompleted=start_time
@@ -339,7 +339,7 @@ class FeedCheckerService {
             statsService.logSuccess(sf,start_time,new_entry_count);
           }
     
-          log.debug("processFeed[${id}] Saving source feed");
+          // log.debug("processFeed[${id}] Saving source feed");
           feedCheckLog.add([timestamp:new Date(),message:"Processing completed on ${id}/${url} at ${sf.lastCompleted} / ${error_message}"]);
           sf.save(flush:true, failOnError:true);
         }
@@ -348,7 +348,7 @@ class FeedCheckerService {
 
 
     feedCheckLog.add([timestamp:new Date(),message:"Process feed completed :: ${id} ${url} / error:${error} ${error_message}"]);
-    log.debug("processFeed[${id}] returning");
+    // log.debug("processFeed[${id}] returning");
   }
 
 
@@ -361,7 +361,7 @@ class FeedCheckerService {
    * 
    */
   def fetchFeedPage(feed_address,httpExpires, httpLastModified) {
-    log.debug("fetchFeedPage(${feed_address})");
+    // log.debug("fetchFeedPage(${feed_address})");
     def result = [:]
     java.net.URL feed_url = new java.net.URL(feed_address)
 
@@ -370,7 +370,7 @@ class FeedCheckerService {
     url_connection.setReadTimeout(4000)
     // Set this to the time we last checked the feed. uc.setIfModifiedSince(System.currentTimeMillis());
     if ( httpLastModified != null ) {
-      log.debug("${feed_address} has last modified ${httpLastModified} so sending that in a If-Modified-Since header");
+      // log.debug("${feed_address} has last modified ${httpLastModified} so sending that in a If-Modified-Since header");
       // url_connection.setRequestProperty("If-Modified-Since", httpLastModified);
       url_connection.setIfModifiedSince(Long.parseLong(httpLastModified));
     }
@@ -379,21 +379,21 @@ class FeedCheckerService {
     result.expires = url_connection.getExpiration()
     result.contentType = url_connection.getContentType()
 
-    log.debug("${feed_address} [URLC]expires: ${result.expires}");
-    log.debug("${feed_address} [URLC]ifModifiedSince: ${url_connection.getIfModifiedSince()}");
-    log.debug("${feed_address} [URLC]lastModified: ${result.lastModified}");
-    log.debug("${feed_address} [URLC]contentType: ${result.contentType}");
+    // log.debug("${feed_address} [URLC]expires: ${result.expires}");
+    // log.debug("${feed_address} [URLC]ifModifiedSince: ${url_connection.getIfModifiedSince()}");
+    // log.debug("${feed_address} [URLC]lastModified: ${result.lastModified}");
+    // log.debug("${feed_address} [URLC]contentType: ${result.contentType}");
 
     // If you get an Expires response header, then it just means that you don't need to request anything until the specified expire time. 
     // If you get a Last-Modified response header, then it means that you should be able to use If-Modified-Since to test it. 
     // If you get an ETag response header, then it means that you should be able to use If-None-Match to test it.
 
-    log.debug("Connection response code: ${url_connection.getResponseCode()}");
+    // log.debug("Connection response code: ${url_connection.getResponseCode()}");
 
     // If we had no lastModified OR the last modified returned was different
     if ( ( result.lastModified == null ) ||
          ( result.lastModified != httpLastModified ) ) {
-      log.debug("${feed_address} **FEEDSTATUS** updated (req lm:${result.lastModified}/db lm:${httpLastModified})");
+      // log.debug("${feed_address} **FEEDSTATUS** updated (req lm:${result.lastModified}/db lm:${httpLastModified})");
       // result.feed_text = feed_url.getText([connectTimeout: 2000, readTimeout: 3000])
       result.feed_text = url_connection.getInputStream().getText()
       MessageDigest md5_digest = MessageDigest.getInstance("MD5");
@@ -402,7 +402,7 @@ class FeedCheckerService {
       result.hash = new BigInteger(1, md5sum).toString(16);
     }
     else {
-      log.debug("${feed_address} **FEEDSTATUS** Unchanged since ${result.lastModified}");
+      // log.debug("${feed_address} **FEEDSTATUS** Unchanged since ${result.lastModified}");
     }
 
     result
@@ -424,18 +424,18 @@ class FeedCheckerService {
 
     def bom_is = new BOMInputStream(feed_is)
     if (bom_is.hasBOM() == false) {
-      log.debug("No BOM in input stream");
+      // log.debug("No BOM in input stream");
     }
     else {
-      log.debug("BOM detected in input stream");
+      // log.debug("BOM detected in input stream");
     }
 
     // rootNodeParser.setFeature('http://apache.org/xml/features/disallow-doctype-decl',false);
-    log.debug("Parse...");
+    // log.debug("Parse...");
     def rootNode = rootNodeParser.parse(bom_is)
 
     // If using namespaces:: rootNode.[atom_ns.entry].each { entry ->
-    log.debug("getNewFeedEntries[${id}] Processing...(root node is ${rootNode.name().toString()})");
+    // log.debug("getNewFeedEntries[${id}] Processing...(root node is ${rootNode.name().toString()})");
     def entry_count = 0;
 
     if ( rootNode.name().toString() == 'rss' ) { // It's RSS
@@ -491,7 +491,7 @@ class FeedCheckerService {
 
         def entry_updated_time = parseDate(entry.updated.text()).getTime();
       
-        log.debug("getNewFeedEntries[${id}] -> processing entry node id:${entry.id.text()} :: ts:${entry_updated_time}");
+        // log.debug("getNewFeedEntries[${id}] -> processing entry node id:${entry.id.text()} :: ts:${entry_updated_time}");
 
         // See if this entry has a timestamp greater than any we have seen so far
         if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
@@ -558,7 +558,7 @@ class FeedCheckerService {
   def logEvent(key,evt) {
    try {
 
-      log.debug("logEvent(${key},${evt})");
+      // log.debug("logEvent(${key},${evt})");
 
       def evt_str = toJson(evt);
 
