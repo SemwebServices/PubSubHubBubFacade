@@ -60,6 +60,8 @@
               <li class="${controllerName=='admin' && actionName=='notificationLog' ? 'active' : ''}"><g:link controller="admin" action="notificationLog">Notifications</g:link></li>
               <li class="${controllerName=='sourcefeed' && actionName=='registerFeed' ? 'active' : ''}"><g:link controller="sourcefeed" action="registerFeed">Register Feed</g:link></li>
               <li class="${controllerName=='subscription' && actionName=='index' ? 'active' : ''}"><g:link controller="subscription" action="index">Subscriptions</g:link></li>
+              <li class="${controllerName=='admin' && actionName=='enableAll' ? 'active' : ''}"><g:link controller="admin" action="enableAll" >Enable All (Operating)</g:link></li>
+              <li class="${controllerName=='admin' && actionName=='disableAll' ? 'active' : ''}"><g:link controller="admin" action="disableAll">Disable All</g:link></li>
               <!--
               <li class="divider"></li>
               <li class="dropdown-header">Nav header</li>

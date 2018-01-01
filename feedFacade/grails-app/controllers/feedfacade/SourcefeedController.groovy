@@ -1,6 +1,7 @@
 package feedfacade
 
 import grails.plugin.springsecurity.annotation.Secured
+import grails.converters.*
 
 
 
@@ -81,12 +82,14 @@ class SourcefeedController {
 
   @Secured(['ROLE_ADMIN', 'IS_AUTHENTICATED_FULLY'])
   def toggleSourceEnabled() {
+    def result = [:]
     log.debug("SourcefeedController::feed ${params.id}");
     def feed = SourceFeed.findByUriname(params.id)
     feed.enabled = !feed.enabled
     feed.save(flush:true, failOnError:true);
     request.getHeader('referer')
-
-    redirect(url: request.getHeader('referer'))
+    def referer = request.getHeader('referer')
+  
+    redirect(url: referer)
   }
 }
