@@ -50,7 +50,6 @@
           <li class="${controllerName=='sourcefeed' && actionName=='index' ? 'active' : ''}"><g:link controller="sourcefeed" action="index">Alert Sources</g:link></li>
           <li class="${controllerName=='home' && actionName=='log' ? 'active' : ''}"><g:link controller="home" action="log">Live Log</g:link></li>
           <sec:ifLoggedIn>
-          <li class="${controllerName=='sourcefeed' && actionName=='index' ? 'active' : ''}"><g:link controller="sourcefeed" action="index">Feeds</g:link></li>
           <li class="${controllerName=='entry' && actionName=='index' ? 'active' : ''}"><g:link controller="entry" action="index">Entries</g:link></li>
           <li class="${controllerName=='topics' && actionName=='index' ? 'active' : ''}"><g:link controller="topics" action="index">Topics</g:link></li>
           <li class="dropdown">
