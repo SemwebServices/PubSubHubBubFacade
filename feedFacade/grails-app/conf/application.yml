@@ -160,6 +160,6 @@ environments:
 rabbitmq:
     connections:
       - name: localRMQ
-        host: localhost
+        host: rabbitmq
         username: guest
         password: guest
