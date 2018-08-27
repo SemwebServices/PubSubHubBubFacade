@@ -11,7 +11,7 @@ class RequestVerifierService {
   def error_count = 0;
 
   def triggerCheck() {
-    log.debug("RequestVerifierService::triggerCheck");
+    // log.debug("RequestVerifierService::triggerCheck");
     if ( running ) {
       log.debug("Request verifier already running - not launching another [${error_count++}]");
       if ( error_count > 10 ) {
@@ -26,11 +26,11 @@ class RequestVerifierService {
   }
 
   def doCheck() {
-    log.debug("RequestVerifierService::doCheck");
+    // log.debug("RequestVerifierService::doCheck");
     running=true;
     def start_time = System.currentTimeMillis()
 
-    log.debug("Finding all feeds due on or after ${start_time}");
+    // log.debug("Finding all pending requests");
 
     try {
       def cont = true
@@ -59,7 +59,7 @@ class RequestVerifierService {
             PendingRequest.executeUpdate('update PendingRequest set status = :p where id = :id',[p:'procesing', id:request_info.id]);
           }
           else {
-            log.debug("No pending requests to verify");
+            // log.debug("No pending requests to verify");
           }
         }
 

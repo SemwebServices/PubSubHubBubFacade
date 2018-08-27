@@ -17,7 +17,7 @@ class StatsService {
 
   def logSuccess(owner, ts, nec) {
 
-      log.debug("StatsService::logSuccess");
+      // log.debug("StatsService::logSuccess");
 
       StatelessSession statelessSession = sessionFactory.openStatelessSession()
       statelessSession.beginTransaction()
@@ -43,7 +43,7 @@ class StatsService {
    */
   def logFailure(owner, ts) {
 
-      log.debug("StatsService::logFailure");
+      // log.debug("StatsService::logFailure");
 
       StatelessSession statelessSession = sessionFactory.openStatelessSession()
       statelessSession.beginTransaction()

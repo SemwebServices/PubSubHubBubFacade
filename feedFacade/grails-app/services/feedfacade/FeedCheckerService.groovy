@@ -214,7 +214,7 @@ class FeedCheckerService {
       
             def processing_result = null;
             // log.debug("Processing feed (contentType::${feed_info.contentType}) - Extract entries");
-            processing_result = getNewFeedEntries(id, new java.net.URL(url).openStream(), highestRecordedTimestamp)
+            processing_result = getNewFeedEntries(id, url, new java.net.URL(url).openStream(), highestRecordedTimestamp)
 
             new_entry_count = processing_result.numNewEntries
             processing_result.newEntries.each { entry ->
@@ -408,7 +408,7 @@ class FeedCheckerService {
     result
   }
 
-  def getNewFeedEntries(id, feed_is, highestRecordedTimestamp) {
+  def getNewFeedEntries(id, url, feed_is, highestRecordedTimestamp) {
     def result = [:]
     result.numNewEntries=0
     result.newEntries=[]
@@ -471,7 +471,7 @@ class FeedCheckerService {
                                   ])
           }
           else {
-            log.debug("getNewFeedEntries[${id}]    -> Timestamp of entry ${item.guid.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
+            // log.debug("getNewFeedEntries[${id}]    -> Timestamp of entry ${item.guid.text()} (${entry_updated_time}) is lower than highest timestamp seen (${highestRecordedTimestamp})");
           }
 
           // Keep track of the highest timestamp we have seen in this pass over the changed feed
@@ -517,7 +517,7 @@ class FeedCheckerService {
                                   ])
           }
           else {
-            log.warn("unable to extract feed link"); // for ${rootNode}");
+            log.warn("unable to extract feed link - parent url is ${url}"); // for ${rootNode}");
           }
         }
         else {

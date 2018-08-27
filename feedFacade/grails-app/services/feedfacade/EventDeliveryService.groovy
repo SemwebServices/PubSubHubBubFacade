@@ -27,7 +27,7 @@ class EventDeliveryService {
   RabbitMessagePublisher rabbitMessagePublisher
 
   def triggerEventDelivery() {
-    log.debug("EventDeliveryService::triggerEventDelivery");
+    // log.debug("EventDeliveryService::triggerEventDelivery");
     if ( running ) {
       log.debug("Event Delivery already running - not launching another [${error_count++}]");
       if ( error_count > 10 ) {
@@ -43,7 +43,7 @@ class EventDeliveryService {
 
   def sendPendingEvents() {
     running=true;
-    log.debug("EventDeliveryService::sendPendingEvents");
+    // log.debug("EventDeliveryService::sendPendingEvents");
 
     long pending_event_count = SubscriptionEntry.executeQuery('select count(se) from SubscriptionEntry as se where se.status=:pending',[pending:'pending'],[readOnly:true])[0];
 
