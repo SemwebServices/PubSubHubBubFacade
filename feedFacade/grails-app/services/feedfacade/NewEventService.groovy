@@ -100,7 +100,7 @@ class NewEventService {
 
   def publishToRabbitMQExchange(entry_type, feed_id, feed_code, entry) {
 
-    // log.debug("NewEventService::publishToRabbitMQ(${feed_id},...)");
+    log.debug("NewEventService::publishToRabbitMQ(${feed_id},...)");
 
     def result = null;
 
