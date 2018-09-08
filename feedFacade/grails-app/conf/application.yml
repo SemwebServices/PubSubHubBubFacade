@@ -101,6 +101,8 @@ dataSource:
 ---
 environments:
     development:
+        server:
+          port: 8081
         dataSource:
             dbCreate: update
             url: jdbc:postgresql://postgres:5432/feedfacadedev
