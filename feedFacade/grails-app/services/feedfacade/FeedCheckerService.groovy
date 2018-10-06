@@ -59,7 +59,7 @@ class FeedCheckerService {
   def doFeedCheck() {
     def start_time = System.currentTimeMillis()
     def start_time_as_date = new Date(start_time)
-    // log.debug("FeedCheckerService::doFeedChecki ${start_time}");
+    log.info("FeedCheckerService::doFeedCheck ${start_time}");
     running=true;
     feedCheckLog=[]
     feedCheckLog.add([timestamp:new Date(),message:'Feed check started']);
@@ -244,7 +244,7 @@ class FeedCheckerService {
               ]);
             }
             else {
-              log.warn("processFeed[${id}] Although hash change detected, we found no new entries... this seems unlikely");
+              log.debug("processFeed[${id}] Although hash change detected, we found no new entries...");
             }
   
             if ( processing_result.highestSeenTimestamp ) {

@@ -47,5 +47,5 @@ else {
     logger ('grails.app.services', WARN)
     logger ('grails.app.controllers', WARN)
     logger ('feedfacade', INFO)
-    root(WARN, ['STDOUT'])
+    root(INFO, ['STDOUT'])
 }
