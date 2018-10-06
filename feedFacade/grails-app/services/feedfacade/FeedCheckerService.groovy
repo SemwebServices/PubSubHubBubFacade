@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat
 import static groovy.json.JsonOutput.*
 import java.text.SimpleDateFormat
 import com.budjb.rabbitmq.publisher.RabbitMessagePublisher
+import java.lang.Thread
 
 @Transactional
 class FeedCheckerService {
@@ -121,6 +122,9 @@ class FeedCheckerService {
           cont = false
         }
       }
+
+      // Give other threads a chance
+      Thread.yield(); 
     }
     catch ( Exception e ) {
       feedCheckLog.add([type:'ERROR', timestamp:new Date(),message:'Feed check error '+e.message]);
