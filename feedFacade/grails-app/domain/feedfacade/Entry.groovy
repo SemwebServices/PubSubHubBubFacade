@@ -12,8 +12,8 @@ class Entry {
   String link
 
   static constraints = {
-      ownerFeed blank: false, nullable:false
-        entryTs blank: false, nullable:false
+      ownerFeed nullable:false
+        entryTs nullable:false
           entry blank: false, nullable:false
     entryAsJson blank: false, nullable:false
       entryHash blank: false, nullable:false
