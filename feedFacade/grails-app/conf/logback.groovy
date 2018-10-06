@@ -41,5 +41,11 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
     root(ERROR, ['STDOUT', 'FULL_STACKTRACE'])
 }
 else {
-    root(ERROR, ['STDOUT'])
+    logger ('grails.app.init', INFO)
+    logger ('grails.app.domains', WARN)
+    logger ('grails.app.jobs', WARN)
+    logger ('grails.app.services', WARN)
+    logger ('grails.app.controllers', WARN)
+    logger ('feedfacade', INFO)
+    root(WARN, ['STDOUT'])
 }
