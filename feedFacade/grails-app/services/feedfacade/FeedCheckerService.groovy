@@ -1,4 +1,4 @@
-package feedfacade
+info feedfacade
 
 import grails.transaction.Transactional
 import java.security.MessageDigest
@@ -366,12 +366,15 @@ class FeedCheckerService {
    */
   def fetchFeedPage(feed_address,httpExpires, httpLastModified) {
     // log.debug("fetchFeedPage(${feed_address})");
+
+    long feedFetchStartTime = System.currentTimeMillis();
+
     def result = [:]
     java.net.URL feed_url = new java.net.URL(feed_address)
 
     java.net.URLConnection url_connection = feed_url.openConnection()
-    url_connection.setConnectTimeout(4000)
-    url_connection.setReadTimeout(4000)
+    url_connection.setConnectTimeout(8000)
+    url_connection.setReadTimeout(8000)
     // Set this to the time we last checked the feed. uc.setIfModifiedSince(System.currentTimeMillis());
     if ( httpLastModified != null ) {
       // log.debug("${feed_address} has last modified ${httpLastModified} so sending that in a If-Modified-Since header");
@@ -397,7 +400,7 @@ class FeedCheckerService {
     // If we had no lastModified OR the last modified returned was different
     if ( ( result.lastModified == null ) ||
          ( result.lastModified != httpLastModified ) ) {
-      // log.debug("${feed_address} **FEEDSTATUS** updated (req lm:${result.lastModified}/db lm:${httpLastModified})");
+      log.info("${feed_address} **CHANGE** (req lm:${result.lastModified}/db lm:${httpLastModified}/http) elapsed: ${System.currentTimeMillis() - feedFetchStartTime}");
       // result.feed_text = feed_url.getText([connectTimeout: 2000, readTimeout: 3000])
       result.feed_text = url_connection.getInputStream().getText()
       MessageDigest md5_digest = MessageDigest.getInstance("MD5");
@@ -408,6 +411,7 @@ class FeedCheckerService {
     else {
       // log.debug("${feed_address} **FEEDSTATUS** Unchanged since ${result.lastModified}");
     }
+
 
     result
   }
