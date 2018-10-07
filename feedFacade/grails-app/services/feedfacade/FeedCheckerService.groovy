@@ -506,26 +506,47 @@ class FeedCheckerService {
           log.debug("getNewFeedEntries[${id}] ATOM   -> ${entry.id.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
           result.numNewEntries++
 
-          def feed_link = null;
-          entry.link.each { el ->
-            if ( el.'@type' == 'application/cap+xml' ) {
-              feed_link = el.'@href'
-            }
-          }
+          switch ( entry.link.size() ) {
+            case 0:
+              log.warn("No links found in ATOM entry");
+              break;
+            case 1:
+              // Only 1 link present - assume it is the correct type
+              result.newEntries.add([
+                                      id:entry.id.text(),
+                                      title:entry.title.text(),
+                                      summary:entry.summary?.text(),
+                                      description:entry.description?.text(),
+                                      link:entry.link.'@href',
+                                      sourceDoc:entry,
+                                      type:'ATOMEntry'
+                                    ])
 
-          if ( feed_link ) {
-            result.newEntries.add([
-                                   id:entry.id.text(),
-                                   title:entry.title.text(),
-                                   summary:entry.summary?.text(),
-                                   description:entry.description?.text(),
-                                   link:feed_link,
-                                   sourceDoc:entry,
-                                   type:'ATOMEntry'
-                                  ])
-          }
-          else {
-            log.warn("unable to extract feed link - parent url is ${url}"); // for ${rootNode}");
+              break;
+            default:
+              def feed_link = null;
+              entry.link.each { el ->
+                // if ( el.'@type' == 'application/cap+xml' ) {
+                if ( el.'@type'.contains('cap') || el.'@type'.contains('common-alerting-protocol') ) {
+                  feed_link = el.'@href'
+                }
+              }
+
+              if ( feed_link ) {
+                result.newEntries.add([
+                                       id:entry.id.text(),
+                                       title:entry.title.text(),
+                                       summary:entry.summary?.text(),
+                                       description:entry.description?.text(),
+                                       link:feed_link,
+                                       sourceDoc:entry,
+                                       type:'ATOMEntry'
+                                      ])
+              }
+              else {
+                log.warn("unable to extract feed link - parent url is ${url}"); // for ${rootNode}");
+              }
+              break;
           }
         }
         else {
