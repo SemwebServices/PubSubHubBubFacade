@@ -1,4 +1,4 @@
-info feedfacade
+package feedfacade
 
 import grails.transaction.Transactional
 import java.security.MessageDigest
