@@ -218,7 +218,7 @@ class FeedCheckerService {
       
             def processing_result = null;
             // log.debug("Processing feed (contentType::${feed_info.contentType}) - Extract entries");
-            processing_result = getNewFeedEntries(id, url, new java.net.URL(url).openStream(), highestRecordedTimestamp)
+            processing_result = getNewFeedEntries(id, url, new java.net.URL(url).openStream(), highestRecordedTimestamp, uriname)
 
             new_entry_count = processing_result.numNewEntries
             processing_result.newEntries.each { entry ->
@@ -416,7 +416,7 @@ class FeedCheckerService {
     result
   }
 
-  def getNewFeedEntries(id, url, feed_is, highestRecordedTimestamp) {
+  def getNewFeedEntries(id, url, feed_is, highestRecordedTimestamp, uriname) {
     def result = [:]
     result.numNewEntries=0
     result.newEntries=[]
@@ -475,7 +475,8 @@ class FeedCheckerService {
                                    description:item.description.text(),
                                    link:item.link.text(),
                                    sourceDoc:item,
-                                   type:'RSSEntry'
+                                   type:'RSSEntry',
+                                   uriname:uriname
                                   ])
           }
           else {
@@ -519,7 +520,8 @@ class FeedCheckerService {
                                       description:entry.description?.text(),
                                       link:entry.link.'@href',
                                       sourceDoc:entry,
-                                      type:'ATOMEntry'
+                                      type:'ATOMEntry',
+                                      uriname:uriname
                                     ])
 
               break;
@@ -540,7 +542,8 @@ class FeedCheckerService {
                                        description:entry.description?.text(),
                                        link:feed_link,
                                        sourceDoc:entry,
-                                       type:'ATOMEntry'
+                                       type:'ATOMEntry',
+                                       uriname:uriname
                                       ])
               }
               else {
