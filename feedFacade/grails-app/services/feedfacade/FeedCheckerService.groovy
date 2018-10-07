@@ -373,7 +373,7 @@ class FeedCheckerService {
     java.net.URL feed_url = new java.net.URL(feed_address)
 
     java.net.URLConnection url_connection = feed_url.openConnection()
-    url_connection.setConnectTimeout(8000)
+    url_connection.setConnectTimeout(5000)
     url_connection.setReadTimeout(8000)
     // Set this to the time we last checked the feed. uc.setIfModifiedSince(System.currentTimeMillis());
     if ( httpLastModified != null ) {
@@ -527,7 +527,7 @@ class FeedCheckerService {
               def feed_link = null;
               entry.link.each { el ->
                 // if ( el.'@type' == 'application/cap+xml' ) {
-                if ( el.'@type'.contains('cap') || el.'@type'.contains('common-alerting-protocol') ) {
+                if ( el.'@type'?.contains('cap') || el.'@type'?.contains('common-alerting-protocol') ) {
                   feed_link = el.'@href'
                 }
               }
