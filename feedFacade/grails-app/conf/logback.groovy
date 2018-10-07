@@ -38,7 +38,7 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
         }
     }
     logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false)
-    root(ERROR, ['STDOUT', 'FULL_STACKTRACE'])
+    root(WARN, ['STDOUT', 'FULL_STACKTRACE'])
 }
 else {
     logger ('grails.app.init', INFO)
@@ -47,5 +47,5 @@ else {
     logger ('grails.app.services', WARN)
     logger ('grails.app.controllers', WARN)
     logger ('feedfacade', INFO)
-    root(INFO, ['STDOUT'])
+    root(WARN, ['STDOUT'])
 }
