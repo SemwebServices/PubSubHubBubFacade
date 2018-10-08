@@ -87,7 +87,7 @@ class FeedCheckerService {
                                            [paused:'paused',ctm:start_time,operating:'operating',testing:'testing', enabled:true],[lock:false])
 
           def num_paused_feeds = q.size();
-          log.debug("feedChecher detects ${num_paused_feeds} feeds paused that are overdue a check");
+          // log.debug("feedChecher detects ${num_paused_feeds} feeds paused that are overdue a check");
 
           if ( num_paused_feeds > 0 ) {
             def row = q.get(0)
