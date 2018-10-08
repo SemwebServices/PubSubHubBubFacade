@@ -38,8 +38,14 @@ if (Environment.isDevelopmentMode() && targetDir != null) {
         }
     }
     logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false)
-    root(ERROR, ['STDOUT', 'FULL_STACKTRACE'])
+    root(WARN, ['STDOUT', 'FULL_STACKTRACE'])
 }
 else {
-    root(ERROR, ['STDOUT'])
+    logger ('grails.app.init', INFO)
+    logger ('grails.app.domains', WARN)
+    logger ('grails.app.jobs', WARN)
+    logger ('grails.app.services', WARN)
+    logger ('grails.app.controllers', WARN)
+    logger ('feedfacade', INFO)
+    root(WARN, ['STDOUT'])
 }

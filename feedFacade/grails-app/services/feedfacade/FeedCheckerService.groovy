@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat
 import static groovy.json.JsonOutput.*
 import java.text.SimpleDateFormat
 import com.budjb.rabbitmq.publisher.RabbitMessagePublisher
+import java.lang.Thread
 
 @Transactional
 class FeedCheckerService {
@@ -58,7 +59,7 @@ class FeedCheckerService {
   def doFeedCheck() {
     def start_time = System.currentTimeMillis()
     def start_time_as_date = new Date(start_time)
-    // log.debug("FeedCheckerService::doFeedChecki ${start_time}");
+    log.info("FeedCheckerService::doFeedCheck ${start_time}");
     running=true;
     feedCheckLog=[]
     feedCheckLog.add([timestamp:new Date(),message:'Feed check started']);
@@ -121,6 +122,9 @@ class FeedCheckerService {
           cont = false
         }
       }
+
+      // Give other threads a chance
+      Thread.yield(); 
     }
     catch ( Exception e ) {
       feedCheckLog.add([type:'ERROR', timestamp:new Date(),message:'Feed check error '+e.message]);
@@ -214,7 +218,7 @@ class FeedCheckerService {
       
             def processing_result = null;
             // log.debug("Processing feed (contentType::${feed_info.contentType}) - Extract entries");
-            processing_result = getNewFeedEntries(id, url, new java.net.URL(url).openStream(), highestRecordedTimestamp)
+            processing_result = getNewFeedEntries(id, url, new java.net.URL(url).openStream(), highestRecordedTimestamp, uriname)
 
             new_entry_count = processing_result.numNewEntries
             processing_result.newEntries.each { entry ->
@@ -226,7 +230,7 @@ class FeedCheckerService {
                 relatedId:uriname+'/'+entry.id
               ]);
   
-              // log.debug("processFeed[${id}] Calling newEventService.handleNewEvent()");
+              log.debug("processFeed[${id}] Calling newEventService.handleNewEvent()");
               newEventService.handleNewEvent(id,entry)
             }
       
@@ -240,7 +244,7 @@ class FeedCheckerService {
               ]);
             }
             else {
-              log.warn("processFeed[${id}] Although hash change detected, we found no new entries... this seems unlikely");
+              log.debug("processFeed[${id}] Although hash change detected, we found no new entries...");
             }
   
             if ( processing_result.highestSeenTimestamp ) {
@@ -362,12 +366,15 @@ class FeedCheckerService {
    */
   def fetchFeedPage(feed_address,httpExpires, httpLastModified) {
     // log.debug("fetchFeedPage(${feed_address})");
+
+    long feedFetchStartTime = System.currentTimeMillis();
+
     def result = [:]
     java.net.URL feed_url = new java.net.URL(feed_address)
 
     java.net.URLConnection url_connection = feed_url.openConnection()
-    url_connection.setConnectTimeout(4000)
-    url_connection.setReadTimeout(4000)
+    url_connection.setConnectTimeout(5000)
+    url_connection.setReadTimeout(8000)
     // Set this to the time we last checked the feed. uc.setIfModifiedSince(System.currentTimeMillis());
     if ( httpLastModified != null ) {
       // log.debug("${feed_address} has last modified ${httpLastModified} so sending that in a If-Modified-Since header");
@@ -393,7 +400,7 @@ class FeedCheckerService {
     // If we had no lastModified OR the last modified returned was different
     if ( ( result.lastModified == null ) ||
          ( result.lastModified != httpLastModified ) ) {
-      // log.debug("${feed_address} **FEEDSTATUS** updated (req lm:${result.lastModified}/db lm:${httpLastModified})");
+      log.info("${feed_address} **CHANGE** (req lm:${result.lastModified}/db lm:${httpLastModified}/http) elapsed: ${System.currentTimeMillis() - feedFetchStartTime}");
       // result.feed_text = feed_url.getText([connectTimeout: 2000, readTimeout: 3000])
       result.feed_text = url_connection.getInputStream().getText()
       MessageDigest md5_digest = MessageDigest.getInstance("MD5");
@@ -405,10 +412,11 @@ class FeedCheckerService {
       // log.debug("${feed_address} **FEEDSTATUS** Unchanged since ${result.lastModified}");
     }
 
+
     result
   }
 
-  def getNewFeedEntries(id, url, feed_is, highestRecordedTimestamp) {
+  def getNewFeedEntries(id, url, feed_is, highestRecordedTimestamp, uriname) {
     def result = [:]
     result.numNewEntries=0
     result.newEntries=[]
@@ -467,7 +475,8 @@ class FeedCheckerService {
                                    description:item.description.text(),
                                    link:item.link.text(),
                                    sourceDoc:item,
-                                   type:'RSSEntry'
+                                   type:'RSSEntry',
+                                   uriname:uriname
                                   ])
           }
           else {
@@ -498,26 +507,49 @@ class FeedCheckerService {
           log.debug("getNewFeedEntries[${id}] ATOM   -> ${entry.id.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
           result.numNewEntries++
 
-          def feed_link = null;
-          entry.link.each { el ->
-            if ( el.'@type' == 'application/cap+xml' ) {
-              feed_link = el.'@href'
-            }
-          }
+          switch ( entry.link.size() ) {
+            case 0:
+              log.warn("No links found in ATOM entry");
+              break;
+            case 1:
+              // Only 1 link present - assume it is the correct type
+              result.newEntries.add([
+                                      id:entry.id.text(),
+                                      title:entry.title.text(),
+                                      summary:entry.summary?.text(),
+                                      description:entry.description?.text(),
+                                      link:entry.link.'@href',
+                                      sourceDoc:entry,
+                                      type:'ATOMEntry',
+                                      uriname:uriname
+                                    ])
 
-          if ( feed_link ) {
-            result.newEntries.add([
-                                   id:entry.id.text(),
-                                   title:entry.title.text(),
-                                   summary:entry.summary?.text(),
-                                   description:entry.description?.text(),
-                                   link:feed_link,
-                                   sourceDoc:entry,
-                                   type:'ATOMEntry'
-                                  ])
-          }
-          else {
-            log.warn("unable to extract feed link - parent url is ${url}"); // for ${rootNode}");
+              break;
+            default:
+              def feed_link = null;
+              entry.link.each { el ->
+                // if ( el.'@type' == 'application/cap+xml' ) {
+                if ( el.'@type'?.contains('cap') || el.'@type'?.contains('common-alerting-protocol') ) {
+                  feed_link = el.'@href'
+                }
+              }
+
+              if ( feed_link ) {
+                result.newEntries.add([
+                                       id:entry.id.text(),
+                                       title:entry.title.text(),
+                                       summary:entry.summary?.text(),
+                                       description:entry.description?.text(),
+                                       link:feed_link,
+                                       sourceDoc:entry,
+                                       type:'ATOMEntry',
+                                       uriname:uriname
+                                      ])
+              }
+              else {
+                log.warn("unable to extract feed link - parent url is ${url}"); // for ${rootNode}");
+              }
+              break;
           }
         }
         else {

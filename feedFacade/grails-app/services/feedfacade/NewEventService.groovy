@@ -91,6 +91,8 @@ class NewEventService {
 
   def publish(entry_type, feed_id, feed_code, entry) {
 
+    log.info("NewEventService::publish(${entry_type},${feed_id},${feed_code},...)");
+
     // Here is where we may publish to RabbitMQ.
     publishToRabbitMQExchange(entry_type, feed_id, feed_code, entry);
 
@@ -100,7 +102,7 @@ class NewEventService {
 
   def publishToRabbitMQExchange(entry_type, feed_id, feed_code, entry) {
 
-    // log.debug("NewEventService::publishToRabbitMQ(${feed_id},...)");
+    log.debug("NewEventService::publishToRabbitMQ(${feed_id},...)");
 
     def result = null;
 
@@ -129,7 +131,6 @@ class NewEventService {
 
   def publishToSubscriptions(feed_id, entry) {
 
-    // log.debug("NewEventService::publishToSubscriptions(${feed_id},...)");
 
     // Find all subscriptions where the sub has a topic which intersects with any of the topics for this feed
     def subscriptions = Subscription.executeQuery('select s from Subscription as s where exists ( select ft from FeedTopic as ft where ft.topic = s.topic and ft.ownerFeed.id = :id )',[id:feed_id]);
