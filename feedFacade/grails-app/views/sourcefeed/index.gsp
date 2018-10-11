@@ -9,16 +9,15 @@
 <body>
   <div class="container-fluid">
     <div class="row">
-      <div class="container-fluid" style="vertical-align: middle; text-align:center;">
+      <div class="container" style="vertical-align: middle; text-align:center;">
 
         <h1>Registered Feeds</h1>
 
-        <g:form controller="sourcefeed" action="index" method="get" class="container">
+        <g:form controller="sourcefeed" action="index" method="get" class="form">
           <div class="input-group">
-              <input type="text" name="q" class="form-control " placeholder="Text input" value="${params.q}">
-              <span class="input-group-btn">
-                  <button type="submit" class="btn btn-search">Search</button>
-              </span>
+              <input type="text" name="q" class="form-control" placeholder="Text input" value="${params.q}">
+              <span class="input-group-addon"><input type="checkbox" name="filterHasErrors" value="on" ${params.filterHasErrors=='on'?'checked':''}> Has Errors</span>
+              <span class="input-group-btn"><button type="submit" class="btn btn-primary">Search</button></span>
           </div>
         </g:form>
 
