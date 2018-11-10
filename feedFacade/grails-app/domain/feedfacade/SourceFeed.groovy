@@ -31,6 +31,9 @@ class SourceFeed {
   // Time taken to process feed on last run
   Long lastElapsed
 
+  // Number of consecutive errors for retry
+  Long consecutiveErrors
+
   String feedStatus
 
   String lastError
@@ -63,6 +66,7 @@ class SourceFeed {
            httpExpires blank: false, nullable:true
       httpLastModified blank: false, nullable:true
                enabled blank: false, nullable:true
+     consecutiveErrors blank: false, nullable:true
   }
 
   static mapping = {

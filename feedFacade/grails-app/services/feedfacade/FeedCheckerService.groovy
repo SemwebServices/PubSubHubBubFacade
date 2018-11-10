@@ -20,6 +20,8 @@ class FeedCheckerService {
   def feedCheckLog=new org.apache.commons.collections.buffer.CircularFifoBuffer(100);
   RabbitMessagePublisher rabbitMessagePublisher
 
+  private Long  MAX_CONSECUTIVE_ERRORS = 100;
+
   def possible_date_formats = [
     // new SimpleDateFormat('yyyy-MM-dd'), // Default format Owen is pushing ATM.
     // new SimpleDateFormat('yyyy/MM/dd'),
@@ -322,13 +324,16 @@ class FeedCheckerService {
           // sf.lastCompleted=start_time
           // Use the actual last completed time to try and even out the feed checking over time - this will skew each feed
           // So that all feeds become eligible over time, rather than being based on the start time of the batch
-          sf.lastCompleted=System.currentTimeMillis();
           sf.lastElapsed=start_time-sf.lastCompleted
           sf.lastError=error_message
     
           if ( error ) {
   
             sf.feedStatus='ERROR'
+            sf.consecutiveErrors++;
+            if ( sf.consecutiveErrors > MAX_CONSECUTIVE_ERRORS) {
+              sf.lastCompleted=System.currentTimeMillis();
+            }
             statsService.logFailure(sf,start_time);
   
             logEvent('Feed.'+uriname,[
@@ -340,6 +345,8 @@ class FeedCheckerService {
           }
           else { 
             sf.feedStatus='OK'
+            sf.consecutiveErrors = 0;
+            sf.lastCompleted=System.currentTimeMillis();
             statsService.logSuccess(sf,start_time,new_entry_count);
           }
     
