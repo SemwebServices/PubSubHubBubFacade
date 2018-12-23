@@ -20,7 +20,7 @@ class RegisterFeedSpec extends GebSpec {
   def cleanup() {
   }
 
-  void "Register Test Feed"() {
+  void "Navigate to Register Test Feed page and Login"() {
     when:"Navigate to the new feed page and fill out form"
       go '/sourcefeed/registerFeed'
       $("form").username = 'admin'
@@ -28,9 +28,9 @@ class RegisterFeedSpec extends GebSpec {
       //    $("form").feedname = 'localTest'
       //    $("form").baseUrl = 'file:testfeed.xml'
       //    $("form").submit
-      //    $('#AddFeedButton').click()
+      $('#submit').click()
 
     then:"The title is Login"
-      title == "Login"
+      title == "Register Feed"
   }
 }
