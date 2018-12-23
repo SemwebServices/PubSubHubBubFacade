@@ -29,7 +29,8 @@ root(WARN, ['STDOUT'])
 logger ('feedfacade', DEBUG)
 
 def targetDir = BuildSettings.TARGET_DIR
-if (Environment.isDevelopmentMode() && targetDir != null) {
+if ( (Environment.isDevelopmentMode() && targetDir != null) || 
+     (Environment.getCurrent() == Environment.TEST ) ) {
     appender("FULL_STACKTRACE", FileAppender) {
         file = "${targetDir}/stacktrace.log"
         append = true

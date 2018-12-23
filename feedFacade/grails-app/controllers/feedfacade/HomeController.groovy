@@ -67,7 +67,7 @@ class HomeController {
   }
 
   @Secured(['ROLE_USER', 'IS_AUTHENTICATED_FULLY'])
-  def logout() {
+  def doLogout() {
     log.debug("HomeController::logout");
     request.logout()
     redirect action:'index'

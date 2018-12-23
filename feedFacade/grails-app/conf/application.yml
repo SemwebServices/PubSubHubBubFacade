@@ -128,9 +128,17 @@ environments:
                 testOnReturn: false
                 jdbcInterceptors: ConnectionState
                 defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
+        sysusers:
+            - name: admin
+              display: Admin
+              email: admin@semweb.co
+              roles:
+                - ROLE_ADMIN
+                - ROLE_USER
     test:
         dataSource:
             dbCreate: create-drop
+            # dbCreate: update
             url: jdbc:postgresql://postgres:5432/feedfacadetest
             username: feedfacade
             password: feedFacade
@@ -154,6 +162,14 @@ environments:
                 testOnReturn: false
                 jdbcInterceptors: ConnectionState
                 defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
+        sysusers:
+            - name: admin
+              pass: admin
+              display: Admin
+              email: admin@semweb.co
+              roles:
+                - ROLE_ADMIN
+                - ROLE_USER
     production:
         dataSource:
             dbCreate: update

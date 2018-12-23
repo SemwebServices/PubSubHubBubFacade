@@ -5,27 +5,18 @@ class BootStrap {
   def sourceListService
   def grailsApplication
 
-  def sysusers = [
-    [
-      name:'admin',
-      pass:System.getenv('YARM_ADM_PW')?:'ChangeMeImmediately',
-      display:'Admin',
-      email:'admin@semweb.co', 
-      roles:['ROLE_ADMIN','ROLE_USER']
-    ]
-  ]
-
   def init = { servletContext ->
     setUpUserAccounts()
     sourceListService.setUpSources(grailsApplication.config.fah.sourceList);
   }
 
   def setUpUserAccounts() {
-    sysusers.each { su ->
+    grailsApplication.config.sysusers.each { su ->
       log.debug("user name:${su.name} ${su.pass} display-as:${su.display} roles:${su.roles}");
       def user = User.findByUsername(su.name)
       if ( user ) {
-        if ( user.password == null ) {
+        if ( ( user.password == null ) && ( su.pass == null ) ) {
+          
           log.debug("Hard change of user password from config ${user.password} -> ${su.pass}");
           user.password = su.pass;
           user.save(failOnError: true)
@@ -35,10 +26,20 @@ class BootStrap {
         }
       }
       else {
-        log.debug("Create user...");
+        String password = null;
+        if ( su.pass == null ) {
+          password = java.util.UUID.randomUUID().toString()
+          log.info("Generated secure random password for ${su.name} -> ${password}");
+        }
+        else {
+          password = su.pass;
+        }
+
+        log.debug("Create user...${su.name} ");
+
         user = new User(
                       username: su.name,
-                      password: su.pass,
+                      password: password,
                       display: su.display,
                       email: su.email,
                       enabled: true).save(failOnError: true)

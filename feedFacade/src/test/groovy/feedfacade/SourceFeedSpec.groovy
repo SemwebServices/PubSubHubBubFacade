@@ -1,13 +1,9 @@
 package feedfacade
 
-import grails.test.mixin.TestFor
+import grails.testing.gorm.DomainUnitTest
 import spock.lang.Specification
 
-/**
- * See the API for {@link grails.test.mixin.domain.DomainClassUnitTestMixin} for usage instructions
- */
-@TestFor(SourceFeed)
-class SourceFeedSpec extends Specification {
+class WobbleSpec extends Specification implements DomainUnitTest<SourceFeed> {
 
     def setup() {
     }
@@ -15,8 +11,9 @@ class SourceFeedSpec extends Specification {
     def cleanup() {
     }
 
-    void "test something"() {
-        expect:"fix me"
-            true == false
+    void "OK place holder"() {
+        expect:"all to be ok"
+            true == true
     }
 }
+

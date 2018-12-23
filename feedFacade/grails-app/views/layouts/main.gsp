@@ -33,7 +33,7 @@
               <ul class="dropdown-menu">
                 <li><g:link controller="home" action="profile">Profile</g:link></li>
                 <li class="divider"></li>
-                <li><g:link controller="home" action="logout">Logout</g:link></li>
+                <li><g:link controller="logoff">Logoff</g:link></li>
               </ul>
             </li>
           </sec:ifLoggedIn>
