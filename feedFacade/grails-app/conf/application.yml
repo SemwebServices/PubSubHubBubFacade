@@ -130,6 +130,7 @@ environments:
                 defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
         sysusers:
             - name: admin
+              pass: ChangeMeImmediately
               display: Admin
               email: admin@semweb.co
               roles:
@@ -196,6 +197,13 @@ environments:
                 testOnReturn: false
                 jdbcInterceptors: ConnectionState
                 defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
+        sysusers:
+            - name: admin
+              display: Admin
+              email: admin@semweb.co
+              roles:
+                - ROLE_ADMIN
+                - ROLE_USER
 ---
 rabbitmq:
     connections:
