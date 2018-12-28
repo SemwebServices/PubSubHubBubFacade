@@ -31,7 +31,9 @@ class FeedCheckerService {
     // new SimpleDateFormat('yyyy')
     new SimpleDateFormat('yyyy-MM-dd\'T\'HH:mm:ssX'),
     new SimpleDateFormat('yyyy-MM-dd\'T\'HH:mm:ss.SSSX'),
-    new SimpleDateFormat('EEE, d MMM yyyy HH:mm:ss Z')
+    new SimpleDateFormat('EEE, d MMM yyyy HH:mm:ss z'),
+    new SimpleDateFormat('EEE, d MMM yyyy HH:mm:ss Z'),
+    new SimpleDateFormat('EEE, d MMM yyyy HH:mm:ss')
   ];
 
   def getLastLog() {
@@ -204,7 +206,7 @@ class FeedCheckerService {
     if ( continue_processing ) {
 
       runAsync {
-        // log.debug("processFeed[${id}] continue_processing.... :: ${url} ${hash}");
+        log.debug("processFeed[${id}] continue_processing.... :: ${url} ${hash}");
         
         def feed_info = null;
   
@@ -496,7 +498,7 @@ class FeedCheckerService {
           }
         }
         else {
-          log.warn("FAILED to parse pubDate in RSS feed [${id}]");
+          log.warn("FAILED to parse pubDate in RSS feed [${id}] (\"${item.pubDate?.text()}\" from ${url}) ");
         }
 
       }
