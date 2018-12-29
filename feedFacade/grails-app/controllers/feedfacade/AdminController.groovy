@@ -31,6 +31,7 @@ class AdminController {
   def enableAll() {
     def result = [:]
     SourceFeed.executeUpdate('update SourceFeed set enabled=:true where enabled=:false and capAlertFeedStatus=:operating',['false':false,'true':true,'operating':'operating']);
+
     redirect(url: request.getHeader('referer'))
   }
 
