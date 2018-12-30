@@ -113,7 +113,8 @@ class NewEventService {
                 'feed-id':feed_id,
                 'feed-code':feed_code,
                 'entry-id':entry.id,
-                'feed-url':entry.ownerFeed.baseUrl
+                'feed-url':entry.ownerFeed.baseUrl,
+                'feed-is-official':entry.ownerFeed.isTagged('sourceIsOfficial','true')
               ]
               // routingKey = 'ATOMEntry.'+entry.ownerFeed.uriname
               routingKey = entry_type+'.'+entry.ownerFeed.uriname

@@ -106,6 +106,16 @@ class SourceFeed {
     SourceTag.findAllByOwner(this)
   }
 
+  def findTagValues(String tag) {
+    return SourceTag.findAllByOwnerAndTag(this,tag)
+  }
+
+  public boolean isTagged(String tag, String value) {
+    int num_rows = SourceTag.executeQuery('select count(*) from SourceTag as st where st.owner = :owner and st.tag.tag = :tag and st.value = :value',
+                                          [owner:this, tag:tag, value:value]).get(0);
+    return ( num_rows > 0 )
+  }
+
   def getTimeToNextPoll() {
     return getNextPollTime() - System.currentTimeMillis()
   }

@@ -4,7 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <title>
-        <g:layoutTitle default="FeedFaçade : A tool to help turn generic pull based feeds into push based notifications"/>
+        <g:layoutTitle default="FeedFaçade : A tool to help turn polled feeds like RSS and ATOM into push notifications like RabbitMQ events"/>
     </title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
