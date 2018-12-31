@@ -28,8 +28,9 @@ class BootStrap {
       else {
         String password = null;
         if ( su.pass == null ) {
-          password = java.util.UUID.randomUUID().toString()
-          log.info("Generated secure random password for ${su.name} -> ${password}");
+          password = grailsApplication.config.defaultAdmPassword ?: java.util.UUID.randomUUID().toString()
+          log.info("Generated password for ${su.name} -> ${password}");
+          println("\n\n*** ${password} ***\n\n");
         }
         else {
           password = su.pass;
