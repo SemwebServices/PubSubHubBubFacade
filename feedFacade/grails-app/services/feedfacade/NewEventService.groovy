@@ -91,7 +91,7 @@ class NewEventService {
 
   def publish(entry_type, feed_id, feed_code, entry) {
 
-    log.info("NewEventService::publish(${entry_type},${feed_id},${feed_code},...)");
+    log.debug("NewEventService::publish(${entry_type},${feed_id},${feed_code},...)");
 
     // Here is where we may publish to RabbitMQ.
     publishToRabbitMQExchange(entry_type, feed_id, feed_code, entry);
