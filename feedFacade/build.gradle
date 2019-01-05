@@ -78,6 +78,13 @@ dependencies {
     compile 'org.grails.plugins:grails-executor:0.4'
     // compile 'org.grails.plugins:joda-time:2.0.0'
 
+    compile 'org.elasticsearch:elasticsearch:5.6.14'
+    compile 'org.elasticsearch.client:transport:5.6.14'
+
+    // log4j deps for es5 above
+    compile 'org.apache.logging.log4j:log4j-api:2.7'
+    compile 'org.apache.logging.log4j:log4j-core:2.7'
+
     profile "org.grails.profiles:web"
     runtime "com.bertramlabs.plugins:asset-pipeline-grails:2.14.6"
     runtime "com.h2database:h2"

@@ -18,6 +18,7 @@ class FeedCheckerService {
   def newEventService
   def statsService
   def feedCheckLog=new org.apache.commons.collections.buffer.CircularFifoBuffer(100);
+  def ESWrapperService
   RabbitMessagePublisher rabbitMessagePublisher
 
   private Long  MAX_CONSECUTIVE_ERRORS = 100;
@@ -72,6 +73,7 @@ class FeedCheckerService {
 
     logEvent('System.notification',[
         timestamp:new Date(),
+        type: 'info',
         message:"Feed Check Started at ${start_time} ${sdf.format(start_time_as_date)}"
     ]);
 
@@ -141,6 +143,7 @@ class FeedCheckerService {
 
     logEvent('System.notification',[
         timestamp:new Date(),
+        type: 'info',
         message:"Feed Check Ended at ${sdf.format(new Date())} tpc:${executorService.executor.getActiveCount()}"
     ]);
 
@@ -166,6 +169,7 @@ class FeedCheckerService {
 
     logEvent('Feed.'+uriname,[
       timestamp:new Date(),
+      type: 'info',
       message:"Checking feed ${uriname} / ${url} (${Thread.currentThread().getName()})",
       relatedType:"feed",
       relatedId:uriname
@@ -190,6 +194,7 @@ class FeedCheckerService {
           sf.lastError="processFeed[${id}] Feed URL seems to be malformed - must start http:// or https:// feed status set to error"
           logEvent('Feed.'+uriname,[
             timestamp:new Date(),
+            type: 'error',
             message:"Invalud URL - must start http: or https: for ${uriname} - ${url}",
             relatedType:"feed",
             relatedId:uriname
@@ -264,6 +269,7 @@ class FeedCheckerService {
           error_message = fnfe.toString()
           log.error("processFeed[${id}] ${url} Feed seems not to exist",fnfe.message);
           logEvent('Feed.'+uriname,[
+            type: 'error',
             timestamp:new Date(),
             message:fnfe.toString(),
             relatedType:"feed",
@@ -276,6 +282,7 @@ class FeedCheckerService {
           log.error("processFeed[${id}] ${url} IO Problem feed_id:${id} feed_url:${url} ${ioe.message}",ioe.message);
           logEvent('Feed.'+uriname,[
             timestamp:new Date(),
+            type: 'error',
             message:ioe.toString(),
             relatedType:"feed",
             relatedId:uriname
@@ -287,6 +294,7 @@ class FeedCheckerService {
           log.error("processFeed[${id}] timeout feed_id:${id} feed_url:${url} ${ste.message}",ste.message);
           logEvent('Feed.'+uriname,[
             timestamp:new Date(),
+            type: 'error',
             message:ste.toString(),
             relatedType:"feed",
             relatedId:uriname
@@ -298,6 +306,7 @@ class FeedCheckerService {
           log.error("processFeed[${id}] ${url} problem fetching feed",e);
           logEvent('Feed.'+uriname,[
             timestamp:new Date(),
+            type: 'error',
             message:e.toString(),
             relatedType:"feed",
             relatedId:uriname
@@ -340,6 +349,7 @@ class FeedCheckerService {
   
             logEvent('Feed.'+uriname,[
               timestamp:new Date(),
+              type: 'error',
               message:'Feed status : ERROR '+error_message,
               relatedType:"feed",
               relatedId:uriname
@@ -597,20 +607,31 @@ class FeedCheckerService {
   }
 
   def logEvent(key,evt) {
-   try {
+   if ( evt ) {
+     try {
+        evt.source = key ?: 'Unknown'
+        if ( evt.timestamp == null ) {
+          evt.timestamp=new Date()
+        }
+        String event_id = java.util.UUID.randomUUID().toString()
 
-      // log.debug("logEvent(${key},${evt})");
+        // N.B. Moving to ES6 we will change doc to _doc
+        ESWrapperService.index('events','doc',event_id,evt);
 
-      def evt_str = toJson(evt);
+        // Publish the event on rabbit
+        if ( false ) {
+          def evt_str = toJson(evt);
+          def result = rabbitMessagePublisher.send {
+                         exchange = "FeedFetcher"
+                         routingKey = key
+                         body = toJson(evt)
+                       }
+        }
 
-      def result = rabbitMessagePublisher.send {
-                      exchange = "FeedFetcher"
-                      routingKey = key
-                      body = toJson(evt)
-                   }
-    }
-    catch ( Exception e ) {
-      log.error("Problem trying to publish to rabbit",e);
+      }
+      catch ( Exception e ) {
+        log.error("Problem trying to log event",e);
+      }
     }
   }
 }
