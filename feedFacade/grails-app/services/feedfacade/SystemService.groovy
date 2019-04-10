@@ -20,5 +20,6 @@ public class SystemService {
     else {
       state.setup_completed = false;
     }
+    log.debug("freshenState() : ${state}");
   }
 }

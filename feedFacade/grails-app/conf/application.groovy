@@ -9,6 +9,7 @@ grails.plugin.springsecurity.authority.className = 'feedfacade.Role'
 grails.plugin.springsecurity.controllerAnnotations.staticRules = [
 	[pattern: '/',                      access: ['permitAll']],
 	[pattern: '/error',                 access: ['permitAll']],
+	[pattern: '/setup/**',              access: ['permitAll']],
 	[pattern: '/index',                 access: ['permitAll']],
 	[pattern: '/index.gsp',             access: ['permitAll']],
 	[pattern: '/shutdown',              access: ['permitAll']],

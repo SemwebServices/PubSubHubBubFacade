@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta name="layout" content="main"/>
-    <title>CAP Collator - Setup</title>
+    <title>FeedFacade - Setup</title>
 
     <asset:link rel="icon" href="favicon.ico" type="image/x-ico" />
 </head>
@@ -10,7 +10,7 @@
   <div class="container-fluid">
     <div class="row">
       <div class="container-fluid">
-        <h1>CAP Collator Initial System Setup</a></h1>
+        <h1>FeedFacade Initial System Setup</a></h1>
 
         <div class="panel panel-default">
           <div class="panel-heading">

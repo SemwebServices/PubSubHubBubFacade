@@ -8,7 +8,10 @@ class SetupController {
 
   def index() {
     def result=[:]
+    log.debug("SetupController::index");
     Setting setup_completed = Setting.findByKey('feedfacade.setupcompleted') ?: new Setting(key:'feedfacade.setupcompleted', value:'false').save(flush:true, failOnError:true);
+
+    systemService.freshenState();
 
     if ( systemService.getCurrentState().setup_completed == false ) {
       log.debug("Do system setup");
@@ -39,6 +42,7 @@ class SetupController {
       }
     }
     else {
+      log.debug("System setup already completed");
       redirect(controller:'home', action:'index');
     }
 
