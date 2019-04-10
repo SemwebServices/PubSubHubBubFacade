@@ -6,7 +6,13 @@ class BootStrap {
   def grailsApplication
 
   def init = { servletContext ->
-    setUpUserAccounts()
+
+    // Only set up default accounts in the test and development environments
+    if ( ( Environment.currentEnvironment.name == Environment.DEVELOPMENT ) ||
+         ( Environment.currentEnvironment.name == Environment.TEST ) ) {
+      setUpUserAccounts()
+    }
+
     sourceListService.setUpSources(grailsApplication.config.fah.sourceList);
   }
 

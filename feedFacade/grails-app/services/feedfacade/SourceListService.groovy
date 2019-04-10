@@ -16,7 +16,7 @@ class SourceListService {
   public void setUpSources(String source_url) {
     try {
       // We add an enabled flag which defaults to false. Sources must now be added then enabled in the web interface.
-      SourceFeed.executeUpdate('update SourceFeed set enabled = :enabled where enabled is null',[enabled:true]);
+      SourceFeed.executeUpdate('update SourceFeed set enabled = :enabled where enabled is null',[enabled:false]);
 
       def live_json_data = new groovy.json.JsonSlurper().parse(new java.net.URL(source_url))
       ingestCapFeeds(live_json_data.sources)
