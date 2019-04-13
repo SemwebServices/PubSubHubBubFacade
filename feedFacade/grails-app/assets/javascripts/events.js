@@ -5,7 +5,7 @@
 // You're free to add application-wide JavaScript to this file, but it's generally better
 // to create separate JavaScript files as needed.
 //
-//= require sockjs-0.3
+//= require sockjs-1.3.0.min
 //= require stomp
 //= require self
 
@@ -25,7 +25,8 @@ function initEvents(exchange,topic_pattern) {
   
   // var stomp_addr = "ws://"+ window.location.hostname + ":15674/stomp"
   // var stomp_addr = "/rabbitws/stomp"
-  var stomp_addr = 'http://' + window.location.hostname + '/rabbitws/stomp';
+  // var stomp_addr = window.location.protocol + '//' + window.location.hostname + '/rabbitws/stomp';
+  // stomp_addr is now set in the application layout.gsp and does something different when env==development
   console.log("Connect to %s",stomp_addr);
 
   var ws = new SockJS(stomp_addr);

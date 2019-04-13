@@ -9,6 +9,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
     <asset:stylesheet src="application.css"/>
+    <g:if env="production">
+      <script language="Javascript">
+        var stomp_addr="/rabbitws/stomp";
+      </script>
+    </g:if>
+    <g:else>
+      <script language="Javascript">
+        var stomp_addr="http://"+ window.location.hostname + ":15674/ws"
+      </script>
+    </g:else>
 
     <g:layoutHead/>
 </head>

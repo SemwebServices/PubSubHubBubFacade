@@ -81,6 +81,8 @@ grails:
                 scriptlets: html
                 taglib: none
                 staticparts: none
+    cors:
+        enabled: true
 endpoints:
     jmx:
         unique-names: true
