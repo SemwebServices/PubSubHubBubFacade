@@ -11,6 +11,29 @@ class FeedFeedbackConsumer {
   ]
 
   def handleMessage(def body, MessageContext context) {
-    log.debug("FeedFeedbackConsumer::handleMessage()");
+    log.debug("FeedFeedbackConsumer::handleMessage() - ${context.envelope.routingKey}");
+    String[] components = context.envelope.routingKey.split('\\.');
+
+    if ( components.length > 1 ) {
+      SourceFeed sf = SourceFeed.findByUriname(components[1])
+      Entry entry = null;
+      if ( ( components.length == 3 ) && ( ! components[2].equalsIgnoreCase('unknown') ) ) {
+        entry = Entry.findById(components[2]);
+      }
+  
+      if ( ( sf != null ) && ( body != null ) ) {
+        String body_as_json = groovy.json.JsonOutput.toJson(body)
+  
+        FeedEventLog fel = new FeedEventLog(
+                                   ownerFeed:sf,
+                                   entry:entry,
+                                   eventTs:System.currentTimeMillis(),
+                                   eventDetails:body_as_json,
+                                   message:body.message).save(flush:true, failOnError:true);
+      }
+    }
+    else {
+      log.warn("Routing key for Feed Feedback ${context.envelope.routingKey} did not have enough components to be processable. ${components}");
+    }
   }
 }
