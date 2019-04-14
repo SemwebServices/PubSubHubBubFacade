@@ -341,6 +341,10 @@ class FeedCheckerService {
           if ( error ) {
   
             sf.feedStatus='ERROR'
+
+            if ( sf.consecutiveErrors == null ) 
+              sf.consecutiveErrors=0;
+
             sf.consecutiveErrors++;
             if ( sf.consecutiveErrors > MAX_CONSECUTIVE_ERRORS) {
               sf.lastCompleted=System.currentTimeMillis();
@@ -369,9 +373,8 @@ class FeedCheckerService {
       }
     }
 
-
     feedCheckLog.add([timestamp:new Date(),message:"Process feed completed :: ${id} ${url} / error:${error} ${error_message}"]);
-    // log.debug("processFeed[${id}] returning");
+    log.debug("processFeed[${id}] returning");
   }
 
 

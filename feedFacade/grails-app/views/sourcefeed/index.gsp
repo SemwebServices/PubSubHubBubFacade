@@ -17,6 +17,7 @@
           <div class="input-group">
               <input type="text" name="q" class="form-control" placeholder="Text input" value="${params.q}">
               <span class="input-group-addon"><input type="checkbox" name="filterHasErrors" value="on" ${params.filterHasErrors=='on'?'checked':''}> Has Errors</span>
+              <span class="input-group-addon"><input type="checkbox" name="filterEnabled" value="on" ${params.filterEnabled=='on'?'checked':''}> Enabled</span>
               <span class="input-group-btn"><button type="submit" class="btn btn-primary">Search</button></span>
           </div>
         </g:form>

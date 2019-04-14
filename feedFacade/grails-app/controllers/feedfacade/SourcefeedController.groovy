@@ -16,7 +16,7 @@ class SourcefeedController {
     int clause_count = 0;
     // def order_by_clause = ' order by (sf.lastCompleted + sf.pollInterval)'
     if ( ( params.q != null ) && ( params.q.length() > 0 ) ) {
-      base_feed_qry += ' where lower(sf.uriname) like :a or lower(sf.name) like :a or lower(baseUrl) like :a'
+      base_feed_qry += ' where ( lower(sf.uriname) like :a or lower(sf.name) like :a or lower(baseUrl) like :a ) '
       qry_params.a = "%${params.q.toLowerCase()}%".toString()
       clause_count++;
     }
@@ -31,6 +31,17 @@ class SourcefeedController {
 
       base_feed_qry += 'exists ( select sfs.owner from SourceFeedStats as sfs where sfs.owner = sf and sfs.lastUpdate > :start_time group by sfs.owner having sum(sfs.errorCount) > 0 )'
       qry_params.start_time = System.currentTimeMillis() - ( 25 * 60 * 60 * 1000 )
+      clause_count++;
+    }
+
+    if ( params.filterEnabled=='on' ) {
+      if ( clause_count == 0 )
+        base_feed_qry += ' where '
+      else 
+        base_feed_qry += ' and '
+
+      base_feed_qry += 'sf.enabled = :true'
+      qry_params.true = true
       clause_count++;
     }
 
