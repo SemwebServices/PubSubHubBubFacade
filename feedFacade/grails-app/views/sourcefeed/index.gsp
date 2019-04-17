@@ -53,7 +53,7 @@
           <tbody>
             <g:each in="${feeds}" var="f" >
               <tr>
-                <td rowspan="2"><g:link controller="sourcefeed" action="feed" id="${f.uriname}">${f.uriname}</g:link></td>
+                <td rowspan="3"><g:link controller="sourcefeed" action="feed" id="${f.uriname}">${f.uriname}</g:link></td>
                 <td>
                   ${f.enabled?'Yes':'No'}
                   <sec:ifAllGranted roles='ROLE_ADMIN'>
@@ -87,10 +87,16 @@
                 <td><g:formatDate date="${new Date(f.nextPollTime)}" format="yyyy MM dd HH:mm:ss.SSS"/></td>
                 <td>${f.httpLastModified}</td>
                 <td>${f.httpExpires}</td>
-                <td>${f.lastError}</td>
               </tr>
               <tr>
-                <td colspan="9">
+                <g:if test="${f.lastError?.length() > 0 }">
+                  <td colspan="12">
+                    ${f.lastError} (Consecutive error count = ${f.consecutiveErrors})
+                  </td>
+                </g:if>
+              </tr>
+              <tr>
+                <td colspan="12">
                   <g:set var="stats" value="${f.getHistogramLastDay()}"/>
                   <table class="table">
                     <thead>
