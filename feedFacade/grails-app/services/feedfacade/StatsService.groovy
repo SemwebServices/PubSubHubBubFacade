@@ -18,6 +18,7 @@ class StatsService {
   def logSuccess(owner, ts, nec) {
 
       // log.debug("StatsService::logSuccess");
+      try {
 
       StatelessSession statelessSession = sessionFactory.openStatelessSession()
       statelessSession.beginTransaction()
@@ -36,6 +37,10 @@ class StatsService {
 
       statelessSession.getTransaction().commit()
       statelessSession.close()
+    }
+    catch ( Exception e ) {
+      log.error("problem in logSuccess",e);
+    }
   }
 
   /**
@@ -44,22 +49,26 @@ class StatsService {
   def logFailure(owner, ts) {
 
       // log.debug("StatsService::logFailure");
+      try {
+        StatelessSession statelessSession = sessionFactory.openStatelessSession()
+        statelessSession.beginTransaction()
 
-      StatelessSession statelessSession = sessionFactory.openStatelessSession()
-      statelessSession.beginTransaction()
+        def bucket = getStatsBucket(statelessSession, owner, ts)
+        bucket.errorCount ++;
 
-      def bucket = getStatsBucket(statelessSession, owner, ts)
-      bucket.errorCount ++;
+        if ( bucket.id == null ) {
+          statelessSession.insert(bucket);
+        }
+        else {
+          statelessSession.update(bucket);
+        }
 
-      if ( bucket.id == null ) {
-        statelessSession.insert(bucket);
-      }
-      else {
-        statelessSession.update(bucket);
-      }
-
-      statelessSession.getTransaction().commit()
-      statelessSession.close()
+        statelessSession.getTransaction().commit()
+        statelessSession.close()
+    }
+    catch ( Exception e ) {
+      log.error("problem in logFailure",e);
+    }
   }
 
   /**

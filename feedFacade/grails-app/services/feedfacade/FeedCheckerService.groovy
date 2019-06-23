@@ -53,7 +53,7 @@ class FeedCheckerService {
   def triggerFeedCheck() {
     // log.debug("FeedCheckerService::triggerFeedCheck thread pool count ${executorService.executor.getActiveCount()}");
     if ( running ) {
-      log.warn("Feed checker already running - not launching another [${error_count++}]");
+      log.error("Feed checker already running - not launching another [${error_count++}]");
     }
     else {
       def error_count = 0;
@@ -94,7 +94,7 @@ class FeedCheckerService {
                                            [paused:'paused',ctm:start_time,operating:'operating',testing:'testing', enabled:true],[lock:false])
 
           def num_paused_feeds = q.size();
-          // log.debug("feedChecher detects ${num_paused_feeds} feeds paused that are overdue a check");
+          log.info("feedChecher detects ${num_paused_feeds} feeds paused that are overdue a check");
 
           if ( num_paused_feeds > 0 ) {
             def row = q.get(0)
@@ -112,15 +112,15 @@ class FeedCheckerService {
 
         if ( feed_info ) {
           feedCheckLog.add([timestamp:new Date(),message:'Identified feed '+feed_info]);
-          // log.debug("Process feed");
-            processFeed(start_time, 
-                        feed_info.id,
-                        feed_info.uriname,
-                        feed_info.url,
-                        feed_info.hash,
-                        feed_info.highesTimestamp,
-                        feed_info.expires,
-                        feed_info.lastModified);
+          log.info("Process feed ${feed_info}");
+          processFeed(start_time, 
+                      feed_info.id,
+                      feed_info.uriname,
+                      feed_info.url,
+                      feed_info.hash,
+                      feed_info.highesTimestamp,
+                      feed_info.expires,
+                      feed_info.lastModified);
         }
         else {  
           // nothing left in the queue
