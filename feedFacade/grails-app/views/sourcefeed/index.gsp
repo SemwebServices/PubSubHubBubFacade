@@ -88,8 +88,8 @@
                 <td>${f.httpExpires}</td>
               </tr>
               <g:set var="latest_issues" value="${f.latestIssues(5)}"/>
-              <g:if test="${latest_issues.size() > 0 }">
-                <tr>
+              <tr>
+                <g:if test="${latest_issues.size() > 0 }">
                   <td colspan="12">
                     <table class="table table-striped">
                       <thead>
@@ -114,8 +114,8 @@
                       </tbody>
                     </table>
                   </td>
-                </tr>
-              </g:if>
+                </g:if>
+              </tr>
               <tr>
                 <td colspan="12">
                   <g:set var="stats" value="${f.getHistogramLastDay()}"/>

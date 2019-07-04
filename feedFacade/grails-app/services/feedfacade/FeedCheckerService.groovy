@@ -279,7 +279,7 @@ class FeedCheckerService {
               relatedType:"feed",
               relatedId:uriname
             ]);
-            SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} Feed seems not to exist","processFeed[${id}] ${url} Feed seems not to exist");
+            SourceFeed.staticRegisterFeedIssue(id, "Feed seems not to exist","processFeed[${id}] ${url} Feed seems not to exist");
           }
           catch ( java.io.IOException ioe ) {
             error=true
@@ -292,7 +292,7 @@ class FeedCheckerService {
               relatedType:"feed",
               relatedId:uriname
             ]);
-            SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} IO Problem feed_id:${id} feed_url:${url}",ioe.message);
+            SourceFeed.staticRegisterFeedIssue(id, "IO Problem",ioe.message);
           }
           catch ( java.net.SocketTimeoutException ste ) {
             error=true
@@ -305,7 +305,20 @@ class FeedCheckerService {
               relatedType:"feed",
               relatedId:uriname
             ]);
-            SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] timeout feed_id:${id} feed_url:${url}", ste.message);
+            SourceFeed.staticRegisterFeedIssue(id, "Socket Timeout", ste.message);
+          }
+          catch ( org.xml.sax.SAXParseException spe ) {
+            error=true
+            error_message = spe.toString()
+            log.error("processFeed[${id}] XML Parse error feed_id:${id} feed_url:${url} ${spe.message}",spe.message);
+            logEvent('Feed.'+uriname,[
+              timestamp:new Date(),
+              type: 'error',
+              message:spe.toString(),
+              relatedType:"feed",
+              relatedId:uriname
+            ]);
+            SourceFeed.staticRegisterFeedIssue(id, "XML Parse problem", spe.message);
           }
           catch ( Exception e ) {
             error=true
