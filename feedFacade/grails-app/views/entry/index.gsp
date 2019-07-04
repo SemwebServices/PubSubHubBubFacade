@@ -32,11 +32,11 @@
               <tr>
                 <td><g:link controller="entry" action="detail" id="${e.id}">${e.id}</g:link></td>
                 <td><g:formatDate date="${new Date(e.entryTs)}"/></td>
-                <td><g:link controller="sourcefeed" action="feed" id="${e.ownerFeed.id}">${e.ownerFeed.name}</g:link><br/>
+                <td><g:link controller="sourcefeed" action="feed" id="${e.ownerFeed.uriname}">${e.ownerFeed.uriname} (${e.ownerFeed.id})</g:link><br/>
                   <g:each in="${e.ownerFeed.topics}" var="feedtopic"> 
                     <span class="badge">${feedtopic.topic.name}</span>
                   </g:each><br/>
-                  <span class="pull-right"><em>Feed</em> Last checked <g:formatDate date="${new Date(e.ownerFeed.lastCompleted)}"/></span>
+                  <span class="pull-left"><em>Feed</em> Last checked <g:formatDate date="${new Date(e.ownerFeed.lastCompleted)}"/></span>
                 </td>
                 <td>${e.numSubscriptionEntries}</td>
                 <td><a href="${e.link}">${e.title}</a><br/>${e.description}</td>

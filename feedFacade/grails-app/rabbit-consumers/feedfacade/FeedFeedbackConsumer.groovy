@@ -11,7 +11,7 @@ class FeedFeedbackConsumer {
   ]
 
   def handleMessage(def body, MessageContext context) {
-    log.debug("FeedFeedbackConsumer::handleMessage() - ${context.envelope.routingKey}");
+    log.debug("FeedFeedbackConsumer::handleMessage() - ${context.envelope.routingKey} ${body.message}");
     String[] components = context.envelope.routingKey.split('\\.');
 
     if ( components.length > 1 ) {

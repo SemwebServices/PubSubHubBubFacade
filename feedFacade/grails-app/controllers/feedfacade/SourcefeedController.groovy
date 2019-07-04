@@ -99,10 +99,10 @@ class SourcefeedController {
     def result = [:]
     result.feed = SourceFeed.findByUriname(params.id)
 
-    def entries_base_qry = 'from Entry as e where e.ownerFeed.id = :owner'
+    def entries_base_qry = 'from Entry as e where e.ownerFeed.uriname = :owner'
 
-    result.totalEntries = Entry.executeQuery('select count(e) '+entries_base_qry,[owner:result.feed.id])[0]
-    result.latestEntries = Entry.executeQuery('select e '+entries_base_qry+' order by entryTs desc',[owner:result.feed.id],[max:50])
+    result.totalEntries = Entry.executeQuery('select count(e) '+entries_base_qry,[owner:params.id])[0]
+    result.latestEntries = Entry.executeQuery('select e '+entries_base_qry+' order by entryTs desc',[owner:params.id],[max:50])
     result
   }
 
