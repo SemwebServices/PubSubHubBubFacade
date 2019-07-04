@@ -199,6 +199,7 @@ class FeedCheckerService {
             relatedType:"feed",
             relatedId:uriname
           ]);
+          sf.registerFeedIssue("Invalud URL - must start http: or https: for ${uriname} - ${url}", "Invalud URL - must start http: or https: for ${uriname} - ${url}");
         }
 
         sf.save(flush:true, failOnError:true);
@@ -214,103 +215,114 @@ class FeedCheckerService {
         log.debug("processFeed[${id}] continue_processing.... :: ${url} ${hash}");
         
         def feed_info = null;
-  
+        // The outer try - because we are in a runAsync unhandled exceptions might get dropped
+        // This block does nothing but catch and log exceptions not caught before. It's important
+        // You don't do any work in here beyond the inner try block.
         try {
+          try {
+    
+            feed_info = fetchFeedPage(url, httpExpires, httpLastModified);
+            // log.debug(feed_info.toString())
+    
+            // If we got a hash back from fetching the page AND the storred hash is different OR not set, then process the feed.
+            if ( ( feed_info.hash != null ) && ( ( hash == null ) || ( feed_info.hash != hash ) ) ) {
+              newhash = feed_info.hash
+              log.debug("processFeed[${id}] Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
+        
+              def processing_result = null;
+              // log.debug("Processing feed (contentType::${feed_info.contentType}) - Extract entries");
+              processing_result = getNewFeedEntries(id, url, new java.net.URL(url).openStream(), highestRecordedTimestamp, uriname)
   
-          feed_info = fetchFeedPage(url, httpExpires, httpLastModified);
-          // log.debug(feed_info.toString())
-  
-          // If we got a hash back from fetching the page AND the storred hash is different OR not set, then process the feed.
-          if ( ( feed_info.hash != null ) && ( ( hash == null ) || ( feed_info.hash != hash ) ) ) {
-            newhash = feed_info.hash
-            log.debug("processFeed[${id}] Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
-      
-            def processing_result = null;
-            // log.debug("Processing feed (contentType::${feed_info.contentType}) - Extract entries");
-            processing_result = getNewFeedEntries(id, url, new java.net.URL(url).openStream(), highestRecordedTimestamp, uriname)
-
-            new_entry_count = processing_result.numNewEntries
-            processing_result.newEntries.each { entry ->
-  
-              logEvent('Feed.'+uriname,[
-                timestamp:new Date(),
-                message:"Detected new entry ${entry.id}",
-                relatedType:"entry",
-                relatedId:uriname+'/'+entry.id
-              ]);
-  
-              log.debug("processFeed[${id}] Calling newEventService.handleNewEvent()");
-              newEventService.handleNewEvent(id,entry)
-            }
-      
-            if ( new_entry_count > 0 ) {
-              // log.debug("processFeed[${id}] Complete having processed ${new_entry_count} new entries");
-              logEvent('Feed.'+uriname,[
-                timestamp:new Date(),
-                message:"${uriname} Processing complete (${url}) - ${new_entry_count} new entries",
-                relatedType:"feed",
-                relatedId:uriname
-              ]);
+              new_entry_count = processing_result.numNewEntries
+              processing_result.newEntries.each { entry ->
+    
+                logEvent('Feed.'+uriname,[
+                  timestamp:new Date(),
+                  message:"Detected new entry ${entry.id}",
+                  relatedType:"entry",
+                  relatedId:uriname+'/'+entry.id
+                ]);
+    
+                log.debug("processFeed[${id}] Calling newEventService.handleNewEvent()");
+                newEventService.handleNewEvent(id,entry)
+              }
+        
+              if ( new_entry_count > 0 ) {
+                // log.debug("processFeed[${id}] Complete having processed ${new_entry_count} new entries");
+                logEvent('Feed.'+uriname,[
+                  timestamp:new Date(),
+                  message:"${uriname} Processing complete (${url}) - ${new_entry_count} new entries",
+                  relatedType:"feed",
+                  relatedId:uriname
+                ]);
+              }
+              else {
+                log.debug("processFeed[${id}] Although hash change detected, we found no new entries...");
+              }
+    
+              if ( processing_result.highestSeenTimestamp ) {
+                highestSeenTimestamp = processing_result.highestSeenTimestamp
+              }
             }
             else {
-              log.debug("processFeed[${id}] Although hash change detected, we found no new entries...");
-            }
-  
-            if ( processing_result.highestSeenTimestamp ) {
-              highestSeenTimestamp = processing_result.highestSeenTimestamp
+              // log.debug("processFeed[${id}] ${url} unchanged");
             }
           }
-          else {
-            // log.debug("processFeed[${id}] ${url} unchanged");
+          catch ( java.io.FileNotFoundException fnfe ) {
+            error=true
+            error_message = fnfe.toString()
+            log.error("processFeed[${id}] ${url} Feed seems not to exist",fnfe.message);
+            logEvent('Feed.'+uriname,[
+              type: 'error',
+              timestamp:new Date(),
+              message:fnfe.toString(),
+              relatedType:"feed",
+              relatedId:uriname
+            ]);
+            SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} Feed seems not to exist","processFeed[${id}] ${url} Feed seems not to exist");
           }
-        }
-        catch ( java.io.FileNotFoundException fnfe ) {
-          error=true
-          error_message = fnfe.toString()
-          log.error("processFeed[${id}] ${url} Feed seems not to exist",fnfe.message);
-          logEvent('Feed.'+uriname,[
-            type: 'error',
-            timestamp:new Date(),
-            message:fnfe.toString(),
-            relatedType:"feed",
-            relatedId:uriname
-          ]);
-        }
-        catch ( java.io.IOException ioe ) {
-          error=true
-          error_message = ioe.toString()
-          log.error("processFeed[${id}] ${url} IO Problem feed_id:${id} feed_url:${url} ${ioe.message}",ioe.message);
-          logEvent('Feed.'+uriname,[
-            timestamp:new Date(),
-            type: 'error',
-            message:ioe.toString(),
-            relatedType:"feed",
-            relatedId:uriname
-          ]);
-        }
-        catch ( java.net.SocketTimeoutException ste ) {
-          error=true
-          error_message = ste.toString()
-          log.error("processFeed[${id}] timeout feed_id:${id} feed_url:${url} ${ste.message}",ste.message);
-          logEvent('Feed.'+uriname,[
-            timestamp:new Date(),
-            type: 'error',
-            message:ste.toString(),
-            relatedType:"feed",
-            relatedId:uriname
-          ]);
+          catch ( java.io.IOException ioe ) {
+            error=true
+            error_message = ioe.toString()
+            log.error("processFeed[${id}] ${url} IO Problem feed_id:${id} feed_url:${url} ${ioe.message}",ioe.message);
+            logEvent('Feed.'+uriname,[
+              timestamp:new Date(),
+              type: 'error',
+              message:ioe.toString(),
+              relatedType:"feed",
+              relatedId:uriname
+            ]);
+            SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} IO Problem feed_id:${id} feed_url:${url}",ioe.message);
+          }
+          catch ( java.net.SocketTimeoutException ste ) {
+            error=true
+            error_message = ste.toString()
+            log.error("processFeed[${id}] timeout feed_id:${id} feed_url:${url} ${ste.message}",ste.message);
+            logEvent('Feed.'+uriname,[
+              timestamp:new Date(),
+              type: 'error',
+              message:ste.toString(),
+              relatedType:"feed",
+              relatedId:uriname
+            ]);
+            SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] timeout feed_id:${id} feed_url:${url}", ste.message);
+          }
+          catch ( Exception e ) {
+            error=true
+            error_message = e.toString()
+            log.error("processFeed[${id}] ${url} problem fetching feed",e);
+            logEvent('Feed.'+uriname,[
+              timestamp:new Date(),
+              type: 'error',
+              message:e.toString(),
+              relatedType:"feed",
+              relatedId:uriname
+            ]);
+            SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} general problem fetching feed",e.message);
+          }
         }
         catch ( Exception e ) {
-          error=true
-          error_message = e.toString()
-          log.error("processFeed[${id}] ${url} problem fetching feed",e);
-          logEvent('Feed.'+uriname,[
-            timestamp:new Date(),
-            type: 'error',
-            message:e.toString(),
-            relatedType:"feed",
-            relatedId:uriname
-          ]);
+          log.error("Untrapped exception processing feed",e);
         }
     
         // log.debug("After processing ${url} entries, highest timestamp seen is ${highestSeenTimestamp}");

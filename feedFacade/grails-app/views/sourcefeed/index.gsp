@@ -47,7 +47,6 @@
               <th>Next Due</th>
               <th>HTTP Last Modified</th>
               <th>HTTP Expires</th>
-              <th>Last Error Message</th>
             </tr>
           </thead>
           <tbody>
@@ -88,13 +87,35 @@
                 <td>${f.httpLastModified}</td>
                 <td>${f.httpExpires}</td>
               </tr>
-              <tr>
-                <g:if test="${f.lastError?.length() > 0 }">
+              <g:set var="latest_issues" value="${f.latestIssues(5)}"/>
+              <g:if test="${latest_issues.size() > 0 }">
+                <tr>
                   <td colspan="12">
-                    ${f.lastError} (Consecutive error count = ${f.consecutiveErrors})
+                    <table class="table table-striped">
+                      <thead>
+                        <tr> 
+                          <th>Key</th>
+                          <th>Message</th>
+                          <th>First Seen</th>
+                          <th>Last Seen</th>
+                          <th>Repeated</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <g:each in="${latest_issues}" var="li">
+                          <tr>
+                            <td>${li.key} </td>
+                            <td>${li.message} </td>
+                            <td><g:formatDate date="${new Date(li.firstSeen)}" format="yyyy MM dd HH:mm:ss.SSS"/></td>
+                            <td><g:formatDate date="${new Date(li.lastSeen)}" format="yyyy MM dd HH:mm:ss.SSS"/></td>
+                            <td>${li.occurrences} </td>
+                          </tr>
+                        </g:each>
+                      </tbody>
+                    </table>
                   </td>
-                </g:if>
-              </tr>
+                </tr>
+              </g:if>
               <tr>
                 <td colspan="12">
                   <g:set var="stats" value="${f.getHistogramLastDay()}"/>

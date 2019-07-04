@@ -45,11 +45,13 @@ class SourceFeed {
   boolean enabled = false;
 
   static hasMany = [
-    topics:FeedTopic
+    topics:FeedTopic,
+    feedIssues:FeedIssue
   ]
 
   static mappedBy = [
-    topics:'ownerFeed'
+    topics:'ownerFeed',
+    feedIssues:'ownerFeed'
   ]
 
   // Last hash
@@ -122,5 +124,58 @@ class SourceFeed {
 
   def getNextPollTime() {
     lastCompleted + pollInterval
+  }
+
+  public static staticRegisterFeedIssue(Long id, String key, String message) {
+   try {
+      def issue = null;
+      def issues = FeedIssue.executeQuery('select fi from FeedIssue as fi where fi.ownerFeed.id = :o and fi.key=:key',[o:id, key:key])
+      switch ( issues?.size() ) {
+        case 0:
+          issue = new FeedIssue(ownerFeed:SourceFeed.get(id),
+                                key:key,
+                                message:message,
+                                firstSeen:System.currentTimeMillis(),
+                                occurrences:0);
+          break;
+        case 1:
+          issue = issues[0]
+          break;
+        default:
+          throw new RuntimeException("Too many issues for this feed with this key");
+      }
+
+      issue.lastSeen = System.currentTimeMillis()
+      issue.occurrences++;
+      issue.save(flush:true, failOnError:true);
+    }
+    catch ( Exception e ) {
+      e.printStackTrace()
+    }
+  }
+
+  public registerFeedIssue(String key, String message) {
+    try {
+      log.debug("${this.uriname} registerFeedIssue(${key},${message})");
+
+      def issue = FeedIssue.findByOwnerFeedAndKey(this, key)
+
+      if ( issue == null ) {
+        issue = new FeedIssue(ownerFeed:this, key:key, message:message, firstSeen:System.currentTimeMillis(), occurrences:0);
+      }
+
+      issue.lastSeen = System.currentTimeMillis()
+      issue.occurrences++;
+      issue.save(flush:true, failOnError:true);
+    }
+    catch ( Exception e ) {
+      e.printStackTrace()
+    }
+  }
+
+  private List<FeedIssue>latestIssues(int max) {
+    log.debug("${this.uriname} latestIssues(${max})");
+    List<FeedIssue> r = FeedIssue.executeQuery('select fi from FeedIssue as fi where fi.ownerFeed=:o order by lastSeen desc',[o:this],[max:max]);
+    return r
   }
 }

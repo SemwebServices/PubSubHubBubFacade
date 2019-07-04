@@ -14,7 +14,8 @@
         <th>Code</th>
         <th>baseUrl</th>
         <th>last checked</th>
-        <th>Status</th>
+        <th>Process Status</th>
+        <th>Feed Status</th>
       </tr>
     </thead>
     <tbody>
@@ -22,6 +23,9 @@
         <tr>
           <td><g:link controller="sourcefeed" action="feed" id="${feed.uriname}">${feed.uriname}</g:link></td>
           <td>${feed.baseUrl}</td>
+          <td><g:formatDate date="${new Date(feed.lastCompleted)}" format="yyyy MM dd HH:mm:ss.SSS"/></td>
+          <td>${feed.status}</td>
+          <td>${feed.feedStatus}</td>
         </tr>
       </g:each>
     </tbody>
