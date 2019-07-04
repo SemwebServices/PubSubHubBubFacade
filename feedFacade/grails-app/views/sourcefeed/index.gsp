@@ -86,9 +86,11 @@
                     <td>${f.status}</td>
                     <td>${f.capAlertFeedStatus}</td>
                     <td><a href="${f.baseUrl}">${f.baseUrl}</a></td>
-                    <td><g:formatDate date="${new Date(f.lastCompleted)}" format="yyyy MM dd HH:mm:ss.SSS"/> (${f.lastElapsed})</td>
+                    <td><g:formatDate date="${new Date(f.lastCompleted)}" format="yyyy-MM-dd HH:mm:ss"/></td>
                     <td>${f.pollInterval}</td>
-                    <td><g:formatDate date="${new Date(f.nextPollTime)}" format="yyyy MM dd HH:mm:ss.SSS"/></td>
+                    <td> 
+                      <g:formatDate date="${new Date(f.nextPollTime)}" format="yyyy-MM-dd HH:mm:ss"/>
+                    </td>
                     <td>${f.httpLastModified}</td>
                     <td>${f.httpExpires}</td>
                   </tr>
@@ -111,8 +113,8 @@
                               <tr>
                                 <td>${li.key} </td>
                                 <td>${li.message} </td>
-                                <td><g:formatDate date="${new Date(li.firstSeen)}" format="yyyy MM dd HH:mm:ss.SSS"/></td>
-                                <td><g:formatDate date="${new Date(li.lastSeen)}" format="yyyy MM dd HH:mm:ss.SSS"/></td>
+                                <td><g:formatDate date="${new Date(li.firstSeen)}" format="yyyy-MM-dd HH:mm:ss"/></td>
+                                <td><g:formatDate date="${new Date(li.lastSeen)}" format="yyyy-MM-dd HH:mm:ss"/></td>
                                 <td>${li.occurrences} </td>
                               </tr>
                             </g:each>
