@@ -174,7 +174,6 @@ class SourceFeed {
   }
 
   private List<FeedIssue>latestIssues(int max) {
-    log.debug("${this.uriname} latestIssues(${max})");
     List<FeedIssue> r = FeedIssue.executeQuery('select fi from FeedIssue as fi where fi.ownerFeed=:o order by lastSeen desc',[o:this],[max:max]);
     return r
   }
