@@ -31,6 +31,7 @@ class HomeController {
   def home() {
     log.debug("HomeController::home");
     def result = [:]
+    redirect controller:'sourcefeed', action:'index'
     result
   }
 
