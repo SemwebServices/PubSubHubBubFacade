@@ -83,6 +83,7 @@ grails:
                 scriptlets: html
                 taglib: none
                 staticparts: none
+        encoding: UTF-8
     cors:
         enabled: true
 endpoints:
