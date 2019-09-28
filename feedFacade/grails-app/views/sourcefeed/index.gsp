@@ -12,6 +12,16 @@
       <div class="container" style="vertical-align: middle; text-align:center;">
 
         <h1>Registered Feeds (${totalFeeds} found)</h1>
+        <g:set var="UTCZONE" value="${TimeZone.getTimeZone('Z')}"/>
+        <g:set var="curime" value="${new Date()}"/>
+        As at: <g:formatDate format="yyyy-MM-dd'T'HH:mm:ssz" date="${curime}" timeZone="${UTCZONE}"/> (UTC) /
+        <g:formatDate format="yyyy-MM-dd'T'HH:mm:ssz" date="${curime}"/> (Server)
+        
+        <g:if test="${(blocked_feeds?:0) > 0}">
+          <h3>Warning: there are currently ${blocked_feeds} feeds in-process for loner than expected.
+            <sec:ifLoggedIn>You can <g:link action="releaseBlockedFeeds">Release Manually</g:link></sec:ifLoggedIn>
+          </h3>
+        </g:if>
 
         <g:form controller="sourcefeed" action="index" method="get" class="form">
           <div class="input-group">
@@ -37,8 +47,10 @@
       
         <g:each in="${feeds}" var="f" >
           <div class="card">
+            <div class="card-header">
+              <h3><a href="${f.baseUrl}">${f.baseUrl}</a> (<g:link controller="sourcefeed" action="feed" id="${f.uriname}">${f.uriname}</g:link>)</h3>
+            </div>
             <div class="card-body">
-              <h3>Feed <g:link controller="sourcefeed" action="feed" id="${f.uriname}">${f.uriname}</g:link></h3>
               <table class="table table-striped well">
                 <thead>
                   <tr>
@@ -48,7 +60,6 @@
                     <th>Tags</th>
                     <th>Fetcher Status</th>
                     <th>CAP Status</th>
-                    <th>Base Url</th>
                     <th>Last Completed</th>
                     <th>Poll Interval</th>
                     <th>Next Due</th>
@@ -85,11 +96,10 @@
                     <td><ul><g:each in="${f.tags}" var="tv"><li>${tv.tag.tag}: <strong>${tv.value}</strong></li></g:each></ul></td>
                     <td>${f.status}</td>
                     <td>${f.capAlertFeedStatus}</td>
-                    <td><a href="${f.baseUrl}">${f.baseUrl}</a></td>
-                    <td><g:formatDate date="${new Date(f.lastCompleted)}" format="yyyy-MM-dd HH:mm:ss"/></td>
+                    <td><g:formatDate date="${new Date(f.lastCompleted)}" format="yyyy-MM-dd HH:mm:ssz" timeZone="${UTCZONE}"/></td>
                     <td>${f.pollInterval}</td>
                     <td> 
-                      <g:formatDate date="${new Date(f.nextPollTime)}" format="yyyy-MM-dd HH:mm:ss"/>
+                      <g:formatDate date="${new Date(f.nextPollTime)}" format="yyyy-MM-dd HH:mm:ssz" timeZone="${UTCZONE}"/>
                     </td>
                     <td>${f.httpLastModified}</td>
                     <td>${f.httpExpires}</td>
@@ -113,8 +123,8 @@
                               <tr>
                                 <td>${li.key} </td>
                                 <td>${li.message} </td>
-                                <td><g:formatDate date="${new Date(li.firstSeen)}" format="yyyy-MM-dd HH:mm:ss"/></td>
-                                <td><g:formatDate date="${new Date(li.lastSeen)}" format="yyyy-MM-dd HH:mm:ss"/></td>
+                                <td><g:formatDate date="${new Date(li.firstSeen)}" format="yyyy-MM-dd HH:mm:ssz" timeZone="${UTCZONE}"/></td>
+                                <td><g:formatDate date="${new Date(li.lastSeen)}" format="yyyy-MM-dd HH:mm:ssz" timeZone="${UTCZONE}"/></td>
                                 <td>${li.occurrences} </td>
                               </tr>
                             </g:each>
@@ -129,7 +139,7 @@
                       <table class="table">
                         <thead>
                           <tr>
-                            <th class="col-md-1">Hour &nbsp;</th>
+                            <th class="col-md-1">Hour (UTC)&nbsp;</th>
                             <g:each in="${stats}" var="h">
                               <th>${h.hour}</th>
                             </g:each>

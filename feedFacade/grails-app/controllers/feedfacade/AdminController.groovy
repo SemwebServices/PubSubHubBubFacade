@@ -6,6 +6,7 @@ class AdminController {
 
   def newEventService
   def feedCheckerService
+  def systemService
 
   @Secured(['ROLE_USER', 'IS_AUTHENTICATED_FULLY'])
   def index() { 
@@ -29,16 +30,14 @@ class AdminController {
 
   @Secured(['ROLE_USER', 'IS_AUTHENTICATED_FULLY'])
   def enableAll() {
-    def result = [:]
-    SourceFeed.executeUpdate('update SourceFeed set enabled=:true where enabled=:false and capAlertFeedStatus=:operating',['false':false,'true':true,'operating':'operating']);
-
+    log.debug("Call systemService.enableAllOperating()");
+    systemService.enableAllOperating();
     redirect(url: request.getHeader('referer'))
   }
 
   @Secured(['ROLE_USER', 'IS_AUTHENTICATED_FULLY'])
   def disableAll() {
-    def result = [:]
-    SourceFeed.executeUpdate('update SourceFeed set enabled=:false where enabled=:true',['false':false,'true':true]);
+    systemService.disableAll();
     redirect(url: request.getHeader('referer'))
   }
 }

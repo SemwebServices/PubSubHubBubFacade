@@ -45,6 +45,10 @@ class SourcefeedController {
       clause_count++;
     }
 
+    // Count how many feeds might be blocked
+    result.blocked_feeds = SourceFeed.executeQuery('select count(sf) from SourceFeed as sf where sf.status=:inProcess and sf.lastStarted < :blocktime', 
+                                                   [blocktime:System.currentTimeMillis()-60000, inProcess:'in-process'])[0];
+
 
     result.totalFeeds = SourceFeed.executeQuery('select count(sf) '+base_feed_qry,qry_params)[0]
     result.feeds = SourceFeed.executeQuery('select sf '+base_feed_qry+order_by_clause,qry_params,params)
@@ -118,4 +122,19 @@ class SourcefeedController {
   
     redirect(url: referer)
   }
+
+  @Secured(['ROLE_ADMIN', 'IS_AUTHENTICATED_FULLY'])
+  def releaseBlockedFeeds() {
+    try {
+      SourceFeed.executeUpdate('update SourceFeed sf set sf.status=:paused where sf.status=:inProcess and sf.lastStarted < :oneMinuteAgo',
+                               [inProcess:'in-process', paused:'paused', oneMinuteAgo:System.currentTimeMillis()-60000])
+    }
+    catch ( Exception e ) {
+      log.warn("problem trying to release blocked feeds",e);
+    }
+    def referer = request.getHeader('referer')
+    redirect(url: referer)
+
+  }
+  
 }

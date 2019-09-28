@@ -187,6 +187,7 @@ class FeedCheckerService {
         if ( url.toLowerCase().startsWith('http') ) {
           // log.debug("processFeed[${id}] Feed really is paused -- mark it as in process and proceed");
           sf.status = 'in-process'
+          sf.lastStarted = System.currentTimeMillis();
           continue_processing = true;
         }
         else {

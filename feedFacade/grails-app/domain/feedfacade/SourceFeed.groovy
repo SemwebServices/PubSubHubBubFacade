@@ -16,6 +16,9 @@ class SourceFeed {
   // Base URL of the underlying feed which will be polled
   String baseUrl 
 
+  // The last time the status changed TO in-process
+  Long lastStarted
+
   // The time the feed last changed from 'in-process' to 'paused'
   Long lastCompleted
 
@@ -69,6 +72,8 @@ class SourceFeed {
       httpLastModified blank: false, nullable:true
                enabled blank: false, nullable:true
      consecutiveErrors blank: false, nullable:true
+         lastCompleted blank: false, nullable:true
+           lastStarted blank: false, nullable:true
   }
 
   static mapping = {
