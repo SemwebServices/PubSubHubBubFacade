@@ -18,7 +18,6 @@ class FeedCheckerService {
   def newEventService
   def statsService
   def feedCheckLog=new org.apache.commons.collections.buffer.CircularFifoBuffer(100);
-  def ESWrapperService
   RabbitMessagePublisher rabbitMessagePublisher
 
   private Long  MAX_CONSECUTIVE_ERRORS = 100;
@@ -643,9 +642,6 @@ class FeedCheckerService {
           evt.timestamp=new Date()
         }
         String event_id = java.util.UUID.randomUUID().toString()
-
-        // N.B. Moving to ES6 we will change doc to _doc
-        ESWrapperService.index('events','doc',event_id,evt);
 
         // Publish the event on rabbit
         if ( false ) {
