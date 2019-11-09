@@ -9,6 +9,10 @@ import java.util.TimeZone
 import org.hibernate.Session
 import org.hibernate.StatelessSession
 
+
+// See https://github.com/http-builder-ng/http-builder-ng
+// for info on possible replacement
+
 import groovyx.net.http.HTTPBuilder
 import static groovyx.net.http.Method.GET
 import static groovyx.net.http.Method.POST
