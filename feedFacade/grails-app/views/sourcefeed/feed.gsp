@@ -52,7 +52,7 @@
           <tbody>
             <g:each in="${latestEntries}" var="f" >
               <tr>
-                <td><g:formatDate date="${new java.util.Date(f.entryTs)}" format="yyyy-MM-dd'T'HH:mm:ss.SSS" /></td>
+                <td><g:formatDate date="${new java.util.Date(f?.entryTs)}" format="yyyy-MM-dd'T'HH:mm:ss.SSS" /></td>
                 <td>
                   <strong><a href="${f.link}">${f.title}</a></strong>
                   <p>${f.description}</p>
