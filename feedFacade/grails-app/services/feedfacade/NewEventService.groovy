@@ -1,6 +1,6 @@
 package feedfacade
 
-import grails.transaction.Transactional
+import grails.gorm.transactions.*
 import java.security.MessageDigest
 import com.budjb.rabbitmq.publisher.RabbitMessagePublisher
 

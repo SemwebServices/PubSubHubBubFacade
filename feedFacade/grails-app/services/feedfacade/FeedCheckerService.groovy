@@ -1,6 +1,6 @@
 package feedfacade
 
-import grails.transaction.Transactional
+import grails.gorm.transactions.*
 import java.security.MessageDigest
 import org.apache.commons.io.input.BOMInputStream
 import java.text.SimpleDateFormat
