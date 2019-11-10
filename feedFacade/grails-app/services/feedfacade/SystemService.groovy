@@ -5,7 +5,9 @@ import static java.util.concurrent.TimeUnit.*
 import grails.async.Promise
 import static grails.async.Promises.*
 
+import grails.gorm.transactions.*
 
+@Transactional
 public class SystemService {
 
   private Map state = [:]
