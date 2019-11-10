@@ -11,14 +11,7 @@ import org.hibernate.StatelessSession
 
 
 // See https://github.com/http-builder-ng/http-builder-ng
-// for info on possible replacement
-
-import groovyx.net.http.HTTPBuilder
-import static groovyx.net.http.Method.GET
-import static groovyx.net.http.Method.POST
-import static groovyx.net.http.ContentType.TEXT
-import static groovyx.net.http.ContentType.XML
-import static groovyx.net.http.ContentType.JSON
+import static groovyx.net.http.HttpBuilder.configure
 
 import com.budjb.rabbitmq.publisher.RabbitMessagePublisher
 
@@ -118,35 +111,38 @@ class EventDeliveryService {
 
             log.debug("attemptDelivery pshb ${host_part} ${path_part} mode is ${evt.owner.targetMimetype}");
 
-            HTTPBuilder builder = new HTTPBuilder( host_part )
-            builder.request( POST ) { 
+            def builder = configure {
+              request.uri = host_part
+            }
+
+            builder.post {
 
               // set uriPath, e.g. /rest/resource
-              uri.path = path_part
+              request.uri.path = path_part
 
 
               // set the xml body, e.g. <xml>...</xml>
               if ( evt.owner.targetMimetype.equalsIgnoreCase('XML') ) {
-                requestContentType = XML
-                body = evt.entry.entry
+                request.contentType = 'application/xml'
+                request.body = evt.entry.entry
               }
               else {
-                requestContentType = JSON
-                body = evt.entry.entryAsJson
+                request.contentType = 'application/json'
+                request.body = evt.entry.entryAsJson
               }
   
               // handle response
-              response.success = { resp ->
+              response.success { fromServer, body ->
                 log.error("OK calling ${evt.owner.callback} :: ${resp.status}");
                 evt.status='delivered'
-                evt.responseCode = resp.status
+                evt.responseCode = fromServer.getStatusCode()
                 evt.deliveryDate = new Date()
               }
 
-              response.error = { resp ->
+              response.error { fromServer, body ->
                 log.error("Error code calling ${url}");
                 evt.status='pending'
-                evt.responseCode = resp.status
+                evt.responseCode = fromServer.getStatusCode()
               }
             }
             break;
