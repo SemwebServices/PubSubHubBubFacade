@@ -22,16 +22,29 @@ appender('STDOUT', ConsoleAppender) {
     }
 }
 
+root(WARN, ['STDOUT'])
+logger ('feedfacade', DEBUG)
+
 def targetDir = BuildSettings.TARGET_DIR
-if (Environment.isDevelopmentMode() && targetDir != null) {
+if ( (Environment.isDevelopmentMode() && targetDir != null) ||
+     (Environment.getCurrent() == Environment.TEST ) ) {
     appender("FULL_STACKTRACE", FileAppender) {
         file = "${targetDir}/stacktrace.log"
         append = true
         encoder(PatternLayoutEncoder) {
-            charset = StandardCharsets.UTF_8
             pattern = "%level %logger - %msg%n"
         }
     }
     logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false)
+    root(WARN, ['STDOUT', 'FULL_STACKTRACE'])
 }
-root(ERROR, ['STDOUT'])
+else {
+    logger ('grails.app.init', INFO)
+    logger ('grails.app.domains', WARN)
+    logger ('grails.app.jobs', WARN)
+    logger ('grails.app.services', WARN)
+    logger ('grails.app.controllers', WARN)
+    logger ('feedfacade', INFO)
+    root(WARN, ['STDOUT'])
+}
+
