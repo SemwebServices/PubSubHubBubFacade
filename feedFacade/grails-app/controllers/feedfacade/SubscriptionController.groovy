@@ -19,14 +19,16 @@ class SubscriptionController {
     log.debug("SourcefeedController::newRabbitQueue");
     def result = [:]
 
-    // Create a new subscription to a topic which fires a RabbitMQ message to a named queue
-    def s = new Subscription(
-                             guid:java.util.UUID.randomUUID().toString(),
-                             callback:params.queueName,
-                             topic:Topic.findByName(params.topicName),
-                             subType:'rabbit'
-                            ).save(flush:true, failOnError:true);
-    log.debug("RabbitMQ Subscription created...");
+    Subscription.withTransaction {
+      // Create a new subscription to a topic which fires a RabbitMQ message to a named queue
+      def s = new Subscription(
+                               guid:java.util.UUID.randomUUID().toString(),
+                               callback:params.queueName,
+                               topic:Topic.findByName(params.topicName),
+                               subType:'rabbit'
+                              ).save(flush:true, failOnError:true);
+      log.debug("RabbitMQ Subscription created...");
+    }
     redirect(action:'index');
   }
 

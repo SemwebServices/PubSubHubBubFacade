@@ -73,20 +73,23 @@ class SourcefeedController {
 
         if ( ( params.feedname ) && ( params.feedname.trim().length() > 0 ) ) {
 
-          log.debug("Find by Uriname ${params.feedname}");
+          SourceFeed.withTransaction {
 
-          def feed = SourceFeed.findByUriname(params.feedname)
+            log.debug("Find by Uriname ${params.feedname}");
 
-          if ( feed == null ) {
-            log.debug("Create new feed ${params}");
-            feed = new SourceFeed(uriname:params.feedname, baseUrl:params.baseUrl, pollInterval:params.pollInterval, status:'paused', processingStartTime:0, lastCompleted:0).save(flush:true, failOnError:true);
-            feed.addTopics(params.topics)
-          }
-          else {
-            log.debug("Update feed ${params}");
-            feed.pollInterval = params.pollInterval
-            feed.baseUrl=params.baseUrl
-            feed.save(flush:true, failOnError:true)
+            def feed = SourceFeed.findByUriname(params.feedname)
+
+            if ( feed == null ) {
+              log.debug("Create new feed ${params}");
+              feed = new SourceFeed(uriname:params.feedname, baseUrl:params.baseUrl, pollInterval:params.pollInterval, status:'paused', processingStartTime:0, lastCompleted:0).save(flush:true, failOnError:true);
+              feed.addTopics(params.topics)
+            }
+            else {
+              log.debug("Update feed ${params}");
+              feed.pollInterval = params.pollInterval
+              feed.baseUrl=params.baseUrl
+              feed.save(flush:true, failOnError:true)
+            }
           }
         }
       }
@@ -114,9 +117,11 @@ class SourcefeedController {
   def toggleSourceEnabled() {
     def result = [:]
     log.debug("SourcefeedController::feed ${params.id}");
-    def feed = SourceFeed.findByUriname(params.id)
-    feed.enabled = !feed.enabled
-    feed.save(flush:true, failOnError:true);
+    SourceFeed.withTransaction {
+      def feed = SourceFeed.findByUriname(params.id)
+      feed.enabled = !feed.enabled
+      feed.save(flush:true, failOnError:true);
+    }
     request.getHeader('referer')
     def referer = request.getHeader('referer')
   
