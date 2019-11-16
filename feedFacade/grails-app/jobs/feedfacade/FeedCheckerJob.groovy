@@ -10,6 +10,7 @@ class FeedCheckerJob {
     }
 
     def execute() {
+      log.debug("FeedCheckerJob::execute");
       feedCheckerService.triggerFeedCheck()
     }
 }

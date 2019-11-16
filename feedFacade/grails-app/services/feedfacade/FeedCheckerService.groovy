@@ -8,11 +8,12 @@ import static groovy.json.JsonOutput.*
 import java.text.SimpleDateFormat
 import com.budjb.rabbitmq.publisher.RabbitMessagePublisher
 import java.lang.Thread
+import grails.async.Promise
+import static grails.async.Promises.*
 
 @Transactional
 class FeedCheckerService {
 
-  def executorService
   def running = false;
   def error_count = 0;
   def newEventService
@@ -50,7 +51,6 @@ class FeedCheckerService {
 
 
   def triggerFeedCheck() {
-    // log.debug("FeedCheckerService::triggerFeedCheck thread pool count ${executorService.executor.getActiveCount()}");
     if ( running ) {
       log.error("Feed checker already running - not launching another [${error_count++}]");
     }
@@ -143,10 +143,10 @@ class FeedCheckerService {
     logEvent('System.notification',[
         timestamp:new Date(),
         type: 'info',
-        message:"Feed Check Ended at ${sdf.format(new Date())} tpc:${executorService.executor.getActiveCount()}"
+        message:"Feed Check Ended at ${sdf.format(new Date())}"
     ]);
 
-    feedCheckLog.add([timestamp:new Date(),message:'Feed check finished tpc:'+executorService.executor.getActiveCount()]);
+    feedCheckLog.add([timestamp:new Date(),message:'Feed check finished']);
     running=false;
   }
 
@@ -160,11 +160,6 @@ class FeedCheckerService {
                   httpLastModified) {
 
     // log.debug("processFeed[${id}] (${start_time},${id},${url},${hash},${highestRecordedTimestamp})");
-    def newhash = null;
-    def highestSeenTimestamp = null;
-    def error = false
-    def error_message = null
-    def new_entry_count = 0
 
     logEvent('Feed.'+uriname,[
       timestamp:new Date(),
@@ -177,7 +172,7 @@ class FeedCheckerService {
     def continue_processing = false;
 
     SourceFeed.withNewTransaction {
-      // log.debug("processFeed[${id}] Mark feed as in-process");
+      log.debug("processFeed[${id}] Mark feed as in-process");
       def sf = SourceFeed.get(id)
 
       sf.lock()
@@ -210,196 +205,221 @@ class FeedCheckerService {
     }
 
     if ( continue_processing ) {
-
-      runAsync {
-        log.debug("processFeed[${id}] continue_processing.... :: ${url} ${hash}");
-        
-        def feed_info = null;
-        // The outer try - because we are in a runAsync unhandled exceptions might get dropped
-        // This block does nothing but catch and log exceptions not caught before. It's important
-        // You don't do any work in here beyond the inner try block.
-        try {
-          try {
-    
-            feed_info = fetchFeedPage(url, httpExpires, httpLastModified);
-            // log.debug(feed_info.toString())
-    
-            // If we got a hash back from fetching the page AND the storred hash is different OR not set, then process the feed.
-            if ( ( feed_info.hash != null ) && ( ( hash == null ) || ( feed_info.hash != hash ) ) ) {
-              newhash = feed_info.hash
-              log.debug("processFeed[${id}] Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
-        
-              def processing_result = null;
-              // log.debug("Processing feed (contentType::${feed_info.contentType}) - Extract entries");
-              processing_result = getNewFeedEntries(id, url, new java.net.URL(url).openStream(), highestRecordedTimestamp, uriname)
-  
-              new_entry_count = processing_result.numNewEntries
-              processing_result.newEntries.each { entry ->
-    
-                logEvent('Feed.'+uriname,[
-                  timestamp:new Date(),
-                  message:"Detected new entry ${entry.id}",
-                  relatedType:"entry",
-                  relatedId:uriname+'/'+entry.id
-                ]);
-    
-                log.debug("processFeed[${id}] Calling newEventService.handleNewEvent()");
-                newEventService.handleNewEvent(id,entry)
-              }
-        
-              if ( new_entry_count > 0 ) {
-                // log.debug("processFeed[${id}] Complete having processed ${new_entry_count} new entries");
-                logEvent('Feed.'+uriname,[
-                  timestamp:new Date(),
-                  message:"${uriname} Processing complete (${url}) - ${new_entry_count} new entries",
-                  relatedType:"feed",
-                  relatedId:uriname
-                ]);
-              }
-              else {
-                log.debug("processFeed[${id}] Although hash change detected, we found no new entries...");
-              }
-    
-              if ( processing_result.highestSeenTimestamp ) {
-                highestSeenTimestamp = processing_result.highestSeenTimestamp
-              }
-            }
-            else {
-              // log.debug("processFeed[${id}] ${url} unchanged");
-            }
-          }
-          catch ( java.io.FileNotFoundException fnfe ) {
-            error=true
-            error_message = fnfe.toString()
-            log.error("processFeed[${id}] ${url} Feed seems not to exist",fnfe.message);
-            logEvent('Feed.'+uriname,[
-              type: 'error',
-              timestamp:new Date(),
-              message:fnfe.toString(),
-              relatedType:"feed",
-              relatedId:uriname
-            ]);
-            SourceFeed.staticRegisterFeedIssue(id, "Feed seems not to exist","processFeed[${id}] ${url} Feed seems not to exist");
-          }
-          catch ( java.io.IOException ioe ) {
-            error=true
-            error_message = ioe.toString()
-            log.error("processFeed[${id}] ${url} IO Problem feed_id:${id} feed_url:${url} ${ioe.message}",ioe.message);
-            logEvent('Feed.'+uriname,[
-              timestamp:new Date(),
-              type: 'error',
-              message:ioe.toString(),
-              relatedType:"feed",
-              relatedId:uriname
-            ]);
-            SourceFeed.staticRegisterFeedIssue(id, "IO Problem",ioe.message);
-          }
-          catch ( java.net.SocketTimeoutException ste ) {
-            error=true
-            error_message = ste.toString()
-            log.error("processFeed[${id}] timeout feed_id:${id} feed_url:${url} ${ste.message}",ste.message);
-            logEvent('Feed.'+uriname,[
-              timestamp:new Date(),
-              type: 'error',
-              message:ste.toString(),
-              relatedType:"feed",
-              relatedId:uriname
-            ]);
-            SourceFeed.staticRegisterFeedIssue(id, "Socket Timeout", ste.message);
-          }
-          catch ( org.xml.sax.SAXParseException spe ) {
-            error=true
-            error_message = spe.toString()
-            log.error("processFeed[${id}] XML Parse error feed_id:${id} feed_url:${url} ${spe.message}",spe.message);
-            logEvent('Feed.'+uriname,[
-              timestamp:new Date(),
-              type: 'error',
-              message:spe.toString(),
-              relatedType:"feed",
-              relatedId:uriname
-            ]);
-            SourceFeed.staticRegisterFeedIssue(id, "XML Parse problem", spe.message);
-          }
-          catch ( Exception e ) {
-            error=true
-            error_message = e.toString()
-            log.error("processFeed[${id}] ${url} problem fetching feed",e);
-            logEvent('Feed.'+uriname,[
-              timestamp:new Date(),
-              type: 'error',
-              message:e.toString(),
-              relatedType:"feed",
-              relatedId:uriname
-            ]);
-            SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} general problem fetching feed",e.message);
-          }
-        }
-        catch ( Exception e ) {
-          log.error("Untrapped exception processing feed",e);
-        }
-    
-        // log.debug("After processing ${url} entries, highest timestamp seen is ${highestSeenTimestamp}");
-    
-        SourceFeed.withNewTransaction {
-          // log.debug("processFeed[${id}] Mark feed as paused");
-          def sf = SourceFeed.get(id)
-          sf.lock()
-          sf.status = 'paused'
-          sf.httpExpires = feed_info?.expires
-          sf.httpLastModified = feed_info?.lastModified
-  
-          if ( newhash ) {
-            // log.debug("Updating hash to ${newhash}");
-            sf.lastHash = newhash
-          }
-  
-          if ( highestSeenTimestamp ) {
-            // log.debug("processFeed[${id}] Updating sf.highestTimestamp to be ${highestSeenTimestamp}");
-            sf.highestTimestamp = highestSeenTimestamp
-          }
-          // sf.lastCompleted=start_time
-          // Use the actual last completed time to try and even out the feed checking over time - this will skew each feed
-          // So that all feeds become eligible over time, rather than being based on the start time of the batch
-          sf.lastElapsed=start_time-sf.lastCompleted
-          sf.lastError=error_message
-    
-          if ( error ) {
-  
-            sf.feedStatus='ERROR'
-
-            if ( sf.consecutiveErrors == null ) 
-              sf.consecutiveErrors=0;
-
-            sf.consecutiveErrors++;
-            if ( sf.consecutiveErrors > MAX_CONSECUTIVE_ERRORS) {
-              sf.lastCompleted=System.currentTimeMillis();
-            }
-            statsService.logFailure(sf,start_time);
-  
-            logEvent('Feed.'+uriname,[
-              timestamp:new Date(),
-              type: 'error',
-              message:'Feed status : ERROR '+error_message,
-              relatedType:"feed",
-              relatedId:uriname
-            ]);
-          }
-          else { 
-            sf.feedStatus='OK'
-            sf.consecutiveErrors = 0;
-            sf.lastCompleted=System.currentTimeMillis();
-            statsService.logSuccess(sf,start_time,new_entry_count);
-          }
-    
-          // log.debug("processFeed[${id}] Saving source feed");
-          feedCheckLog.add([timestamp:new Date(),message:"Processing completed on ${id}/${url} at ${sf.lastCompleted} / ${error_message}"]);
-          sf.save(flush:true, failOnError:true);
-        }
+      log.debug("Launch promise to process feed ${id}");
+      Promise p = task {
+        this.continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time);
+      }
+      p.onError { Throwable err ->
+        log.error("Promise error",err);
+      }
+      p.onComplete { result ->
+        log.debug("Promise completed OK");
       }
     }
 
-    feedCheckLog.add([timestamp:new Date(),message:"Process feed completed :: ${id} ${url} / error:${error} ${error_message}"]);
+    feedCheckLog.add([timestamp:new Date(),message:"Process feed completed :: ${id} ${url}"]);
     log.debug("processFeed[${id}] returning");
+  }
+
+
+  /**
+   *  This method will be called by the promise above, it's session will be disconnected due to the way
+   *  promise works in a new thread. Because the service is transactional, it should get the relevant 
+   *  new session/transaction injected.
+   */
+  private void continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time) {
+
+    log.debug("processFeed[${id}] continue_processing.... :: ${url} ${hash}");
+    def error = false
+    String error_message = null
+    def newhash = null;
+    def new_entry_count = 0
+    def highestSeenTimestamp = null;
+
+    def feed_info = null;
+    // The outer try - because we are in a runAsync unhandled exceptions might get dropped
+    // This block does nothing but catch and log exceptions not caught before. It's important
+    // You don't do any work in here beyond the inner try block.
+    try {
+      try {
+
+        feed_info = fetchFeedPage(url, httpExpires, httpLastModified);
+        // log.debug(feed_info.toString())
+
+        // If we got a hash back from fetching the page AND the storred hash is different OR not set, then process the feed.
+        if ( ( feed_info.hash != null ) && ( ( hash == null ) || ( feed_info.hash != hash ) ) ) {
+          newhash = feed_info.hash
+          log.debug("processFeed[${id}] Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
+    
+          def processing_result = null;
+          // log.debug("Processing feed (contentType::${feed_info.contentType}) - Extract entries");
+          processing_result = getNewFeedEntries(id, url, new java.net.URL(url).openStream(), highestRecordedTimestamp, uriname)
+  
+          new_entry_count = processing_result.numNewEntries
+          processing_result.newEntries.each { entry ->
+
+            logEvent('Feed.'+uriname,[
+              timestamp:new Date(),
+              message:"Detected new entry ${entry.id}",
+              relatedType:"entry",
+              relatedId:uriname+'/'+entry.id
+            ]);
+
+            log.debug("processFeed[${id}] Calling newEventService.handleNewEvent()");
+            newEventService.handleNewEvent(id,entry)
+          }
+    
+          if ( new_entry_count > 0 ) {
+            // log.debug("processFeed[${id}] Complete having processed ${new_entry_count} new entries");
+            logEvent('Feed.'+uriname,[
+              timestamp:new Date(),
+              message:"${uriname} Processing complete (${url}) - ${new_entry_count} new entries",
+              relatedType:"feed",
+              relatedId:uriname
+            ]);
+          }
+          else {
+            log.debug("processFeed[${id}] Although hash change detected, we found no new entries...");
+          }
+
+          if ( processing_result.highestSeenTimestamp ) {
+            highestSeenTimestamp = processing_result.highestSeenTimestamp
+          }
+        }
+        else {
+          // log.debug("processFeed[${id}] ${url} unchanged");
+        }
+      }
+      catch ( java.io.FileNotFoundException fnfe ) {
+        error=true
+        error_message = fnfe.toString()
+        log.error("processFeed[${id}] ${url} Feed seems not to exist",fnfe.message);
+        logEvent('Feed.'+uriname,[
+          type: 'error',
+          timestamp:new Date(),
+          message:fnfe.toString(),
+          relatedType:"feed",
+          relatedId:uriname
+        ]);
+        SourceFeed.staticRegisterFeedIssue(id, "Feed seems not to exist","processFeed[${id}] ${url} Feed seems not to exist");
+      }
+      catch ( java.io.IOException ioe ) {
+        error=true
+        error_message = ioe.toString()
+        log.error("processFeed[${id}] ${url} IO Problem feed_id:${id} feed_url:${url} ${ioe.message}",ioe.message);
+        logEvent('Feed.'+uriname,[
+          timestamp:new Date(),
+          type: 'error',
+          message:ioe.toString(),
+          relatedType:"feed",
+          relatedId:uriname
+        ]);
+        SourceFeed.staticRegisterFeedIssue(id, "IO Problem",ioe.message);
+      }
+      catch ( java.net.SocketTimeoutException ste ) {
+        error=true
+        error_message = ste.toString()
+        log.error("processFeed[${id}] timeout feed_id:${id} feed_url:${url} ${ste.message}",ste.message);
+        logEvent('Feed.'+uriname,[
+          timestamp:new Date(),
+          type: 'error',
+          message:ste.toString(),
+          relatedType:"feed",
+          relatedId:uriname
+        ]);
+        SourceFeed.staticRegisterFeedIssue(id, "Socket Timeout", ste.message);
+      }
+      catch ( org.xml.sax.SAXParseException spe ) {
+        error=true
+        error_message = spe.toString()
+        log.error("processFeed[${id}] XML Parse error feed_id:${id} feed_url:${url} ${spe.message}",spe.message);
+        logEvent('Feed.'+uriname,[
+          timestamp:new Date(),
+          type: 'error',
+          message:spe.toString(),
+          relatedType:"feed",
+          relatedId:uriname
+        ]);
+        SourceFeed.staticRegisterFeedIssue(id, "XML Parse problem", spe.message);
+      }
+      catch ( Exception e ) {
+        error=true
+        error_message = e.toString()
+        log.error("processFeed[${id}] ${url} problem fetching feed",e);
+        logEvent('Feed.'+uriname,[
+          timestamp:new Date(),
+          type: 'error',
+          message:e.toString(),
+          relatedType:"feed",
+          relatedId:uriname
+        ]);
+        SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} general problem fetching feed",e.message);
+      }
+    }
+    catch ( Exception e ) {
+      log.error("Untrapped exception processing feed",e);
+    }
+
+    // log.debug("After processing ${url} entries, highest timestamp seen is ${highestSeenTimestamp}");
+
+    SourceFeed.withNewTransaction {
+      log.debug("processFeed[${id}] Mark feed as paused");
+      def sf = SourceFeed.get(id)
+      log.debug("Lock...");
+      sf.lock()
+      log.debug("Locked...");
+      sf.status = 'paused'
+      sf.httpExpires = feed_info?.expires
+      sf.httpLastModified = feed_info?.lastModified
+  
+      if ( newhash ) {
+        // log.debug("Updating hash to ${newhash}");
+        sf.lastHash = newhash
+      }
+  
+      if ( highestSeenTimestamp ) {
+        // log.debug("processFeed[${id}] Updating sf.highestTimestamp to be ${highestSeenTimestamp}");
+        sf.highestTimestamp = highestSeenTimestamp
+      }
+      // sf.lastCompleted=start_time
+      // Use the actual last completed time to try and even out the feed checking over time - this will skew each feed
+      // So that all feeds become eligible over time, rather than being based on the start time of the batch
+      sf.lastElapsed=start_time-sf.lastCompleted
+      sf.lastError=error_message
+
+      if ( error ) {
+  
+        sf.feedStatus='ERROR'
+
+        if ( sf.consecutiveErrors == null ) 
+          sf.consecutiveErrors=0;
+
+        sf.consecutiveErrors++;
+        if ( sf.consecutiveErrors > MAX_CONSECUTIVE_ERRORS) {
+          sf.lastCompleted=System.currentTimeMillis();
+        }
+        statsService.logFailure(sf,start_time);
+  
+        logEvent('Feed.'+uriname,[
+          timestamp:new Date(),
+          type: 'error',
+          message:'Feed status : ERROR '+error_message,
+          relatedType:"feed",
+          relatedId:uriname
+        ]);
+      }
+      else { 
+        sf.feedStatus='OK'
+        sf.consecutiveErrors = 0;
+        sf.lastCompleted=System.currentTimeMillis();
+        statsService.logSuccess(sf,start_time,new_entry_count);
+      }
+
+      log.debug("processFeed[${id}] completed Saving source feed, set status back to ${sf.status}");
+      feedCheckLog.add([timestamp:new Date(),message:"Processing completed on ${id}/${url} at ${sf.lastCompleted} / ${error_message}"]);
+      sf.save(flush:true, failOnError:true);
+    }
+    log.debug("continueToProcessFeed(${id},... returning (error=${error}, errorMessage=${error_message})");
   }
 
 

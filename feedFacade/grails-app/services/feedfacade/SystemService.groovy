@@ -4,8 +4,8 @@ package feedfacade;
 import static java.util.concurrent.TimeUnit.*
 import grails.async.Promise
 import static grails.async.Promises.*
-
 import grails.gorm.transactions.*
+
 
 @Transactional
 public class SystemService {
@@ -55,7 +55,9 @@ public class SystemService {
     log.debug("Enable all operating");
     Promise p = task {
       SourceFeed.withNewSession {
-        this.spinUp();
+        SourceFeed.withTransaction {
+          this.spinUp();
+        }
       }
     }
     p.onError { Throwable err ->

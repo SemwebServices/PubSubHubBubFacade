@@ -31,7 +31,9 @@ class AdminController {
   @Secured(['ROLE_USER', 'IS_AUTHENTICATED_FULLY'])
   def enableAll() {
     log.debug("Call systemService.enableAllOperating()");
-    systemService.enableAllOperating();
+    SourceFeed.withTransaction {
+      systemService.enableAllOperating();
+    }
     redirect(url: request.getHeader('referer'))
   }
 

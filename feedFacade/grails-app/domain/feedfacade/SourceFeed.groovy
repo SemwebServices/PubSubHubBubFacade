@@ -63,17 +63,16 @@ class SourceFeed {
   static constraints = {
               lastHash blank: false, nullable:true
                   name blank: false, nullable:true
-      highestTimestamp blank: false, nullable:true
+      highestTimestamp nullable:true
             feedStatus blank: false, nullable:true
-             lastError blank: false, nullable:true
+             lastError nullable:true
            lastElapsed blank: false, nullable:true
     capAlertFeedStatus blank: false, nullable:true
            httpExpires blank: false, nullable:true
       httpLastModified blank: false, nullable:true
-               enabled blank: false, nullable:true
-     consecutiveErrors blank: false, nullable:true
-         lastCompleted blank: false, nullable:true
-           lastStarted blank: false, nullable:true
+     consecutiveErrors nullable:true
+         lastCompleted nullable:true
+           lastStarted nullable:true
   }
 
   static mapping = {
@@ -83,12 +82,14 @@ class SourceFeed {
 
   public void addTopics(String topicList) {
     def topics = topicList.split(',');
-    topics.each { raw_topic ->
-      def normalised_topic = raw_topic.trim().toLowerCase()
-      if ( normalised_topic.length() > 0 ) {
-        log.debug("    Adding topic ${normalised_topic} to feed ${this.id}");
-        def topic = Topic.findByName(normalised_topic) ?: new Topic(name:normalised_topic).save(flush:true, failOnError:true);
-        def feed_topic = FeedTopic.findByOwnerFeedAndTopic(this, topic) ?: new FeedTopic(ownerFeed:this, topic:topic).save(flush:true, failOnError:true);
+    SourceFeed.withTransaction {
+      topics.each { raw_topic ->
+        def normalised_topic = raw_topic.trim().toLowerCase()
+        if ( normalised_topic.length() > 0 ) {
+          log.debug("    Adding topic ${normalised_topic} to feed ${this.id}");
+          def topic = Topic.findByName(normalised_topic) ?: new Topic(name:normalised_topic).save(flush:true, failOnError:true);
+          def feed_topic = FeedTopic.findByOwnerFeedAndTopic(this, topic) ?: new FeedTopic(ownerFeed:this, topic:topic).save(flush:true, failOnError:true);
+        }
       }
     }
   }
@@ -133,26 +134,28 @@ class SourceFeed {
 
   public static staticRegisterFeedIssue(Long id, String key, String message) {
    try {
-      def issue = null;
-      def issues = FeedIssue.executeQuery('select fi from FeedIssue as fi where fi.ownerFeed.id = :o and fi.key=:key',[o:id, key:key])
-      switch ( issues?.size() ) {
-        case 0:
-          issue = new FeedIssue(ownerFeed:SourceFeed.get(id),
-                                key:key,
-                                message:message,
-                                firstSeen:System.currentTimeMillis(),
-                                occurrences:0);
-          break;
-        case 1:
-          issue = issues[0]
-          break;
-        default:
-          throw new RuntimeException("Too many issues for this feed with this key");
-      }
+      SourceFeed.withTransaction {
+        def issue = null;
+        def issues = FeedIssue.executeQuery('select fi from FeedIssue as fi where fi.ownerFeed.id = :o and fi.key=:key',[o:id, key:key])
+        switch ( issues?.size() ) {
+          case 0:
+            issue = new FeedIssue(ownerFeed:SourceFeed.get(id),
+                                  key:key,
+                                  message:message,
+                                  firstSeen:System.currentTimeMillis(),
+                                  occurrences:0);
+            break;
+          case 1:
+            issue = issues[0]
+            break;
+          default:
+            throw new RuntimeException("Too many issues for this feed with this key");
+        }
 
-      issue.lastSeen = System.currentTimeMillis()
-      issue.occurrences++;
-      issue.save(flush:true, failOnError:true);
+        issue.lastSeen = System.currentTimeMillis()
+        issue.occurrences++;
+        issue.save(flush:true, failOnError:true);
+      }
     }
     catch ( Exception e ) {
       e.printStackTrace()
@@ -161,17 +164,19 @@ class SourceFeed {
 
   public registerFeedIssue(String key, String message) {
     try {
-      log.debug("${this.uriname} registerFeedIssue(${key},${message})");
+      SourceFeed.withTransaction {
+        log.debug("${this.uriname} registerFeedIssue(${key},${message})");
 
-      def issue = FeedIssue.findByOwnerFeedAndKey(this, key)
+        def issue = FeedIssue.findByOwnerFeedAndKey(this, key)
+  
+        if ( issue == null ) {
+          issue = new FeedIssue(ownerFeed:this, key:key, message:message, firstSeen:System.currentTimeMillis(), occurrences:0);
+        }
 
-      if ( issue == null ) {
-        issue = new FeedIssue(ownerFeed:this, key:key, message:message, firstSeen:System.currentTimeMillis(), occurrences:0);
+        issue.lastSeen = System.currentTimeMillis()
+        issue.occurrences++;
+        issue.save(flush:true, failOnError:true);
       }
-
-      issue.lastSeen = System.currentTimeMillis()
-      issue.occurrences++;
-      issue.save(flush:true, failOnError:true);
     }
     catch ( Exception e ) {
       e.printStackTrace()

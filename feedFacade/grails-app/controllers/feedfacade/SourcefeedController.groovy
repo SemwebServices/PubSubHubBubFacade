@@ -131,8 +131,10 @@ class SourcefeedController {
   @Secured(['ROLE_ADMIN', 'IS_AUTHENTICATED_FULLY'])
   def releaseBlockedFeeds() {
     try {
-      SourceFeed.executeUpdate('update SourceFeed sf set sf.status=:paused where sf.status=:inProcess and sf.lastStarted < :oneMinuteAgo',
-                               [inProcess:'in-process', paused:'paused', oneMinuteAgo:System.currentTimeMillis()-60000])
+      SourceFeed.withTransaction {
+        SourceFeed.executeUpdate('update SourceFeed sf set sf.status=:paused where sf.status=:inProcess and sf.lastStarted < :oneMinuteAgo',
+                                 [inProcess:'in-process', paused:'paused', oneMinuteAgo:System.currentTimeMillis()-60000])
+      }
     }
     catch ( Exception e ) {
       log.warn("problem trying to release blocked feeds",e);

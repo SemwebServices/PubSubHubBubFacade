@@ -36,6 +36,7 @@ if ( (Environment.isDevelopmentMode() && targetDir != null) ||
         }
     }
     logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false)
+    logger ('org.hibernate.orm.deprecation', ERROR)
     root(WARN, ['STDOUT', 'FULL_STACKTRACE'])
 }
 else {
@@ -44,6 +45,7 @@ else {
     logger ('grails.app.jobs', WARN)
     logger ('grails.app.services', WARN)
     logger ('grails.app.controllers', WARN)
+    logger ('org.hibernate.orm.deprecation', ERROR)
     logger ('feedfacade', INFO)
     root(WARN, ['STDOUT'])
 }

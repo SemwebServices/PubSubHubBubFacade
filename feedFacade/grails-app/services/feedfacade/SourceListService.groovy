@@ -34,6 +34,7 @@ class SourceListService {
         if ( s.source ) {
           log.debug("Validate source ${s.source.sourceId}");
           def source = SourceFeed.findByUriname(s.source.sourceId)
+          log.debug("query executed - test");
           if ( source == null ) {
             log.debug("  --> Create (enabled:false)");
             source = new SourceFeed(
@@ -58,7 +59,6 @@ class SourceListService {
             source.addTopics("${s.source.sourceId},AllFeeds,${s.source.authorityCountry},${s.source.authorityAbbrev}")
           }
           else {
-
             if ( ( ! source.baseUrl.equals(s.source.capAlertFeed) ) ||
                  ( ! (source.capAlertFeedStatus?:'').equals(s.source.capAlertFeedStatus?:'') ) ) {
               log.debug("  --> changed :: (db)${source.baseUrl}/${source.capAlertFeedStatus}  != (new)${s.source.capAlertFeed}/${s.source.capAlertFeedStatus}. Update.. (enabled:${source.enabled})");

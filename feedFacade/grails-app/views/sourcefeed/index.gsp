@@ -18,7 +18,7 @@
         <g:formatDate format="yyyy-MM-dd'T'HH:mm:ssz" date="${curime}"/> (Server)
         
         <g:if test="${(blocked_feeds?:0) > 0}">
-          <h3>Warning: there are currently ${blocked_feeds} feeds in-process for loner than expected.
+          <h3>Warning: there are currently ${blocked_feeds} feeds in-process for longer than expected.
             <sec:ifLoggedIn>You can <g:link action="releaseBlockedFeeds">Release Manually</g:link></sec:ifLoggedIn>
           </h3>
         </g:if>
@@ -94,7 +94,12 @@
                     </td>
                     <td><ul><g:each in="${f.topics}" var="topic"><li>${topic.topic.name}</li></g:each></ul></td>
                     <td><ul><g:each in="${f.tags}" var="tv"><li>${tv.tag.tag}: <strong>${tv.value}</strong></li></g:each></ul></td>
-                    <td>${f.status}</td>
+                    <td>
+                      ${f.status}
+                      <g:if test="${f.status=='in-process'}">
+                        ${System.currentTimeMillis() - f.lastStarted}
+                      </g:if>
+                    </td>
                     <td>${f.capAlertFeedStatus}</td>
                     <td><g:formatDate date="${new Date(f.lastCompleted)}" format="yyyy-MM-dd HH:mm:ssz" timeZone="${UTCZONE}"/></td>
                     <td>${f.pollInterval}</td>
