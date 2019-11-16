@@ -9,7 +9,7 @@ class SetupController {
   def index() {
     def result=[:]
     log.debug("SetupController::index");
-    Setting.withTransaction {
+    Setting.withTransaction { status ->
       Setting setup_completed = Setting.findByKey('feedfacade.setupcompleted') ?: new Setting(key:'feedfacade.setupcompleted', value:'false').save(flush:true, failOnError:true);
   
       systemService.freshenState();
