@@ -35,13 +35,18 @@ public class SystemService {
     log.debug("spinUp");
     try {
       int loop_protection = 100;
-      int remaining_feeds = countOperatingButNotEnabled();
+      int remaining_feeds = 0;
+
+      remaining_feeds = countOperatingButNotEnabled();
+
       while ( ( loop_protection > 0 ) && ( remaining_feeds > 0 ) ) {
+        SourceFeed.withTransaction {
           log.debug("Detected ${remaining_feeds} still to be enabled - activate next 10");
-          enableUpToNFeeds(10);
+          enableUpToNFeeds(5);
           Thread.sleep(30*1000);
           loop_protection--;
           remaining_feeds = countOperatingButNotEnabled()
+        }
       }
     }
     catch ( Exception e ) {
@@ -55,9 +60,7 @@ public class SystemService {
     log.debug("Enable all operating");
     Promise p = task {
       SourceFeed.withNewSession {
-        SourceFeed.withTransaction {
-          this.spinUp();
-        }
+        this.spinUp();
       }
     }
     p.onError { Throwable err ->

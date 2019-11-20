@@ -22,16 +22,18 @@ class FeedFeedbackConsumer {
         if ( ( components.length == 3 ) && ( ! components[2].equalsIgnoreCase('unknown') ) ) {
           entry = Entry.findById(components[2]);
         }
+
   
         if ( ( sf != null ) && ( body != null ) ) {
-          String body_as_json = groovy.json.JsonOutput.toJson(body)
+          // String body_as_json = groovy.json.JsonOutput.toJson(body)
   
-          FeedEventLog fel = new FeedEventLog(
-                                     ownerFeed:sf,
-                                     entry:entry,
-                                     eventTs:System.currentTimeMillis(),
-                                     eventDetails:body_as_json,
-                                     message:body.message).save(flush:true, failOnError:true);
+          // FeedEventLog fel = new FeedEventLog(
+          //                            ownerFeed:sf,
+          //                            entry:entry,
+          //                            eventTs:System.currentTimeMillis(),
+          //                            eventDetails:body_as_json,
+          //                            message:body.message).save(flush:true, failOnError:true);
+          sf.registerFeedIssue(body.message,body.message);
         }
       }
     }
