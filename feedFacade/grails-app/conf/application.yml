@@ -199,16 +199,10 @@ environments:
                 validationInterval: 15000
                 testOnBorrow: true
                 testWhileIdle: true
-                testOnReturn: false
+                testOnReturn: true
+                validationQuery: "SELECT 1"
                 jdbcInterceptors: ConnectionState
                 defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
-        sysusers:
-            - name: admin
-              display: Admin
-              email: admin@semweb.co
-              roles:
-                - ROLE_ADMIN
-                - ROLE_USER
 ---
 rabbitmq:
     connections:
@@ -216,6 +210,8 @@ rabbitmq:
         host: rabbitmq
         username: cap
         password: cap
+        automaticReconnect: true
+        requestedHeartbeat: 120
 ---
 fah:
     sourceList: https://s3-eu-west-1.amazonaws.com/alert-hub-sources/json
