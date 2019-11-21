@@ -78,7 +78,6 @@ dependencies {
 
 
     compile 'org.grails.plugins:rabbitmq-native:3.3.2'
-    // compile 'org.grails.plugins:http-builder-helper:1.0.2'
     compile("org.quartz-scheduler:quartz:2.2.3") {
         exclude group: 'slf4j-api', module: 'c3p0'
     }
