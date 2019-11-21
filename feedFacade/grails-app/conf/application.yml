@@ -100,9 +100,6 @@ hibernate:
 dataSource:
     pooled: true
     jmxExport: true
-    driverClassName: org.h2.Driver
-    username: sa
-    password:
 ---
 environments:
     development:
@@ -116,7 +113,6 @@ environments:
             driverClassName: org.postgresql.Driver
             dialect: org.hibernate.dialect.PostgreSQLDialect
             properties:
-                jmxEnabled: true
                 initialSize: 5
                 maxActive: 50
                 minIdle: 5
@@ -151,7 +147,6 @@ environments:
             driverClassName: org.postgresql.Driver
             dialect: org.hibernate.dialect.PostgreSQLDialect
             properties:
-                jmxEnabled: true
                 initialSize: 5
                 maxActive: 50
                 minIdle: 5
@@ -185,7 +180,6 @@ environments:
             driverClassName: org.postgresql.Driver
             dialect: org.hibernate.dialect.PostgreSQLDialect
             properties:
-                jmxEnabled: true
                 initialSize: 5
                 maxActive: 50
                 minIdle: 5
@@ -200,7 +194,6 @@ environments:
                 testOnBorrow: true
                 testWhileIdle: true
                 testOnReturn: true
-                validationQuery: "SELECT 1"
                 jdbcInterceptors: ConnectionState
                 defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
 ---
