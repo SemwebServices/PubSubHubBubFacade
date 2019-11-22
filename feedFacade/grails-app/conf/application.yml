@@ -1,6 +1,7 @@
 ---
 server:
-    contextPath: /feedFacade
+    servlet:
+        context-path: /feedFacade
 grails:
     profile: web
     codegen:
