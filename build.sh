@@ -16,3 +16,5 @@ docker push semweb/caphub_feedfacade:v2
 docker push semweb/caphub_feedfacade:latest
 
 
+
+# See https://medium.com/@krishnaregmi/wait-for-it-docker-compose-f0bac30f3357 for wait-for-it info
