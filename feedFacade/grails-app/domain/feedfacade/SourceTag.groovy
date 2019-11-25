@@ -13,8 +13,8 @@ class SourceTag {
   ]
 
   static constraints = {
-    owner blank: false, nullable:false
-    tag blank: false, nullable:false
+    owner nullable:false
+    tag nullable:false
     value blank: false, nullable:false
   }
 

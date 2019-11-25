@@ -66,7 +66,7 @@ class SourceFeed {
       highestTimestamp nullable:true
             feedStatus blank: false, nullable:true
              lastError nullable:true
-           lastElapsed blank: false, nullable:true
+           lastElapsed nullable:true
     capAlertFeedStatus blank: false, nullable:true
            httpExpires blank: false, nullable:true
       httpLastModified blank: false, nullable:true
