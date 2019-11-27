@@ -10,9 +10,12 @@ import com.budjb.rabbitmq.publisher.RabbitMessagePublisher
 import java.lang.Thread
 import grails.async.Promise
 import static grails.async.Promises.*
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.stereotype.Component;
 
 @Transactional
-class FeedCheckerService {
+class FeedCheckerService  implements HealthIndicator {
 
   def running = false;
   def error_count = 0;
@@ -20,6 +23,9 @@ class FeedCheckerService {
   def statsService
   def feedCheckLog=new org.apache.commons.collections.buffer.CircularFifoBuffer(100);
   RabbitMessagePublisher rabbitMessagePublisher
+  Long lastFeedCheckStartedAt = 0;
+  Long lastFeedCheckElapsed = 0;
+  Long currentCheckStartTime = 0;
 
   private Long  MAX_CONSECUTIVE_ERRORS = 100;
 
@@ -49,6 +55,19 @@ class FeedCheckerService {
     feedCheckLog
   }
 
+  public Long getLastFeedCheckStartTime() {
+    return lastFeedCheckStartedAt;
+  }
+
+  public Long getCurrentCheckElapsed() {
+    Long result = null;
+    Long start = currentCheckStartTime;
+    if ( start != null ) {
+      result = System.currentTimeMillis() - start
+    }
+    return result;
+  }
+
 
   def triggerFeedCheck() {
     if ( running ) {
@@ -56,6 +75,7 @@ class FeedCheckerService {
     }
     else {
       def error_count = 0;
+      lastFeedCheckStartedAt = System.currentTimeMillis();
       doFeedCheck()
     }
   }
@@ -65,6 +85,7 @@ class FeedCheckerService {
     def start_time_as_date = new Date(start_time)
     log.info("FeedCheckerService::doFeedCheck ${start_time}");
     running=true;
+    currentCheckStartTime = start_time;
     feedCheckLog=[]
     feedCheckLog.add([timestamp:new Date(),message:'Feed check started']);
     // log.debug("Finding all feeds due on or after ${start_time}");
@@ -147,6 +168,8 @@ class FeedCheckerService {
     ]);
 
     feedCheckLog.add([timestamp:new Date(),message:'Feed check finished']);
+    lastFeedCheckElapsed = System.currentTimeMillis() - start_time;
+    currentCheckStartTime = null;
     running=false;
   }
 
@@ -678,5 +701,13 @@ class FeedCheckerService {
         log.error("Problem trying to log event",e);
       }
     }
+  }
+
+  public Health health() {
+    int errorCode = 0;
+    if (errorCode != 0) {
+      return Health.down().withDetail("feedChecker down", errorCode).build();
+    }
+    return Health.up().build();
   }
 }
