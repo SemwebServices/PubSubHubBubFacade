@@ -170,7 +170,7 @@ class SourceFeed {
         def issue = FeedIssue.findByOwnerFeedAndKey(this, key)
   
         if ( issue == null ) {
-          issue = new FeedIssue(ownerFeed:this, key:key, message:message, firstSeen:System.currentTimeMillis(), occurrences:0);
+          issue = new FeedIssue(ownerFeed:this, key:key, message:message?.take(254), firstSeen:System.currentTimeMillis(), occurrences:0);
         }
 
         issue.lastSeen = System.currentTimeMillis()
