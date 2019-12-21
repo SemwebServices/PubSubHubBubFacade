@@ -8,6 +8,7 @@ COPY ./feedFacade.war /feedFacade.war
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.6.0/wait /wait
 RUN chmod +x /wait
 
+EXPOSE 8080/tcp
+
 # ENTRYPOINT ["/wait", "java","-Djava.security.egd=file:/dev/./urandom","-Xshareclasses", "-Xscmx50M", "-Xtune:virtualized", "-jar","/feedFacade.war"]
 CMD /wait && java -Djava.security.egd=file:/dev/./urandom -Xshareclasses -Xscmx50M -Xtune:virtualized -jar /feedFacade.war
-EXPOSE 8080/tcp
