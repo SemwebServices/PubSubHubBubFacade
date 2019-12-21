@@ -3,5 +3,10 @@ MAINTAINER Ian.Ibbotson@semweb.co
 VOLUME /tmp
 # ADD service-0.1.war mockncipserver.war
 COPY ./feedFacade.war /feedFacade.war
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-Xshareclasses", "-Xscmx50M", "-Xtune:virtualized", "-jar","/feedFacade.war"]
+
+# Handy info here: https://dev.to/hugodias/wait-for-mongodb-to-start-on-docker-3h8b
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.6.0/wait /wait
+RUN chmod +x /wait
+
+ENTRYPOINT ["/wait", "java","-Djava.security.egd=file:/dev/./urandom","-Xshareclasses", "-Xscmx50M", "-Xtune:virtualized", "-jar","/feedFacade.war"]
 EXPOSE 8080/tcp
