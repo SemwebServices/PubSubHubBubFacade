@@ -1,5 +1,10 @@
 # PubSubHubBubFacade
 
+An asychronous feed fetcher which emits events when it detects new entries in RSS/ATOM feeds with the intent of turning
+statically published feeds into an event stream for downstream services to consume in real time.
+
+This work has been kindly supported by UCAR Subaward SUBAWD001770
+
 ## Background
 
 In the development of the CAP Filtered Alert Hub one key issue kept coming up:
