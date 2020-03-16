@@ -164,18 +164,29 @@ class SourceFeed {
 
   public registerFeedIssue(String key, String message) {
     try {
-      SourceFeed.withTransaction {
-        log.debug("${this.uriname} registerFeedIssue(${key},${message})");
+      if ( ( key != null ) &&
+           ( message != null ) ) {
 
-        def issue = FeedIssue.findByOwnerFeedAndKey(this, key)
+        if ( key.length() > 254 )
+          log.warn("Unexpectedly long key for feed issue: ${key}");
+
+        if ( message.length() > 254 )
+          log.warn("Unexpectedly long message for feed issue: ${message}");
+
+        SourceFeed.withTransaction {
+          log.debug("${this.uriname} registerFeedIssue(${key},${message})");
   
-        if ( issue == null ) {
-          issue = new FeedIssue(ownerFeed:this, key:key, message:message?.take(254), firstSeen:System.currentTimeMillis(), occurrences:0);
+          String trunc_key = key.take(254);
+          def issue = FeedIssue.findByOwnerFeedAndKey(this, trunc_key)
+    
+          if ( issue == null ) {
+            issue = new FeedIssue(ownerFeed:this, key:trunc_key, message:message?.take(254), firstSeen:System.currentTimeMillis(), occurrences:0);
+          }
+  
+          issue.lastSeen = System.currentTimeMillis()
+          issue.occurrences++;
+          issue.save(flush:true, failOnError:true);
         }
-
-        issue.lastSeen = System.currentTimeMillis()
-        issue.occurrences++;
-        issue.save(flush:true, failOnError:true);
       }
     }
     catch ( Exception e ) {
