@@ -25,7 +25,7 @@ else
   echo  Standard Release
   docker build -t semweb/caphub_feedfacade:v$FF_VER -t semweb/caphub_feedfacade:v2.0 -t semweb/caphub_feedfacade:v2 -t semweb/caphub_feedfacade:latest .
   docker push semweb/caphub_feedfacade:v$FF_VER
-  docker push semweb/caphub_feedfacade:v2.0
+  docker push semweb/caphub_feedfacade:v2.1
   docker push semweb/caphub_feedfacade:v2
   docker push semweb/caphub_feedfacade:latest
 fi
