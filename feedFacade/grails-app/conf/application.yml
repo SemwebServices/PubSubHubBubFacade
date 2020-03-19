@@ -2,6 +2,8 @@
 server:
     servlet:
         context-path: /feedFacade
+        use-forward-headers: true
+    use-forward-headers: true
     forward-headers-strategy: FRAMEWORK
 grails:
     profile: web
