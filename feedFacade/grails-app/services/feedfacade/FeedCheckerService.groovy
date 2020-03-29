@@ -566,7 +566,8 @@ class FeedCheckerService  implements HealthIndicator {
                                    link:item.link.text(),
                                    sourceDoc:item,
                                    type:'RSSEntry',
-                                   uriname:uriname
+                                   uriname:uriname,
+                                   timestamp: entry_updated_time
                                   ])
           }
           else {
@@ -611,7 +612,8 @@ class FeedCheckerService  implements HealthIndicator {
                                       link:entry.link.'@href',
                                       sourceDoc:entry,
                                       type:'ATOMEntry',
-                                      uriname:uriname
+                                      uriname:uriname,
+                                      timestamp: entry_updated_time
                                     ])
 
               break;
@@ -633,7 +635,8 @@ class FeedCheckerService  implements HealthIndicator {
                                        link:feed_link,
                                        sourceDoc:entry,
                                        type:'ATOMEntry',
-                                       uriname:uriname
+                                       uriname:uriname,
+                                       timestamp: entry_updated_time
                                       ])
               }
               else {
@@ -656,8 +659,18 @@ class FeedCheckerService  implements HealthIndicator {
       log.error("Unable to handle root element : ${rootNode.name().toString()}");
     }
 
+    // Sort the new entries so they are in the correct timestamp order
+    result.newEntries.sort {it.timestamp}
+
     log.debug("getNewFeedEntries[${id}] Found ${result.numNewEntries} new entries (checked ${entry_count}), highest timestamp seen ${result.highestSeenTimestamp}, highest timestamp recorded ${highestRecordedTimestamp}");
     result
+  }
+
+  private void reportNewAlerts(List alerts) {
+    int i = 0;
+    alerts.each { 
+      log.debug("[${i++}] ${it.timestamp} ${it.id} ${it.title}");
+    }
   }
 
   /**

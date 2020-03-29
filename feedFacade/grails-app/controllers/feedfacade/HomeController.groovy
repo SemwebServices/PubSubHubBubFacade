@@ -13,7 +13,7 @@ class HomeController {
     def result = [:]
 
     if ( user ) {
-      redirect action:'home'
+      redirect(controller:'home', action:'home');
     }
     else {
       result.feeds=SourceFeed.executeQuery('select sf from SourceFeed as sf');
