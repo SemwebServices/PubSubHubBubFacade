@@ -17,6 +17,18 @@ class BootStrap {
         setUpUserAccounts()
       }
 
+      // load local overrrides first
+      if ( grailsApplication.config.fah.localFeedSettings != null ) {
+        File local_feed_settings_file = new File(grailsApplication.config.fah.localFeedSettings)
+        if ( local_feed_settings_file.canRead() ) {
+          log.debug("Attempting to read local feed settings from ${grailsApplication.config.fah.localFeedSettings}");
+          sourceListService.loadLocalFeedSettings("file://${local_feed_settings_file}");
+        }
+        else {
+          log.warn("Unable to locate local feed settings file: ${grailsApplication.config.fah.localFeedSettings}");
+        }
+      }
+
       log.debug("Call sourceListService.setupSources");
       sourceListService.setUpSources(grailsApplication.config.fah.sourceList);
     }

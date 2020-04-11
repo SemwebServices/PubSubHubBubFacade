@@ -110,8 +110,8 @@ class FeedCheckerService  implements HealthIndicator {
         SourceFeed.withNewTransaction {
           // log.debug("Searching for paused feeds where lastCompleted+pollInterval < now ${start_time}");
 
-          def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp, sf.httpExpires, sf.httpLastModified, sf.uriname from SourceFeed as sf where sf.baseUrl is not null and sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm and ( sf.capAlertFeedStatus = :operating or capAlertFeedStatus = :testing ) and sf.enabled = :enabled order by (sf.lastCompleted + sf.pollInterval) asc',
-                                           [paused:'paused',ctm:start_time,operating:'operating',testing:'testing', enabled:true],[lock:false])
+          def q = SourceFeed.executeQuery('select sf.id, sf.baseUrl, sf.lastHash, sf.highestTimestamp, sf.httpExpires, sf.httpLastModified, sf.uriname from SourceFeed as sf where sf.baseUrl is not null and sf.status=:paused AND sf.lastCompleted + sf.pollInterval < :ctm and sf.enabled = :enabled order by (sf.lastCompleted + sf.pollInterval) asc',
+                                           [paused:'paused', ctm:start_time, enabled:true],[lock:false])
 
           def num_paused_feeds = q.size();
           log.info("feedChecher detects ${num_paused_feeds} feeds paused that are overdue a check");
@@ -200,26 +200,10 @@ class FeedCheckerService  implements HealthIndicator {
 
       sf.lock()
       if ( sf.status == 'paused' ) {
-
-        if ( url.toLowerCase().startsWith('http') ) {
-          // log.debug("processFeed[${id}] Feed really is paused -- mark it as in process and proceed");
-          sf.status = 'in-process'
-          sf.lastStarted = System.currentTimeMillis();
-          continue_processing = true;
-        }
-        else {
-          sf.capAlertFeedStatus = 'error'
-          sf.lastError="processFeed[${id}] Feed URL seems to be malformed - must start http:// or https:// feed status set to error"
-          logEvent('Feed.'+uriname,[
-            timestamp:new Date(),
-            type: 'error',
-            message:"Invalud URL - must start http: or https: for ${uriname} - ${url}",
-            relatedType:"feed",
-            relatedId:uriname
-          ]);
-          sf.registerFeedIssue("Invalud URL - must start http: or https: for ${uriname} - ${url}", "Invalud URL - must start http: or https: for ${uriname} - ${url}");
-        }
-
+        // log.debug("processFeed[${id}] Feed really is paused -- mark it as in process and proceed");
+        sf.status = 'in-process'
+        sf.lastStarted = System.currentTimeMillis();
+        continue_processing = true;
         sf.save(flush:true, failOnError:true);
       }
       else {
@@ -229,8 +213,9 @@ class FeedCheckerService  implements HealthIndicator {
 
     if ( continue_processing ) {
       log.debug("Launch promise to process feed ${id}");
+      LocalFeedSettings lfs = LocalFeedSettings.findByUriname(uriname)
       Promise p = task {
-        this.continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time);
+        this.continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time, lfs);
       }
       p.onError { Throwable err ->
         log.error("Promise error",err);
@@ -250,7 +235,15 @@ class FeedCheckerService  implements HealthIndicator {
    *  promise works in a new thread. Because the service is transactional, it should get the relevant 
    *  new session/transaction injected.
    */
-  private void continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time) {
+  private void continueToProcessFeed(id, 
+                                     uriname, 
+                                     url, 
+                                     hash, 
+                                     httpExpires, 
+                                     httpLastModified, 
+                                     highestRecordedTimestamp, 
+                                     start_time,
+                                     lfs) {
 
     log.debug("processFeed[${id}] continue_processing.... :: ${url} ${hash}");
     def error = false
@@ -258,6 +251,21 @@ class FeedCheckerService  implements HealthIndicator {
     def newhash = null;
     def new_entry_count = 0
     def highestSeenTimestamp = null;
+
+    if ( lfs != null ) {
+      log.debug("Have override local feed settings for ${lfs.uriname}");
+
+      if ( lfs.alternateFeedURL != null )
+        url = lfs.alternateFeedURL;
+
+      switch ( lfs.authenticationMethod ) {
+        case 'pin':
+          url += "?pin=${lfs.credentials}"
+          break;
+        default:
+          break;
+      }
+    }
 
     def feed_info = null;
     // The outer try - because we are in a runAsync unhandled exceptions might get dropped
@@ -454,7 +462,7 @@ class FeedCheckerService  implements HealthIndicator {
    * @See http://stackoverflow.com/questions/7095897/im-trying-to-use-javas-httpurlconnection-to-do-a-conditional-get-but-i-neve
    * 
    */
-  def fetchFeedPage(feed_address,httpExpires, httpLastModified) {
+  def fetchFeedPage(feed_address, httpExpires, httpLastModified) {
     // log.debug("fetchFeedPage(${feed_address})");
 
     long feedFetchStartTime = System.currentTimeMillis();
@@ -620,7 +628,6 @@ class FeedCheckerService  implements HealthIndicator {
             default:
               def feed_link = null;
               entry.link.each { el ->
-                // if ( el.'@type' == 'application/cap+xml' ) {
                 if ( el.'@type'?.contains('cap') || el.'@type'?.contains('common-alerting-protocol') ) {
                   feed_link = el.'@href'
                 }

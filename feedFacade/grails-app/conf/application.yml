@@ -232,3 +232,13 @@ rabbitmq:
 ---
 fah:
     sourceList: https://s3-eu-west-1.amazonaws.com/alert-hub-sources/json
+environments:
+    development:
+        fah:
+            localFeedSettings: "${user.home}/.grails/localFeedSettings.json"
+    test:
+        fah:
+            localFeedSettings: "${user.home}/.grails/localFeedSettings.json"
+    production:
+        fah:
+            localFeedSettings: /localFeedSettings.json
