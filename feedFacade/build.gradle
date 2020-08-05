@@ -7,6 +7,7 @@ buildscript {
         classpath "org.grails.plugins:hibernate5:7.0.0"
         classpath "gradle.plugin.com.github.erdi.webdriver-binaries:webdriver-binaries-gradle-plugin:2.0"
         classpath "com.bertramlabs.plugins:asset-pipeline-gradle:3.0.10"
+        classpath "com.google.cloud.tools.jib:com.google.cloud.tools.jib.gradle.plugin:2.4.0"
     }
 }
 
@@ -20,6 +21,7 @@ apply plugin:"org.grails.grails-web"
 apply plugin:"com.github.erdi.webdriver-binaries"
 apply plugin:"org.grails.grails-gsp"
 apply plugin:"com.bertramlabs.asset-pipeline"
+apply plugin:"com.google.cloud.tools.jib"
 
 repositories {
     mavenLocal()
@@ -34,6 +36,7 @@ configurations {
         extendsFrom developmentOnly
     }
 }
+
 
 dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
@@ -124,4 +127,26 @@ tasks.withType(Test) {
 assets {
     minifyJs = true
     minifyCss = true
+}
+
+// https://github.com/GoogleContainerTools/jib/tree/master/jib-gradle-plugin
+jib.to.image = 'semweb/caphub_feedfacade'
+jib {
+  from {
+    image = 'adoptopenjdk:11-jdk-openj9-bionic'
+  }
+  to {
+    image = 'semweb/caphub_feedfacade'
+    // credHelper = 'osxkeychain'
+    tags = ['latest']
+  }
+  container {
+    jvmFlags = [ '-Djava.security.egd=file:/dev/./urandom', '-Xshareclasses', '-Xscmx50M', '-Xtune:virtualized' ]
+    // mainClass = 'mypackage.MyApp'
+    // args = ['some', 'args']
+    // ports = ['1000', '2000-2003/udp']
+    ports = ['8080']
+    // labels = [key1:'value1', key2:'value2']
+    // format = 'OCI' / 'Docker'
+  }
 }
