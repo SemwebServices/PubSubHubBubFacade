@@ -470,9 +470,11 @@ class FeedCheckerService  implements HealthIndicator {
     def result = [:]
     java.net.URL feed_url = new java.net.URL(feed_address)
 
-    java.net.URLConnection url_connection = feed_url.openConnection()
+    // java.net.URLConnection url_connection = feed_url.openConnection()
+    java.net.URLConnection url_connection = new java.net.URLConnection(feed_url)
     url_connection.setConnectTimeout(5000)
     url_connection.setReadTimeout(8000)
+    url_connection.connect()
     // Set this to the time we last checked the feed. uc.setIfModifiedSince(System.currentTimeMillis());
     if ( httpLastModified != null ) {
       // log.debug("${feed_address} has last modified ${httpLastModified} so sending that in a If-Modified-Since header");
