@@ -482,7 +482,6 @@ class FeedCheckerService  implements HealthIndicator {
       // See https://http-builder-ng.github.io/http-builder-ng/asciidoc/html5/#_resource_last_modified_head
       response.success { FromServer resp ->
 
-
         String last_modified_string = FromServer.Header.find( resp.headers, 'Last-Modified')?.value
         Date last_modified_value  = last_modified_string ? parseDate(last_modified_string) : null
         if ( last_modified_value )
@@ -521,10 +520,12 @@ class FeedCheckerService  implements HealthIndicator {
           fs.inputStream.text
         }
 
-        response.failure {
+        response.failure { FromServer resp ->
+          log.debug("Failure fetching content : ${resp}")
           return null;
         }
       }
+
       if ( response_content ) {
         result.feed_text = response_content
 
