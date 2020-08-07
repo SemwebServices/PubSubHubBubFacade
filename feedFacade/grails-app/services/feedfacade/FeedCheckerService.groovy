@@ -5,7 +5,6 @@ import java.security.MessageDigest
 import org.apache.commons.io.input.BOMInputStream
 import java.text.SimpleDateFormat
 import static groovy.json.JsonOutput.*
-import java.text.SimpleDateFormat
 import com.budjb.rabbitmq.publisher.RabbitMessagePublisher
 import java.lang.Thread
 import grails.async.Promise
@@ -13,6 +12,10 @@ import static grails.async.Promises.*
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
+import groovyx.net.http.HttpBuilder
+import groovyx.net.http.FromServer
+import groovyx.net.http.ChainedHttpConfig
+import static groovyx.net.http.HttpBuilder.configure
 
 @Transactional
 class FeedCheckerService  implements HealthIndicator {
@@ -40,7 +43,8 @@ class FeedCheckerService  implements HealthIndicator {
     new SimpleDateFormat('yyyy-MM-dd\'T\'HH:mm:ss.SSSX'),
     new SimpleDateFormat('EEE, d MMM yyyy HH:mm:ss z'),
     new SimpleDateFormat('EEE, d MMM yyyy HH:mm:ss Z'),
-    new SimpleDateFormat('EEE, d MMM yyyy HH:mm:ss')
+    new SimpleDateFormat('EEE, d MMM yyyy HH:mm:ss'),
+    new SimpleDateFormat('EEE, dd MMM yyyy  H:mm:ss zzz')
   ];
 
   def getLastLog() {
@@ -463,6 +467,78 @@ class FeedCheckerService  implements HealthIndicator {
    * 
    */
   def fetchFeedPage(feed_address, httpExpires, httpLastModified) {
+    long feedFetchStartTime = System.currentTimeMillis();
+    def result = [:]
+    
+    HttpBuilder http_client = configure {
+      request.uri = feed_address
+       client.clientCustomizer { HttpURLConnection conn ->
+       conn.connectTimeout = 5000;
+      }
+    }
+
+    http_client.head {
+
+      // See https://http-builder-ng.github.io/http-builder-ng/asciidoc/html5/#_resource_last_modified_head
+      response.success { FromServer resp ->
+
+
+        String last_modified_string = FromServer.Header.find( resp.headers, 'Last-Modified')?.value
+        Date last_modified_value  = last_modified_string ? parseDate(last_modified_string) : null
+        if ( last_modified_value )
+          result.lastModified = last_modified_value?.getTime() // Convert date to long
+
+        String expires_string = FromServer.Header.find( resp.headers, 'Expires')?.value
+        Date expires_value = expires_string ? parseDate( expires_string) : null
+        if ( expires_value ) 
+          result.expires = expires_value?.getTime()
+
+        result.contentType = FromServer.Header.find( resp.headers, 'Content-Type')?.value
+      }
+
+      response.failure {
+        log.warn("Unable to get last modified from server");
+      }
+    }
+
+    log.debug("Intermediate: ${result}");
+
+    // If the last modified from the server is null OR it is different to the last one we saw
+    if ( ( result.lastModified == null ) || ( result.lastModified != httpLastModified ) ) {
+      log.debug("processing content from ${feed_address} / ${result.lastModified} / ${httpLastModified}")
+      String response_content = http_client.get {
+
+        response.parser('application/xml') { ChainedHttpConfig cfg, FromServer fs ->
+          fs.inputStream.text
+        }
+        response.parser('application/rss+xml') { ChainedHttpConfig cfg, FromServer fs ->
+          fs.inputStream.text
+        }
+        response.parser('application/atom+xml') { ChainedHttpConfig cfg, FromServer fs ->
+          fs.inputStream.text
+        }
+        response.parser('text/xml') { ChainedHttpConfig cfg, FromServer fs ->
+          fs.inputStream.text
+        }
+
+        response.failure {
+          return null;
+        }
+      }
+      if ( response_content ) {
+        result.feed_text = response_content
+
+        MessageDigest md5_digest = MessageDigest.getInstance("MD5");
+        md5_digest.update(result.feed_text.getBytes())
+        byte[] md5sum = md5_digest.digest();
+        result.hash = new BigInteger(1, md5sum).toString(16);
+      }
+    }
+    
+    return result;
+  }
+
+  def oldFetchFeedPage(feed_address, httpExpires, httpLastModified) {
     // log.debug("fetchFeedPage(${feed_address})");
 
     long feedFetchStartTime = System.currentTimeMillis();

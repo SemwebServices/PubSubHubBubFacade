@@ -41,6 +41,22 @@ production jar. An embedded database is used for feed state.
 There are many deployment options, the initial goal was for a local facade, but projects may also use the
 service internally to poll RSS and turn feeds into event streams.
 
+## Development
+
+Users will normally work with three git projects side by side
+  * git@github.com:SemwebServices/SWCapAlertHubDevops.git
+    The devops project that provides base infrastructure. Check out this project and run
+      cd vagrant
+      docker-compose -f ./docker-compose-dev-setup.yml up
+    to provision the base postgres, elasticsearch and rabbitMQ with appropriate config
+  * This project
+      cd feedFacade
+      grails run-app 
+    to provide a running feed facade you can edit. 
+    Visit http://localhost:8081/feedFacade/setup to complete setup.
+  * CapAggregator
+    
+
 ### GeneralUser
 
     CREATE USER feedfacade WITH PASSWORD 'feedFacade';
