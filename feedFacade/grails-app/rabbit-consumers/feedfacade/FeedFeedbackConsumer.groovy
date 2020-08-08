@@ -7,7 +7,8 @@ class FeedFeedbackConsumer {
   def grailsApplication
 
   static rabbitConfig = [
-    "queue": "FeedFeedbackQueue"
+    "queue": "FeedFeedbackQueue",
+    "transacted": true
   ]
 
   def handleMessage(def body, MessageContext context) {
