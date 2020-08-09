@@ -421,10 +421,23 @@ class FeedCheckerService  implements HealthIndicator {
         ]);
         SourceFeed.staticRegisterFeedIssue(id, "XML Parse problem", sslhe.message);
       }
-      catch ( Exception e ) {
+      catch ( java.lang.Exception e ) {
         error=true
         error_message = e.toString()
-        log.error("processFeed[${id}] ${url} problem fetching feed",e);
+        log.error("GENERAL EXCEPTION processFeed[${id}] ${url} problem fetching feed",e);
+        logEvent('Feed.'+uriname,[
+          timestamp:new Date(),
+          type: 'error',
+          message:e.toString(),
+          relatedType:"feed",
+          relatedId:uriname
+        ]);
+        SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} general problem fetching feed",e.message);
+      }
+      catch ( java.lang.RuntimeException e ) {
+        error=true
+        error_message = e.toString()
+        log.error("RUNTIME EXCEPTION processFeed[${id}] ${url} problem fetching feed",e);
         logEvent('Feed.'+uriname,[
           timestamp:new Date(),
           type: 'error',
