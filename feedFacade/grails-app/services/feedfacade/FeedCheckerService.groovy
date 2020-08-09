@@ -411,7 +411,7 @@ class FeedCheckerService  implements HealthIndicator {
       catch ( javax.net.ssl.SSLHandshakeException sslhe ) {
         error=true
         error_message = sslhe.toString()
-        log.error("processFeed[${id}] SSL Handshake error feed_id:${id} feed_url:${url} ${spe.message}");
+        log.error("processFeed[${id}] SSL Handshake error feed_id:${id} feed_url:${url} ${sslhe.message}");
         logEvent('Feed.'+uriname,[
           timestamp:new Date(),
           type: 'error',
