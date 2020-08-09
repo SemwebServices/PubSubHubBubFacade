@@ -7,7 +7,7 @@ export FF_VER=`grep appVersion ./feedFacade/gradle.properties | cut -f2 -d=`
 echo Release FeedFacade $FF_VER
 
 sdk use grails 4.0.3
-sdk use java 11.0.5.j9-adpt
+sdk use java 11.0.6.j9-adpt
 cd feedFacade
 grails clean
 grails prod war
