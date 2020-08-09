@@ -356,6 +356,19 @@ class FeedCheckerService  implements HealthIndicator {
         ]);
         SourceFeed.staticRegisterFeedIssue(id, "IO Problem",ioe.message);
       }
+      catch ( java.net.NoRouteToHostException no_route_e ) {
+        error=true
+        error_message = no_route_e.toString()
+        log.error("processFeed[${id}] timeout feed_id:${id} feed_url:${url} ${no_route_e.message}")
+        logEvent('Feed.'+uriname,[
+          timestamp:new Date(),
+          type: 'error',
+          message:no_route_e.toString(),
+          relatedType:"feed", 
+          relatedId:uriname
+        ]);
+        SourceFeed.staticRegisterFeedIssue(id, "No Route", no_route_e.message);
+      }
       catch ( org.apache.http.conn.ConnectTimeoutException ste ) {
         error=true
         error_message = ste.toString()
