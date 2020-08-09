@@ -437,7 +437,7 @@ class FeedCheckerService  implements HealthIndicator {
       catch ( java.lang.RuntimeException e ) {
         error=true
         error_message = e.toString()
-        log.error("RUNTIME EXCEPTION processFeed[${id}] ${url} problem fetching feed",e);
+        log.error("RUNTIME EXCEPTION processFeed[${id}] ${url} problem fetching feed")
         logEvent('Feed.'+uriname,[
           timestamp:new Date(),
           type: 'error',
@@ -445,7 +445,7 @@ class FeedCheckerService  implements HealthIndicator {
           relatedType:"feed",
           relatedId:uriname
         ]);
-        SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} general problem fetching feed",e.message);
+        SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} general RUNTIME problem fetching feed")
       }
     }
     catch ( Exception e ) {
