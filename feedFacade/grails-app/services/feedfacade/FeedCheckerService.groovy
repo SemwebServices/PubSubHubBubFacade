@@ -17,6 +17,11 @@ import groovyx.net.http.FromServer
 import groovyx.net.http.ChainedHttpConfig
 import static groovyx.net.http.HttpBuilder.configure
 
+// Moving to Apache http client implementation for HttpBuilderNG
+import groovyx.net.http.ApacheHttpBuilder
+import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.http.client.config.RequestConfig
+
 @Transactional
 class FeedCheckerService  implements HealthIndicator {
 
@@ -230,7 +235,7 @@ class FeedCheckerService  implements HealthIndicator {
     }
 
     feedCheckLog.add([timestamp:new Date(),message:"Process feed completed :: ${id} ${url}"]);
-    log.debug("processFeed[${id}] returning");
+    log.debug("processFeed[${id}] returning having launched promise");
   }
 
 
@@ -249,7 +254,7 @@ class FeedCheckerService  implements HealthIndicator {
                                      start_time,
                                      lfs) {
 
-    log.debug("processFeed[${id}] continue_processing.... :: ${url} ${hash}");
+    log.debug("continueToProcessFeed[${id}] continue_processing.... :: url:${url} existing hash:${hash}");
     def error = false
     String error_message = null
     def newhash = null;
@@ -277,7 +282,7 @@ class FeedCheckerService  implements HealthIndicator {
     // You don't do any work in here beyond the inner try block.
     try {
       try {
-
+        log.debug("call fetchFeedPage for ${url}");
         feed_info = fetchFeedPage(url, httpExpires, httpLastModified);
         // log.debug(feed_info.toString())
 
@@ -354,7 +359,7 @@ class FeedCheckerService  implements HealthIndicator {
       catch ( java.net.SocketTimeoutException ste ) {
         error=true
         error_message = ste.toString()
-        log.error("processFeed[${id}] timeout feed_id:${id} feed_url:${url} ${ste.message}",ste.message);
+        log.error("processFeed[${id}] timeout feed_id:${id} feed_url:${url} ${ste.message}")
         logEvent('Feed.'+uriname,[
           timestamp:new Date(),
           type: 'error',
@@ -393,6 +398,8 @@ class FeedCheckerService  implements HealthIndicator {
     }
     catch ( Exception e ) {
       log.error("Untrapped exception processing feed",e);
+    }
+    finally {
     }
 
     // log.debug("After processing ${url} entries, highest timestamp seen is ${highestSeenTimestamp}");
@@ -468,12 +475,16 @@ class FeedCheckerService  implements HealthIndicator {
    */
   def fetchFeedPage(feed_address, httpExpires, httpLastModified) {
     long feedFetchStartTime = System.currentTimeMillis();
+
     def result = [:]
     
-    HttpBuilder http_client = configure {
+    HttpBuilder http_client = ApacheHttpBuilder.configure {
       request.uri = feed_address
-       client.clientCustomizer { HttpURLConnection conn ->
-       conn.connectTimeout = 5000;
+      client.clientCustomizer { HttpClientBuilder builder ->
+        RequestConfig.Builder requestBuilder = RequestConfig.custom()
+        requestBuilder.connectTimeout = 2000
+        requestBuilder.connectionRequestTimeout = 2000
+        builder.defaultRequestConfig = requestBuilder.build()
       }
     }
 
@@ -536,59 +547,8 @@ class FeedCheckerService  implements HealthIndicator {
       }
     }
     
+
     return result;
-  }
-
-  def oldFetchFeedPage(feed_address, httpExpires, httpLastModified) {
-    // log.debug("fetchFeedPage(${feed_address})");
-
-    long feedFetchStartTime = System.currentTimeMillis();
-
-    def result = [:]
-    java.net.URL feed_url = new java.net.URL(feed_address)
-
-    java.net.URLConnection url_connection = feed_url.openConnection()
-    url_connection.setConnectTimeout(5000)
-    url_connection.setReadTimeout(8000)
-    // Set this to the time we last checked the feed. uc.setIfModifiedSince(System.currentTimeMillis());
-    if ( httpLastModified != null ) {
-      // log.debug("${feed_address} has last modified ${httpLastModified} so sending that in a If-Modified-Since header");
-      // url_connection.setRequestProperty("If-Modified-Since", httpLastModified);
-      url_connection.setIfModifiedSince(Long.parseLong(httpLastModified));
-    }
-   
-    result.lastModified = url_connection.getLastModified()
-    result.expires = url_connection.getExpiration()
-    result.contentType = url_connection.getContentType()
-
-    // log.debug("${feed_address} [URLC]expires: ${result.expires}");
-    // log.debug("${feed_address} [URLC]ifModifiedSince: ${url_connection.getIfModifiedSince()}");
-    // log.debug("${feed_address} [URLC]lastModified: ${result.lastModified}");
-    // log.debug("${feed_address} [URLC]contentType: ${result.contentType}");
-
-    // If you get an Expires response header, then it just means that you don't need to request anything until the specified expire time. 
-    // If you get a Last-Modified response header, then it means that you should be able to use If-Modified-Since to test it. 
-    // If you get an ETag response header, then it means that you should be able to use If-None-Match to test it.
-
-    // log.debug("Connection response code: ${url_connection.getResponseCode()}");
-
-    // If we had no lastModified OR the last modified returned was different
-    if ( ( result.lastModified == null ) ||
-         ( result.lastModified != httpLastModified ) ) {
-      log.info("${feed_address} **CHANGE** (req lm:${result.lastModified}/db lm:${httpLastModified}/http) elapsed: ${System.currentTimeMillis() - feedFetchStartTime}");
-      // result.feed_text = feed_url.getText([connectTimeout: 2000, readTimeout: 3000])
-      result.feed_text = url_connection.getInputStream().getText()
-      MessageDigest md5_digest = MessageDigest.getInstance("MD5");
-      md5_digest.update(result.feed_text.getBytes())
-      byte[] md5sum = md5_digest.digest();
-      result.hash = new BigInteger(1, md5sum).toString(16);
-    }
-    else {
-      // log.debug("${feed_address} **FEEDSTATUS** Unchanged since ${result.lastModified}");
-    }
-
-
-    result
   }
 
   def getNewFeedEntries(id, url, feed_is, highestRecordedTimestamp, uriname) {
