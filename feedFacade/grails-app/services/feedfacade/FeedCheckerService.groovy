@@ -356,6 +356,19 @@ class FeedCheckerService  implements HealthIndicator {
         ]);
         SourceFeed.staticRegisterFeedIssue(id, "IO Problem",ioe.message);
       }
+      catch ( org.apache.http.conn.ConnectTimeoutException ste ) {
+        error=true
+        error_message = ste.toString()
+        log.error("processFeed[${id}] timeout feed_id:${id} feed_url:${url} ${ste.message}")
+        logEvent('Feed.'+uriname,[
+          timestamp:new Date(),
+          type: 'error',
+          message:ste.toString(),
+          relatedType:"feed",
+          relatedId:uriname
+        ]);
+        SourceFeed.staticRegisterFeedIssue(id, "Connect Timeout", ste.message);
+      }
       catch ( java.net.SocketTimeoutException ste ) {
         error=true
         error_message = ste.toString()
@@ -381,6 +394,19 @@ class FeedCheckerService  implements HealthIndicator {
           relatedId:uriname
         ]);
         SourceFeed.staticRegisterFeedIssue(id, "XML Parse problem", spe.message);
+      }
+      catch ( javax.net.ssl.SSLHandshakeException sslhe ) {
+        error=true
+        error_message = sslhe.toString()
+        log.error("processFeed[${id}] SSL Handshake error feed_id:${id} feed_url:${url} ${spe.message}");
+        logEvent('Feed.'+uriname,[
+          timestamp:new Date(),
+          type: 'error',
+          message:sslhe.toString(),
+          relatedType:"feed",
+          relatedId:uriname
+        ]);
+        SourceFeed.staticRegisterFeedIssue(id, "XML Parse problem", sslhe.message);
       }
       catch ( Exception e ) {
         error=true
@@ -482,8 +508,8 @@ class FeedCheckerService  implements HealthIndicator {
       request.uri = feed_address
       client.clientCustomizer { HttpClientBuilder builder ->
         RequestConfig.Builder requestBuilder = RequestConfig.custom()
-        requestBuilder.connectTimeout = 2000
-        requestBuilder.connectionRequestTimeout = 2000
+        requestBuilder.connectTimeout = 5000
+        requestBuilder.connectionRequestTimeout = 5000
         builder.defaultRequestConfig = requestBuilder.build()
       }
     }
