@@ -17,8 +17,10 @@ class StatsService {
 
   def logSuccess(owner, ts, nec) {
 
-      // log.debug("StatsService::logSuccess");
-      try {
+    def result = [:]
+
+    // log.debug("StatsService::logSuccess");
+    try {
 
       StatelessSession statelessSession = sessionFactory.openStatelessSession()
       statelessSession.beginTransaction()
@@ -29,6 +31,7 @@ class StatsService {
       bucket.newEntryCount += nec;
 
       bucket.health = calculateHealth(bucket);
+      result.latestHealth = bucket.health;
 
       if ( bucket.id == null ) {
         statelessSession.insert(bucket);
@@ -43,6 +46,8 @@ class StatsService {
     catch ( Exception e ) {
       log.error("problem in logSuccess",e);
     }
+
+    return result;
   }
 
   /**
@@ -50,29 +55,34 @@ class StatsService {
    */
   def logFailure(owner, ts) {
 
-      // log.debug("StatsService::logFailure");
-      try {
-        StatelessSession statelessSession = sessionFactory.openStatelessSession()
-        statelessSession.beginTransaction()
+    def result = [:]
 
-        def bucket = getStatsBucket(statelessSession, owner, ts)
-        bucket.errorCount ++;
+    // log.debug("StatsService::logFailure");
+    try {
+      StatelessSession statelessSession = sessionFactory.openStatelessSession()
+      statelessSession.beginTransaction()
 
-        bucket.health = calculateHealth(bucket);
+      def bucket = getStatsBucket(statelessSession, owner, ts)
+      bucket.errorCount ++;
 
-        if ( bucket.id == null ) {
-          statelessSession.insert(bucket);
-        }
-        else {
-          statelessSession.update(bucket);
-        }
+      bucket.health = calculateHealth(bucket);
+      result.latestHealth = bucket.health;
 
-        statelessSession.getTransaction().commit()
-        statelessSession.close()
+      if ( bucket.id == null ) {
+        statelessSession.insert(bucket);
+      }
+      else {
+        statelessSession.update(bucket);
+      }
+
+      statelessSession.getTransaction().commit()
+      statelessSession.close()
     }
     catch ( Exception e ) {
       log.error("problem in logFailure",e);
     }
+
+    return result;
   }
 
   private int calculateHealth(SourceFeedStats sfs) {

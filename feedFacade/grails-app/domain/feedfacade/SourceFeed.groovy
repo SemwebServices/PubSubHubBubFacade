@@ -47,6 +47,8 @@ class SourceFeed {
 
   boolean enabled = false;
 
+  Long latestHealth = 0
+
   static hasMany = [
     topics:FeedTopic,
     feedIssues:FeedIssue
@@ -72,7 +74,8 @@ class SourceFeed {
       httpLastModified blank: false, nullable:true
      consecutiveErrors nullable:true
          lastCompleted nullable:true
-           lastStarted nullable:true
+	   lastStarted nullable:true
+          latestHealth nullable:true
   }
 
   static mapping = {

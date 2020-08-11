@@ -55,7 +55,7 @@
                 <thead>
                   <tr>
                     <th>Enabled</th>
-                    <th>Feed Status</th>
+                    <th>Status/Health</th>
                     <th>Topics</th>
                     <th>Tags</th>
                     <th>Fetcher Status</th>
@@ -90,6 +90,9 @@
                       </g:if>
                       <g:if test="${f.feedStatus!='OK' && f.feedStatus!='ERROR'}">
                         ${f.feedStatus?:'Unset'}
+                      </g:if>
+                      <g:if test="${f.latestHealth}">
+                        health:${f.latestHealth}
                       </g:if>
                     </td>
                     <td><ul><g:each in="${f.topics}" var="topic"><li>${topic.topic.name}</li></g:each></ul></td>

@@ -25,6 +25,8 @@ import org.apache.http.client.config.RequestConfig
 @Transactional
 class FeedCheckerService  implements HealthIndicator {
 
+  private static int MAX_HTTP_TIME = 20 * 1000;
+
   def running = false;
   def error_count = 0;
   def newEventService
@@ -424,7 +426,7 @@ class FeedCheckerService  implements HealthIndicator {
       catch ( java.lang.Exception e ) {
         error=true
         error_message = e.toString()
-        log.error("GENERAL EXCEPTION processFeed[${id}] ${url} problem fetching feed: ${e.message}");
+        log.error("GENERAL EXCEPTION processFeed[${id}] ${url} problem fetching feed: ${e.message} (elapsed:${System.currentTimeMillis()-start_time})");
         logEvent('Feed.'+uriname,[
           timestamp:new Date(),
           type: 'error',
@@ -432,12 +434,12 @@ class FeedCheckerService  implements HealthIndicator {
           relatedType:"feed",
           relatedId:uriname
         ]);
-        SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} general problem fetching feed",e.message);
+        SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} general problem fetching feed","${e.message} (elapsed:${System.currentTimeMillis()-start_time})");
       }
       catch ( Throwable e ) {
         error=true
         error_message = e.toString()
-        log.error("RUNTIME EXCEPTION processFeed[${id}] ${url} problem fetching feed")
+        log.error("RUNTIME EXCEPTION processFeed[${id}] ${url} problem fetching feed (elapsed:${System.currentTimeMillis()-start_time})")
         logEvent('Feed.'+uriname,[
           timestamp:new Date(),
           type: 'error',
@@ -445,7 +447,7 @@ class FeedCheckerService  implements HealthIndicator {
           relatedType:"feed",
           relatedId:uriname
         ]);
-        SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} general RUNTIME problem fetching feed")
+        SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} general RUNTIME problem fetching feed", "${e.message} (elapsed:${System.currentTimeMillis()-start_time})")
       }
     }
     catch ( Exception e ) {
@@ -492,7 +494,7 @@ class FeedCheckerService  implements HealthIndicator {
         if ( sf.consecutiveErrors > MAX_CONSECUTIVE_ERRORS) {
           sf.lastCompleted=System.currentTimeMillis();
         }
-        statsService.logFailure(sf,start_time);
+        sf.latestHealth = statsService.logFailure(sf,start_time).latestHealth;
   
         logEvent('Feed.'+uriname,[
           timestamp:new Date(),
@@ -506,7 +508,7 @@ class FeedCheckerService  implements HealthIndicator {
         sf.feedStatus='OK'
         sf.consecutiveErrors = 0;
         sf.lastCompleted=System.currentTimeMillis();
-        statsService.logSuccess(sf,start_time,new_entry_count);
+        sf.latestHealth = statsService.logSuccess(sf,start_time,new_entry_count).latestHealth;
       }
 
       log.debug("processFeed[${id}] completed Saving source feed, set status back to ${sf.status}");
@@ -534,8 +536,8 @@ class FeedCheckerService  implements HealthIndicator {
       request.uri = feed_address
       client.clientCustomizer { HttpClientBuilder builder ->
         RequestConfig.Builder requestBuilder = RequestConfig.custom()
-        requestBuilder.connectTimeout = 2500
-        requestBuilder.connectionRequestTimeout = 2500
+        requestBuilder.connectTimeout = MAX_HTTP_TIME;
+        requestBuilder.connectionRequestTimeout = MAX_HTTP_TIME;
         builder.defaultRequestConfig = requestBuilder.build()
       }
     }
