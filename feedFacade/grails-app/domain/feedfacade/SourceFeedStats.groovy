@@ -10,6 +10,7 @@ class SourceFeedStats {
   Long errorCount
   Long successCount
   Long newEntryCount
+  Long health
 
   static constraints = {
        lastUpdate blank: false, nullable:true
@@ -18,6 +19,7 @@ class SourceFeedStats {
        errorCount blank: false, nullable:true
      successCount blank: false, nullable:true
     newEntryCount blank: false, nullable:true
+           health blank: false, nullable:true
   }
 
 }

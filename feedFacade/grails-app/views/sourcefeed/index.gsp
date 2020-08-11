@@ -169,6 +169,12 @@
                               <td>${h.newEntryCount}</td>
                             </g:each>
                           </tr>
+                          <tr>
+                           <th>Health</th>
+                            <g:each in="${stats}" var="h">
+                              <td>${h.health}</td>
+                            </g:each>
+                          </tr>
                         </tbody>
                       </table>
                     </td>

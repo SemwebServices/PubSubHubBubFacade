@@ -28,6 +28,8 @@ class StatsService {
       bucket.successCount ++;
       bucket.newEntryCount += nec;
 
+      bucket.health = calculateHealth(bucket);
+
       if ( bucket.id == null ) {
         statelessSession.insert(bucket);
       }
@@ -56,6 +58,8 @@ class StatsService {
         def bucket = getStatsBucket(statelessSession, owner, ts)
         bucket.errorCount ++;
 
+        bucket.health = calculateHealth(bucket);
+
         if ( bucket.id == null ) {
           statelessSession.insert(bucket);
         }
@@ -69,6 +73,15 @@ class StatsService {
     catch ( Exception e ) {
       log.error("problem in logFailure",e);
     }
+  }
+
+  private int calculateHealth(SourceFeedStats sfs) {
+    int percentage_passing = 0
+    long total = sfs.errorCount + sfs.successCount
+    if ( total > 0 ) {
+      percentage_passing = ( sfs.successCount / total * 100 )
+    }
+    return percentage_passing;
   }
 
   /**
