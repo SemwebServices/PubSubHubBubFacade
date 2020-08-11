@@ -67,7 +67,7 @@ class NewEventService {
           publish(entry_type, feed_id, uriname, e)
         }
         else {
-          log.warn("Entry is a repeated hash");
+          log.warn("Entry is a repeated hash (feed ${feed_id}, hash:${entryHash})");
         }
       }
       else {

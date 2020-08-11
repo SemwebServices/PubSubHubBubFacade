@@ -424,7 +424,7 @@ class FeedCheckerService  implements HealthIndicator {
       catch ( java.lang.Exception e ) {
         error=true
         error_message = e.toString()
-        log.error("GENERAL EXCEPTION processFeed[${id}] ${url} problem fetching feed",e);
+        log.error("GENERAL EXCEPTION processFeed[${id}] ${url} problem fetching feed: ${e.message}");
         logEvent('Feed.'+uriname,[
           timestamp:new Date(),
           type: 'error',
@@ -534,8 +534,8 @@ class FeedCheckerService  implements HealthIndicator {
       request.uri = feed_address
       client.clientCustomizer { HttpClientBuilder builder ->
         RequestConfig.Builder requestBuilder = RequestConfig.custom()
-        requestBuilder.connectTimeout = 5000
-        requestBuilder.connectionRequestTimeout = 5000
+        requestBuilder.connectTimeout = 2500
+        requestBuilder.connectionRequestTimeout = 2500
         builder.defaultRequestConfig = requestBuilder.build()
       }
     }
