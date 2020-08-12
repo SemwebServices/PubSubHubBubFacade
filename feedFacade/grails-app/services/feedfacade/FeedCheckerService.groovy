@@ -26,6 +26,7 @@ import org.apache.http.client.config.RequestConfig
 class FeedCheckerService  implements HealthIndicator {
 
   private static int MAX_HTTP_TIME = 20 * 1000;
+  private static int active_checks = 0;
 
   def running = false;
   def error_count = 0;
@@ -82,7 +83,7 @@ class FeedCheckerService  implements HealthIndicator {
 
   def triggerFeedCheck() {
     if ( running ) {
-      log.error("Feed checker already running - not launching another [${error_count++}]");
+      log.error("Feed checker already running - not launching another [${error_count++}] - active_checks=${active_checks}");
     }
     else {
       def error_count = 0;
@@ -222,18 +223,28 @@ class FeedCheckerService  implements HealthIndicator {
       }
     }
 
-    if ( continue_processing ) {
-      log.debug("Launch promise to process feed ${id}");
-      LocalFeedSettings lfs = LocalFeedSettings.findByUriname(uriname)
-      Promise p = task {
-        this.continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time, lfs);
+    String feed_check_mode='Promise'
+
+    
+    if ( feed_check_mode=='Promise' ) {
+      if ( continue_processing ) {
+        log.debug("Launch promise to process feed ${id}");
+        LocalFeedSettings lfs = LocalFeedSettings.findByUriname(uriname)
+        Promise p = task {
+          active_checks++;
+          this.continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time, lfs);
+        }
+        p.onError { Throwable err ->
+          log.error("Promise error",err);
+        }
+        p.onComplete { result ->
+          active_checks--;
+          log.debug("Promise completed OK (active_checks=${active_checks})");
+        }
       }
-      p.onError { Throwable err ->
-        log.error("Promise error",err);
-      }
-      p.onComplete { result ->
-        log.debug("Promise completed OK");
-      }
+    }
+    else {
+      log.warn("Unhandled feed checker mode");
     }
 
     feedCheckLog.add([timestamp:new Date(),message:"Process feed completed :: ${id} ${url}"]);
