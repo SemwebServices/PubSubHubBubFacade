@@ -1,5 +1,4 @@
 package feedfacade
-
 import grails.gorm.transactions.*
 import java.security.MessageDigest
 import org.apache.commons.io.input.BOMInputStream
@@ -27,6 +26,9 @@ class FeedCheckerService  implements HealthIndicator {
 
   private static int MAX_HTTP_TIME = 20 * 1000;
   private static int active_checks = 0;
+  private static Map<String,Object> active_check_info = [:]
+
+  def grailsApplication
 
   def running = false;
   def error_count = 0;
@@ -82,14 +84,21 @@ class FeedCheckerService  implements HealthIndicator {
 
 
   def triggerFeedCheck() {
+
+    log.info("triggerFeedCheck :: FEED-CHECK-PROMISE active info (${active_checks})");
+    active_check_info.each { k, v ->
+      log.info("  [${k}] -> ${v}");
+    }
+
     if ( running ) {
-      log.error("Feed checker already running - not launching another [${error_count++}] - active_checks=${active_checks}");
+      log.info("Feed checker already running - not launching another [${error_count++}] - active_checks=${active_checks}");
     }
     else {
       def error_count = 0;
       lastFeedCheckStartedAt = System.currentTimeMillis();
       doFeedCheck()
     }
+
   }
 
   def doFeedCheck() {
@@ -223,25 +232,38 @@ class FeedCheckerService  implements HealthIndicator {
       }
     }
 
-    String feed_check_mode='Promise'
+    String feed_check_mode=grailsApplication.config?.feedCheckMode ?: 'serial'
 
     
+    log.debug("process feed in ${feed_check_mode} mode");
     if ( feed_check_mode=='Promise' ) {
       if ( continue_processing ) {
         log.debug("Launch promise to process feed ${id}");
-        LocalFeedSettings lfs = LocalFeedSettings.findByUriname(uriname)
-        Promise p = task {
+        String ckid = java.util.UUID.randomUUID().toString()
+
+        Promise p = task( { check_id ->
+          LocalFeedSettings lfs = LocalFeedSettings.findByUriname(uriname)
           active_checks++;
+          def promise_info = [ id:id, uriname:uriname, url:url, start_time:start_time ]
+          log.info("FEED-CHECK-PROMISE[${check_id}] Launch promise ${promise_info} after start, active_checks=${active_checks++}");
+          active_check_info[check_id] = promise_info
           this.continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time, lfs);
-        }
-        p.onError { Throwable err ->
-          log.error("Promise error",err);
-        }
-        p.onComplete { result ->
+        }.curry(ckid))
+
+        p.onError( { check_id, Throwable err ->
+          log.error("FEED-CHECK-PROMISE[${check_id}] error",err);
+        }.curry(ckid))
+
+        p.onComplete( { check_id, result ->
           active_checks--;
-          log.debug("Promise completed OK (active_checks=${active_checks})");
-        }
+          active_check_info.remove(check_id);
+          log.debug("FEED-CHECK-PROMISE[${check_id}] completed OK (active_checks=${active_checks})");
+        }.curry(ckid))
       }
+    }
+    else if ( feed_check_mode=='serial' ) {
+      LocalFeedSettings lfs = LocalFeedSettings.findByUriname(uriname)
+      this.continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time, lfs);
     }
     else {
       log.warn("Unhandled feed checker mode");
@@ -502,9 +524,7 @@ class FeedCheckerService  implements HealthIndicator {
           sf.consecutiveErrors=0;
 
         sf.consecutiveErrors++;
-        if ( sf.consecutiveErrors > MAX_CONSECUTIVE_ERRORS) {
-          sf.lastCompleted=System.currentTimeMillis();
-        }
+        sf.lastCompleted=System.currentTimeMillis();
         sf.latestHealth = statsService.logFailure(sf,start_time).latestHealth;
   
         logEvent('Feed.'+uriname,[
@@ -549,6 +569,7 @@ class FeedCheckerService  implements HealthIndicator {
         RequestConfig.Builder requestBuilder = RequestConfig.custom()
         requestBuilder.connectTimeout = MAX_HTTP_TIME;
         requestBuilder.connectionRequestTimeout = MAX_HTTP_TIME;
+        requestBuilder.socketTimeout = MAX_HTTP_TIME;
         builder.defaultRequestConfig = requestBuilder.build()
       }
     }

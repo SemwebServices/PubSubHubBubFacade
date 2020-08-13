@@ -10,7 +10,7 @@ class FeedIssue {
   String message
 
   static constraints = {
-    ownerFeed blank: false, nullable:false
+    ownerFeed nullable:false
   }
 
   static mapping = {

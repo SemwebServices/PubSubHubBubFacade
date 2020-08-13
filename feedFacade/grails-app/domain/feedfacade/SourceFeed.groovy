@@ -137,7 +137,7 @@ class SourceFeed {
 
   public static staticRegisterFeedIssue(Long id, String key, String message) {
    try {
-      SourceFeed.withTransaction {
+      SourceFeed.withNewTransaction {
         def issue = null;
         def issues = FeedIssue.executeQuery('select fi from FeedIssue as fi where fi.ownerFeed.id = :o and fi.key=:key',[o:id, key:key])
         switch ( issues?.size() ) {
