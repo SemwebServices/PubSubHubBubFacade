@@ -24,8 +24,8 @@ import org.apache.http.client.config.RequestConfig
 @Transactional
 class FeedCheckerService  implements HealthIndicator {
 
-  private static int MAX_HTTP_TIME = 20 * 1000;
-  private static int active_checks = 0;
+  private static int MAX_HTTP_TIME = 5 * 1000;
+  private static Integer active_checks = 0;
   private static Map<String,Object> active_check_info = [:]
 
   def grailsApplication
@@ -135,7 +135,7 @@ class FeedCheckerService  implements HealthIndicator {
                                            [paused:'paused', ctm:start_time, enabled:true],[lock:false])
 
           def num_paused_feeds = q.size();
-          log.info("feedChecher detects ${num_paused_feeds} feeds paused that are overdue a check");
+          log.info("feedChecher detects ${num_paused_feeds} feeds paused that are overdue a check (lastCompleted+pollInterval > ${start_time_as_date})");
 
           if ( num_paused_feeds > 0 ) {
             def row = q.get(0)
@@ -153,7 +153,7 @@ class FeedCheckerService  implements HealthIndicator {
 
         if ( feed_info ) {
           feedCheckLog.add([timestamp:new Date(),message:'Identified feed '+feed_info]);
-          log.info("Process feed ${feed_info}");
+          log.info("Process selected feed ${feed_info}");
           processFeed(start_time, 
                       feed_info.id,
                       feed_info.uriname,
@@ -232,41 +232,72 @@ class FeedCheckerService  implements HealthIndicator {
       }
     }
 
-    String feed_check_mode=grailsApplication.config?.feedCheckMode ?: 'serial'
+    String feed_check_mode=grailsApplication.config?.feedCheckMode ?: 'parallel'
 
     
-    log.debug("process feed in ${feed_check_mode} mode");
-    if ( feed_check_mode=='Promise' ) {
-      if ( continue_processing ) {
+    if ( continue_processing ) {
+
+      log.debug("process feed in ${feed_check_mode} mode");
+
+      if ( feed_check_mode=='parallel' ) {
+
+        int max_active = grailsApplication.config?.feedCheckMaxActivePromises ?: 5
+
+        // Block whilst we have > max_active promises, then continue
+        synchronized(active_check_info) {
+          while ( active_checks > max_active ) {
+            log.debug("FEED-CHECK-PROMISE Active=${active_checks}, max=${max_active} BLOCKING waiting for a promise to complete");
+            active_check_info.wait(60000)
+            log.debug("Done waiting, recheck")
+          }
+        }
+
         log.debug("Launch promise to process feed ${id}");
         String ckid = java.util.UUID.randomUUID().toString()
 
         Promise p = task( { check_id ->
-          LocalFeedSettings lfs = LocalFeedSettings.findByUriname(uriname)
-          active_checks++;
-          def promise_info = [ id:id, uriname:uriname, url:url, start_time:start_time ]
-          log.info("FEED-CHECK-PROMISE[${check_id}] Launch promise ${promise_info} after start, active_checks=${active_checks++}");
-          active_check_info[check_id] = promise_info
-          this.continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time, lfs);
+          LocalFeedSettings.withNewSession {
+            LocalFeedSettings.withNewTransaction {
+              LocalFeedSettings lfs = LocalFeedSettings.findByUriname(uriname)
+              def promise_info = [ id:id, uriname:uriname, url:url, start_time:start_time ]
+              synchronized(active_check_info) {
+                active_checks++;
+                active_check_info[check_id] = promise_info
+              }
+
+              log.info("FEED-CHECK-PROMISE[${check_id}] Launch promise ${promise_info} after start, active_checks=${active_checks}");
+              this.continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time, lfs);
+            }
+          }
         }.curry(ckid))
 
         p.onError( { check_id, Throwable err ->
-          log.error("FEED-CHECK-PROMISE[${check_id}] error",err);
+          synchronized(active_check_info) {
+            active_checks--;
+            active_check_info.remove(check_id);
+            active_check_info.notifyAll()
+          }
+          log.error("FEED-CHECK-PROMISE[${check_id}] completed with error (active_checks=${active_checks})",err);
+          log.debug("Notify waiters that promise completed");
         }.curry(ckid))
 
         p.onComplete( { check_id, result ->
-          active_checks--;
-          active_check_info.remove(check_id);
+          synchronized(active_check_info) {
+            active_checks--;
+            active_check_info.remove(check_id);
+            active_check_info.notifyAll()
+          }
           log.debug("FEED-CHECK-PROMISE[${check_id}] completed OK (active_checks=${active_checks})");
+          log.debug("Notify waiters that promise completed");
         }.curry(ckid))
       }
-    }
-    else if ( feed_check_mode=='serial' ) {
-      LocalFeedSettings lfs = LocalFeedSettings.findByUriname(uriname)
-      this.continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time, lfs);
-    }
-    else {
-      log.warn("Unhandled feed checker mode");
+      else if ( feed_check_mode=='serial' ) {
+        LocalFeedSettings lfs = LocalFeedSettings.findByUriname(uriname)
+        this.continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time, lfs);
+      }
+      else {
+        log.warn("Unhandled feed checker mode");
+      }
     }
 
     feedCheckLog.add([timestamp:new Date(),message:"Process feed completed :: ${id} ${url}"]);
@@ -295,6 +326,8 @@ class FeedCheckerService  implements HealthIndicator {
     def newhash = null;
     def new_entry_count = 0
     def highestSeenTimestamp = null;
+ 
+    def processing_start_time = System.currentTimeMillis()
 
     if ( lfs != null ) {
       log.debug("Have override local feed settings for ${lfs.uriname}");
@@ -540,6 +573,10 @@ class FeedCheckerService  implements HealthIndicator {
         sf.consecutiveErrors = 0;
         sf.lastCompleted=System.currentTimeMillis();
         sf.latestHealth = statsService.logSuccess(sf,start_time,new_entry_count).latestHealth;
+      }
+
+      if ( sf.lastCompleted - processing_start_time > MAX_HTTP_TIME ) {
+        log.warn("Processing feed[${id}] ${url} took ${sf.lastCompleted - processing_start_time} - longer than MAX_HTTP_TIME ${MAX_HTTP_TIME}. Investigate");
       }
 
       log.debug("processFeed[${id}] completed Saving source feed, set status back to ${sf.status}");
