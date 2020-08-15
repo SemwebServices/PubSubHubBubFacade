@@ -24,7 +24,7 @@ import org.apache.http.client.config.RequestConfig
 @Transactional
 class FeedCheckerService  implements HealthIndicator {
 
-  private static int MAX_HTTP_TIME = 5 * 1000;
+  private static int MAX_HTTP_TIME = 10 * 1000;
   private static Integer active_checks = 0;
   private static Map<String,Object> active_check_info = [:]
 
@@ -241,11 +241,11 @@ class FeedCheckerService  implements HealthIndicator {
 
       if ( feed_check_mode=='parallel' ) {
 
-        int max_active = grailsApplication.config?.feedCheckMaxActivePromises ?: 5
+        int max_active = grailsApplication.config?.feedCheckMaxActivePromises ?: 8
 
         // Block whilst we have > max_active promises, then continue
         synchronized(active_check_info) {
-          while ( active_checks > max_active ) {
+          while ( active_checks >= max_active ) {
             log.debug("FEED-CHECK-PROMISE Active=${active_checks}, max=${max_active} BLOCKING waiting for a promise to complete");
             active_check_info.wait(60000)
             log.debug("Done waiting, recheck")
