@@ -16,7 +16,7 @@ class HomeController {
       redirect(controller:'home', action:'home');
     }
     else {
-      result.feeds=SourceFeed.executeQuery('select sf from SourceFeed as sf');
+      result.feeds=SourceFeed.executeQuery('select sf from SourceFeed as sf order by sf.enabled desc, sf.uriname');
     }
 
     result
