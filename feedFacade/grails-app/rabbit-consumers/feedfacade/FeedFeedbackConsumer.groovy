@@ -34,7 +34,7 @@ class FeedFeedbackConsumer {
           //                            eventTs:System.currentTimeMillis(),
           //                            eventDetails:body_as_json,
           //                            message:body.message).save(flush:true, failOnError:true);
-          sf.registerFeedIssue(body.message,body.message);
+          sf.registerFeedIssue(body.key ?: body.message,body.message);
         }
       }
     }

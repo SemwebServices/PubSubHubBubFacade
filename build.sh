@@ -29,3 +29,8 @@ else
   docker push semweb/caphub_feedfacade:v2
   docker push semweb/caphub_feedfacade:latest
 fi
+
+echo Completed release of FeedFacade $FF_VER
+echo to deploy
+echo ssh cap
+echo docker service update --image semweb/caphub_feedfacade:v$FF_VER fah_feedFacade
