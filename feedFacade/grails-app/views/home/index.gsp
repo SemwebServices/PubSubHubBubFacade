@@ -38,11 +38,9 @@
           <td>${feed.capAlertFeedStatus}</td>
           <td>
             <g:if test="${feed.enabled}">
-              <g:if test="${ feed.latestHealth >= 80 }"> <asset:image src="sunny.svg" width="32" alt="${feed.latestHealth}"/></g:if>
-              <g:if test="${ feed.latestHealth >= 60 && feed.latestHealth < 80 }"><asset:image src="partially-sunny.svg" width="32" alt="${feed.latestHealth}"/></g:if>
-              <g:if test="${ feed.latestHealth >= 40 && feed.latestHealth < 60 }"><asset:image src="cloudy.svg" width="32" alt="${feed.latestHealth}"/></g:if>
-              <g:if test="${ feed.latestHealth >= 20 && feed.latestHealth < 40 }"><asset:image src="raining.svg" width="32" alt="${feed.latestHealth}"/></g:if>
-              <g:if test="${ feed.latestHealth >= 0 && feed.latestHealth < 20 }"><asset:image src="storm.svg" width="32" alt="${feed.latestHealth}"/></g:if>
+              <g:if test="${ feed.latestHealth >= 80 }"> <span style="background-color: green; padding:5px;">${feed.latestHealth}%</span></g:if>
+              <g:if test="${ feed.latestHealth >= 40 && feed.latestHealth < 80 }"><span style="background-color: amber; padding:5px;">${feed.latestHealth}%</span></g:if>
+              <g:if test="${ feed.latestHealth >= 0 && feed.latestHealth < 40 }"><span style="background-color: red; padding:5px;">${feed.latestHealth}%</span></g:if>
             </g:if>
           </td>
         </tr>
