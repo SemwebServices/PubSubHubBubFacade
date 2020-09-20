@@ -52,7 +52,7 @@ podTemplate(
             // Some interesting stuff here https://github.com/jenkinsci/pipeline-examples/pull/83/files
             if ( !is_snapshot ) {
               do_k8s_update=true
-              docker.withRegistry('',credentialsId:'semwebdockerhub') {
+              docker.withRegistry('','semwebdockerhub') {
                 println("Publishing released version with latest tag and semver ${semantic_version_components}");
                 docker_image.push('latest')
                 docker_image.push(app_version)
@@ -61,7 +61,7 @@ podTemplate(
               }
             }
             else {
-              docker.withRegistry('',credentialsId:'semwebdockerhub') {
+              docker.withRegistry('','semwebdockerhub') {
                 println("Publishing snapshot-latest");
                 docker_image.push('snapshot-latest')
               }
