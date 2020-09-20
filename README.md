@@ -129,6 +129,3 @@ With
 To watch the rabbit queues, visit http://localhost:15672/#/ and log on with cap/cap
 
 at http://localhost:15672/#/queues you can see the size of any queues and wait for pending messages to stack up
-
-
-
