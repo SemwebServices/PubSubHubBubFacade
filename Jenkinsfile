@@ -59,10 +59,9 @@ podTemplate(
                 docker_image.push("${semantic_version_components[0]}.${semantic_version_components[1]}".toString())
                 docker_image.push(semantic_version_components[0])
                 build(job:'/semwebdevops/deploy', parameters:[
-                  string(name: 'TESTPARAM', value: 'test'),
-                  string(name: 'env', value: 'test'),
-                  string(name: 'component', value: 'PubSubHubBub'),
-                  string(name: 'tag', value: 'latest')
+                  string(name: 'deployenv', value: 'test'),
+                  string(name: 'deploycomponent', value: 'PubSubHubBub'),
+                  string(name: 'deploytag', value: 'latest')
                 ])
               }
             }
@@ -72,10 +71,9 @@ podTemplate(
                 docker_image.push('snapshot-latest')
 
                 build(job:'/semwebdevops/deploy', parameters:[
-                  string(name: 'TESTPARAM', value: 'test'),
-                  string(name: 'env', value: 'test'),
-                  string(name: 'component', value: 'PubSubHubBub'),
-                  string(name: 'tag', value: 'snapshot-latest')
+                  string(name: 'deployenv', value: 'test'),
+                  string(name: 'deploycomponent', value: 'PubSubHubBub'),
+                  string(name: 'deploytag', value: 'snapshot-latest')
                 ])
               }
             }
