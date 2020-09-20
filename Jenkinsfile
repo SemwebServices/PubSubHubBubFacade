@@ -17,6 +17,7 @@ podTemplate(
       app_version = props.appVersion
       semantic_version_components = app_version.toString().split('\\.')
       is_snapshot = app_version.contains('SNAPSHOT')
+      constructed_tag = "build-${props?.appVersion}-${checkout_details?.GIT_COMMIT?.take(12)}"
       do_k8s_update = false
       println("Got props: asString:${props} appVersion:${props.appVersion}/${props['appVersion']}/${semantic_version_components}");
       sh 'echo branch:$BRANCH_NAME'
