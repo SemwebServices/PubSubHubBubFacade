@@ -58,11 +58,11 @@ podTemplate(
                 docker_image.push(app_version)
                 docker_image.push("${semantic_version_components[0]}.${semantic_version_components[1]}".toString())
                 docker_image.push(semantic_version_components[0])
-                build '/semwebdevops/deploy', parameters:[
+                build(job:'/semwebdevops/deploy', parameters:[
                   string(name: 'env', value: 'test'),
                   string(name: 'component', value: 'PubSubHubBub'),
                   string(name: 'tag', value: 'latest')
-                ]
+                ])
               }
             }
             else {
@@ -70,11 +70,11 @@ podTemplate(
                 println("Publishing snapshot-latest");
                 docker_image.push('snapshot-latest')
 
-                build '/semwebdevops/deploy', parameters:[
+                build(job:'/semwebdevops/deploy', parameters:[
                   string(name: 'env', value: 'test'),
                   string(name: 'component', value: 'PubSubHubBub'),
                   string(name: 'tag', value: 'snapshot-latest')
-                ]
+                ])
               }
             }
           }
