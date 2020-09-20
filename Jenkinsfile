@@ -39,7 +39,7 @@ podTemplate(
       container('docker') {
         dir('docker') {
           println("Docker build")
-          docker_image = docker.build("caphub_feedfacade")
+          docker_image = docker.build("semweb/caphub_feedfacade")
         }
       }
     }
