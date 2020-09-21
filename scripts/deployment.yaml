@@ -11,33 +11,18 @@ spec:
   template:
     metadata:
       labels:
-        build_number: ${BUILD_NUMBER}
         app: ff-pod
         role: rolling-update
     spec:
       containers:
       - name: ff-service-container-pod
-        image: semweb/feedfacade:latest
+        image: semweb/caphub_feedfacade:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
-        env:
-        - name: PROVISIONED_DB_HOST
-          value: "postgres.holokube"
-        - name: DATASOURCE_URL
-          value: "jdbc:postgresql://postgres.holokube:5432/mtcp_registry"
-        - name: DATASOURCE_USERNAME
-          value: "mtcp"
-        - name: DATASOURCE_PASSWORD
-          value: "mtcp"
-        - name: DATASOURCES_MTCP_URL
-          value: "jdbc:postgresql://postgres.holokube:5432/mtcp_registry"
-        - name: DATASOURCES_MTCP_USERNAME
-          value: "mtcp"
-        - name: DATASOURCES_MTCP_PASSWORD
-          value: "mtcp"
-        - name: KEYCLOAK_URL
-          value: "http://keycloak.holokube:8080"
+        envFrom:
+        - configMapRef:
+            name: cap
   strategy:
     type: RollingUpdate
     rollingUpdate:
