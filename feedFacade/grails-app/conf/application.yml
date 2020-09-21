@@ -198,11 +198,11 @@ environments:
     production:
         dataSource:
             dbCreate: update
-            url: jdbc:postgresql://postgres:5432/feedfacade
-            username: feedfacade
-            password: feedFacade
-            driverClassName: org.postgresql.Driver
-            dialect: org.hibernate.dialect.PostgreSQLDialect
+            url: "${FF_DB_URL:jdbc:postgresql://postgres:5432/feedfacade}"
+            username: "${FF_USERNAME:feedfacade}"
+            password: "${FF_PASSWORD:feedFacade}"
+            driverClassName: "${FF_JDBC_DRIVER:org.postgresql.Driver}"
+            dialect: "${FF_HIBERNATE_DIALECT:org.hibernate.dialect.PostgreSQLDialect}"
             properties:
                 initialSize: 5
                 maxActive: 50
@@ -224,9 +224,9 @@ environments:
 rabbitmq:
     connections:
       - name: localRMQ
-        host: rabbitmq
-        username: cap
-        password: cap
+        host: "${RABBIT_HOST:rabbitmq}"
+        username: "${CAP_RABBIT_USER:cap}"
+        password: "${CAP_RABBIT_PASS:cap}"
         automaticReconnect: true
         requestedHeartbeat: 120
 ---

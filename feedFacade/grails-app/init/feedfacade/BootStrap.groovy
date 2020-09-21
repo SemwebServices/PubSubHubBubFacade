@@ -10,6 +10,14 @@ class BootStrap {
 
   def init = { servletContext ->
 
+    log.info("FeedFacade Starting.....");
+    log.info("  -> rabbitmq.connections.host: ${grailsApplication.config.rabbitmq.connections.host}");
+    log.info("  -> rabbitmq.connections.username: ${grailsApplication.config.rabbitmq.connections.username}");
+    log.info("  -> datasource.url : ${grailsApplication.config.dataSource.url}");
+    log.info("  -> datasource.username : ${grailsApplication.config.dataSource.username}");
+    log.info("  -> datasource.dialect : ${grailsApplication.config.dataSource.dialect}");
+    log.info("  -> datasource.driverClassName : ${grailsApplication.config.dataSource.driverClassName}");
+
     User.withTransaction { status ->
       // Only set up default accounts in the test and development environments
       if ( ( Environment.currentEnvironment.name == Environment.DEVELOPMENT ) ||
@@ -19,6 +27,16 @@ class BootStrap {
 
       // load local overrrides first
       if ( grailsApplication.config.fah.localFeedSettings != null ) {
+
+        // Local Feed Settings points to a config file of the form
+        // [ {
+        //     "uriname":"feedcode",
+        //     "alternateFeedURL":"url",
+        //     "authenticationMethod":"pin",
+        //     "credentials":"creds"
+        // } ]
+        // And can be used to annotate information coming from the global alert hub registry with local credentials
+
         File local_feed_settings_file = new File(grailsApplication.config.fah.localFeedSettings)
         if ( local_feed_settings_file.canRead() ) {
           log.debug("Attempting to read local feed settings from ${grailsApplication.config.fah.localFeedSettings}");
