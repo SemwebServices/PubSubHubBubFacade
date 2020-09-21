@@ -55,9 +55,9 @@ podTemplate(
               docker.withRegistry('','semwebdockerhub') {
                 println("Publishing released version with latest tag and semver ${semantic_version_components}");
                 docker_image.push('latest')
-                docker_image.push(app_version)
-                docker_image.push("${semantic_version_components[0]}.${semantic_version_components[1]}".toString())
-                docker_image.push(semantic_version_components[0])
+                docker_image.push("v${app_version}".toString())
+                docker_image.push("v${semantic_version_components[0]}.${semantic_version_components[1]}".toString())
+                docker_image.push("v${semantic_version_components[0]}".toString())
                 build(job:'/semwebdevops/deploy', parameters:[
                   string(name: 'deployenv', value: 'test'),
                   string(name: 'deploycomponent', value: 'PubSubHubBub'),
