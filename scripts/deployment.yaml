@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feedfacade
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: ff-pod
+  template:
+    metadata:
+      labels:
+        build_number: ${BUILD_NUMBER}
+        app: ff-pod
+        role: rolling-update
+    spec:
+      containers:
+      - name: ff-service-container-pod
+        image: semweb/feedfacade:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PROVISIONED_DB_HOST
+          value: "postgres.holokube"
+        - name: DATASOURCE_URL
+          value: "jdbc:postgresql://postgres.holokube:5432/mtcp_registry"
+        - name: DATASOURCE_USERNAME
+          value: "mtcp"
+        - name: DATASOURCE_PASSWORD
+          value: "mtcp"
+        - name: DATASOURCES_MTCP_URL
+          value: "jdbc:postgresql://postgres.holokube:5432/mtcp_registry"
+        - name: DATASOURCES_MTCP_USERNAME
+          value: "mtcp"
+        - name: DATASOURCES_MTCP_PASSWORD
+          value: "mtcp"
+        - name: KEYCLOAK_URL
+          value: "http://keycloak.holokube:8080"
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ff-service
+  name: ff-service
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: ff-pod
+
