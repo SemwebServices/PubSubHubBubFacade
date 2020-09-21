@@ -37,3 +37,21 @@ grails.plugin.springsecurity.filterChain.chainMap = [
 ]
 
 grails.mime.use.accept.header = true
+
+
+// Move the configuration to rabbit here - it appears that environment variable interpolation for
+// maps within arrays has regressed to the behaviour seen in this issue:
+// https://github.com/grails/grails-core/issues/10340
+// Moving it here and using System.getenv('VAR')?:'default' instead
+rabbitmq = [
+  connections:[
+    [
+      name: 'localRMQ'
+      host: System.getenv('RABBIT_HOST')?:'rabbitmq',
+      username: System.getenv('CAP_RABBIT_USER')?:'cap',
+      password: System.getenv('CAP_RABBIT_PASS')?:'cap',
+      automaticReconnect: true,
+      requestedHeartbeat: 120
+    ]
+  ]
+]

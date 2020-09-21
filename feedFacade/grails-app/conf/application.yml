@@ -221,15 +221,6 @@ environments:
                 jdbcInterceptors: ConnectionState
                 defaultTransactionIsolation: 2 # TRANSACTION_READ_COMMITTED
 ---
-rabbitmq:
-    connections:
-      - name: localRMQ
-        host: "${RABBIT_HOST:rabbitmq}"
-        username: "${CAP_RABBIT_USER:cap}"
-        password: "${CAP_RABBIT_PASS:cap}"
-        automaticReconnect: true
-        requestedHeartbeat: 120
----
 fah:
     sourceList: https://s3-eu-west-1.amazonaws.com/alert-hub-sources/json
 environments:
