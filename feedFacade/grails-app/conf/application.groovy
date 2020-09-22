@@ -46,7 +46,7 @@ grails.mime.use.accept.header = true
 rabbitmq = [
   connections:[
     [
-      name: 'localRMQ'
+      name: 'localRMQ',
       host: System.getenv('RABBIT_HOST')?:'rabbitmq',
       username: System.getenv('CAP_RABBIT_USER')?:'cap',
       password: System.getenv('CAP_RABBIT_PASS')?:'cap',
