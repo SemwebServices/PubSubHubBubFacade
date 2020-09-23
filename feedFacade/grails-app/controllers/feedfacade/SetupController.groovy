@@ -1,4 +1,4 @@
-package feedfacade
+pcoackage feedfacade
 
 import grails.plugin.springsecurity.annotation.Secured
 

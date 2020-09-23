@@ -14,7 +14,7 @@ spec:
     - test.semweb.co
     secretName: swtest-letsencrypt-prod-cert
   rules:
-  - host: test.semweb.co
+  - host: test.semweb.net
     http:
       paths:
       - path: /feedfacade

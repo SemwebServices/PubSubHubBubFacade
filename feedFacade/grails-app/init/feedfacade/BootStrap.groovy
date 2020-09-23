@@ -17,6 +17,7 @@ class BootStrap {
     log.info("  -> datasource.username : ${grailsApplication.config.dataSource.username}");
     log.info("  -> datasource.dialect : ${grailsApplication.config.dataSource.dialect}");
     log.info("  -> datasource.driverClassName : ${grailsApplication.config.dataSource.driverClassName}");
+    log.info("  -> grails.serverUrl : ${grailsApplication.config.grails?.serverUrl}");
 
     User.withTransaction { status ->
       // Only set up default accounts in the test and development environments
