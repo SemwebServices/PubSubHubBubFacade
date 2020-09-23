@@ -12,7 +12,7 @@ class BootStrap {
 
     log.info("FeedFacade Starting.....");
     log.info("  -> rabbitmq.connections.host: ${grailsApplication.config.rabbitmq.connections.host}");
-    log.info("  -> rabbitmq.connections.username: ${grailsApplication.config.rabbitmq.connections.username}");
+    log.info("  -> rabbitmq.connections.username: ${grailsApplication.config.rabbitmq.connections[0].username}");
     log.info("  -> datasource.url : ${grailsApplication.config.dataSource.url}");
     log.info("  -> datasource.username : ${grailsApplication.config.dataSource.username}");
     log.info("  -> datasource.dialect : ${grailsApplication.config.dataSource.dialect}");
