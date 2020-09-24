@@ -84,7 +84,7 @@ podTemplate(
           // Credentials for k8s to run the required deployment commands
           kubeconfigId: 'local_k8s',
           // Definition of the deployment
-          configs: "k8s/${deploy_tag}",
+          configs: "k8s/${deploy_tag}.yaml",
         )
       }
     }
