@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feedfacade
+  namespace: swcaptest
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: ff-pod
+  template:
+    metadata:
+      labels:
+        app: ff-pod
+        role: rolling-update
+    spec:
+      containers:
+      - name: ff-service-container-pod
+        image: semweb/caphub_feedfacade:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+          - name: UNUSED_PROP
+            value: "jdbc:postgresql://pg12-postgresql.default:5432/feedfacade"
+        envFrom:
+          - configMapRef:
+              name: cap
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ff-service
+  namespace: swcaptest
+  labels:
+    app: ff-service
+spec:
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: ff-pod
+

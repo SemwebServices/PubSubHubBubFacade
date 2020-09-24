@@ -15,6 +15,7 @@ podTemplate(
       checkout_details = checkout scm
       props = readProperties file: './feedFacade/gradle.properties'
       app_version = props.appVersion
+      deploy_tag = null;
       semantic_version_components = app_version.toString().split('\\.')
       is_snapshot = app_version.contains('SNAPSHOT')
       constructed_tag = "build-${props?.appVersion}-${checkout_details?.GIT_COMMIT?.take(12)}"
@@ -58,35 +59,14 @@ podTemplate(
                 docker_image.push("v${app_version}".toString())
                 docker_image.push("v${semantic_version_components[0]}.${semantic_version_components[1]}".toString())
                 docker_image.push("v${semantic_version_components[0]}".toString())
-
-                // This build step will require signature approval - please watch build log for a link
-                try {
-                  build(job:'/semwebdevops/deploy', parameters:[
-                    string(name: 'deployenv', value: 'test'),
-                    string(name: 'deploycomponent', value: 'PubSubHubBub'),
-                    string(name: 'deploytag', value: 'latest')
-                  ])
-                }
-                catch(Exception e) {
-                  println("No deploy job found");
-                }
+                deploy_tag='latest'
               }
             }
             else {
               docker.withRegistry('','semwebdockerhub') {
                 println("Publishing snapshot-latest");
                 docker_image.push('snapshot-latest')
-
-                try {
-                  build(job:'/semwebdevops/deploy', parameters:[
-                    string(name: 'deployenv', value: 'test'),
-                    string(name: 'deploycomponent', value: 'PubSubHubBub'),
-                    string(name: 'deploytag', value: 'snapshot-latest')
-                  ])
-                }
-                catch(Exception e) {
-                  println("No deploy job found");
-                }
+                deploy_tag='snapshot-latest'
               }
             }
           }
@@ -94,6 +74,18 @@ podTemplate(
             println("Not publishing docker image for branch ${checkout_details?.GIT_BRANCH}. Please merge to master for a docker image build");
           }
         }
+      }
+    }
+
+    stage('Rolling Update') {
+      if ( deploy_tag != null ) {
+        println("Attempt to deploy : ${deploy_tag}");
+        kubernetesDeploy(
+          // Credentials for k8s to run the required deployment commands
+          kubeconfigId: 'localk8s',
+          // Definition of the deployment
+          configs: "k8s/${deploy_tag}",
+        )
       }
     }
 
