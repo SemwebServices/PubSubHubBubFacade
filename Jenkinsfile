@@ -59,6 +59,7 @@ podTemplate(
                 docker_image.push("v${semantic_version_components[0]}.${semantic_version_components[1]}".toString())
                 docker_image.push("v${semantic_version_components[0]}".toString())
 
+                // This build step will require signature approval - please watch build log for a link
                 if (jenkins.model.Jenkins.instance.getItem('/semwebdevops/deploy') != null) {
                   build(job:'/semwebdevops/deploy', parameters:[
                     string(name: 'deployenv', value: 'test'),
@@ -73,6 +74,7 @@ podTemplate(
                 println("Publishing snapshot-latest");
                 docker_image.push('snapshot-latest')
 
+                // This build step will require signature approval - please watch build log for a link
                 if (jenkins.model.Jenkins.instance.getItem('/semwebdevops/deploy') != null) {
                   build(job:'/semwebdevops/deploy', parameters:[
                     string(name: 'deployenv', value: 'test'),
