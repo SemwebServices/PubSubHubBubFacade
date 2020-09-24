@@ -58,11 +58,14 @@ podTemplate(
                 docker_image.push("v${app_version}".toString())
                 docker_image.push("v${semantic_version_components[0]}.${semantic_version_components[1]}".toString())
                 docker_image.push("v${semantic_version_components[0]}".toString())
-                build(job:'/semwebdevops/deploy', parameters:[
-                  string(name: 'deployenv', value: 'test'),
-                  string(name: 'deploycomponent', value: 'PubSubHubBub'),
-                  string(name: 'deploytag', value: 'latest')
-                ])
+
+                if (jenkins.model.Jenkins.instance.getItem('/semwebdevops/deploy') != null) {
+                  build(job:'/semwebdevops/deploy', parameters:[
+                    string(name: 'deployenv', value: 'test'),
+                    string(name: 'deploycomponent', value: 'PubSubHubBub'),
+                    string(name: 'deploytag', value: 'latest')
+                  ])
+                }
               }
             }
             else {
@@ -70,11 +73,13 @@ podTemplate(
                 println("Publishing snapshot-latest");
                 docker_image.push('snapshot-latest')
 
-                build(job:'/semwebdevops/deploy', parameters:[
-                  string(name: 'deployenv', value: 'test'),
-                  string(name: 'deploycomponent', value: 'PubSubHubBub'),
-                  string(name: 'deploytag', value: 'snapshot-latest')
-                ])
+                if (jenkins.model.Jenkins.instance.getItem('/semwebdevops/deploy') != null) {
+                  build(job:'/semwebdevops/deploy', parameters:[
+                    string(name: 'deployenv', value: 'test'),
+                    string(name: 'deploycomponent', value: 'PubSubHubBub'),
+                    string(name: 'deploytag', value: 'snapshot-latest')
+                  ])
+                }
               }
             }
           }
