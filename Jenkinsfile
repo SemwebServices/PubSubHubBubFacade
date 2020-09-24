@@ -60,12 +60,15 @@ podTemplate(
                 docker_image.push("v${semantic_version_components[0]}".toString())
 
                 // This build step will require signature approval - please watch build log for a link
-                if (jenkins.model.Jenkins.instance.getItem('/semwebdevops/deploy') != null) {
+                try {
                   build(job:'/semwebdevops/deploy', parameters:[
                     string(name: 'deployenv', value: 'test'),
                     string(name: 'deploycomponent', value: 'PubSubHubBub'),
                     string(name: 'deploytag', value: 'latest')
                   ])
+                }
+                catch(Exception e) {
+                  println("No deploy job found");
                 }
               }
             }
@@ -74,13 +77,15 @@ podTemplate(
                 println("Publishing snapshot-latest");
                 docker_image.push('snapshot-latest')
 
-                // This build step will require signature approval - please watch build log for a link
-                if (jenkins.model.Jenkins.instance.getItem('/semwebdevops/deploy') != null) {
+                try {
                   build(job:'/semwebdevops/deploy', parameters:[
                     string(name: 'deployenv', value: 'test'),
                     string(name: 'deploycomponent', value: 'PubSubHubBub'),
                     string(name: 'deploytag', value: 'snapshot-latest')
                   ])
+                }
+                catch(Exception e) {
+                  println("No deploy job found");
                 }
               }
             }
