@@ -15,7 +15,7 @@ podTemplate(
       checkout_details = checkout scm
       props = readProperties file: './feedFacade/gradle.properties'
       app_version = props.appVersion
-      deploy_tag = null;
+      deploy_cfg = null;
       semantic_version_components = app_version.toString().split('\\.')
       is_snapshot = app_version.contains('SNAPSHOT')
       constructed_tag = "build-${props?.appVersion}-${checkout_details?.GIT_COMMIT?.take(12)}"
@@ -59,14 +59,14 @@ podTemplate(
                 docker_image.push("v${app_version}".toString())
                 docker_image.push("v${semantic_version_components[0]}.${semantic_version_components[1]}".toString())
                 docker_image.push("v${semantic_version_components[0]}".toString())
-                deploy_tag='latest'
+                deploy_cfg='deploy_latest.yaml'
               }
             }
             else {
               docker.withRegistry('','semwebdockerhub') {
                 println("Publishing snapshot-latest");
                 docker_image.push('snapshot-latest')
-                deploy_tag='snapshot-latest'
+                deploy_cfg='deploy_snapshot.yaml'
               }
             }
           }
@@ -79,13 +79,13 @@ podTemplate(
 
     stage('Rolling Update') {
       if ( deploy_tag != null ) {
-        println("Attempt to deploy : ${deploy_tag}");
-        kubernetesDeploy(
-          // Credentials for k8s to run the required deployment commands
-          kubeconfigId: 'local_k8s',
-          // Definition of the deployment
-          configs: "k8s/${deploy_tag}.yaml",
-        )
+          println("Attempt to deploy : ${deploy_tag}");
+          kubernetesDeploy(
+            // Credentials for k8s to run the required deployment commands
+            kubeconfigId: 'local_k8s',
+            // Definition of the deployment
+            configs: "k8s/${deploy_cfg}",
+          )
       }
     }
 
