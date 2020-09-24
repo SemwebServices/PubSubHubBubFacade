@@ -82,7 +82,7 @@ podTemplate(
         println("Attempt to deploy : ${deploy_tag}");
         kubernetesDeploy(
           // Credentials for k8s to run the required deployment commands
-          kubeconfigId: 'localk8s',
+          kubeconfigId: 'local_k8s',
           // Definition of the deployment
           configs: "k8s/${deploy_tag}",
         )
