@@ -42,4 +42,11 @@ class AdminController {
     systemService.disableAll();
     redirect(url: request.getHeader('referer'))
   }
+
+  @Secured(['ROLE_USER', 'IS_AUTHENTICATED_FULLY'])
+  def status() {
+    def result=[:]
+    result.activeTasks=feedCheckerService.getActiveTaskReport()
+    result
+  }
 }

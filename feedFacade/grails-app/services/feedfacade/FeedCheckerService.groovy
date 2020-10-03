@@ -85,7 +85,7 @@ class FeedCheckerService  implements HealthIndicator {
 
   def triggerFeedCheck() {
 
-    log.info("triggerFeedCheck :: FEED-CHECK-PROMISE active info (${active_checks})");
+    log.info("triggerFeedCheck :: FEED-CHECK-PROMISE active info (active_checks counter = ${active_checks}, size of active_check_info=${active_check_info?.size()})");
     active_check_info.each { k, v ->
       log.info("  [${k}] -> ${v}");
     }
@@ -889,5 +889,13 @@ class FeedCheckerService  implements HealthIndicator {
       return Health.down().withDetail("feedChecker down", errorCode).build();
     }
     return Health.up().build();
+  }
+
+  public Map<String, Map> getActiveTaskReport() {
+    Map<String, Map> result = [:]
+    active_check_info.each { k, v ->
+      result[k] = v
+    }
+    return result;
   }
 }
