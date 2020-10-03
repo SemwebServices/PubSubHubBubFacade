@@ -35,13 +35,17 @@ class SourcefeedController {
     }
 
     if ( params.filterEnabled=='on' ) {
-      if ( clause_count == 0 )
-        base_feed_qry += ' where '
-      else 
-        base_feed_qry += ' and '
+      if ( clause_count == 0 ) base_feed_qry += ' where ' else base_feed_qry += ' and '
 
       base_feed_qry += 'sf.enabled = :true'
       qry_params.true = true
+      clause_count++;
+    }
+
+    if ( params.filterInProcess == 'on' ) {
+      if ( clause_count == 0 ) base_feed_qry += ' where ' else base_feed_qry += ' and '
+      base_feed_qry += 'sf.status = :inprocess'
+      qry_params.inprocess = 'in-process'
       clause_count++;
     }
 
