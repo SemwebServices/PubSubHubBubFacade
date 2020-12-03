@@ -130,4 +130,11 @@ To watch the rabbit queues, visit http://localhost:15672/#/ and log on with cap/
 
 at http://localhost:15672/#/queues you can see the size of any queues and wait for pending messages to stack up
 
+# Piping output into a file
 
+in development
+
+  export TERM=dumb
+  grails run-app
+
+can ease your pain when redirecting log output to a file

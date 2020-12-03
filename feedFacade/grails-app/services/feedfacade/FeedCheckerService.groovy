@@ -525,7 +525,7 @@ class FeedCheckerService  implements HealthIndicator {
     // log.debug("After processing ${url} entries, highest timestamp seen is ${highestSeenTimestamp}");
 
     SourceFeed.withNewTransaction {
-      log.debug("processFeed[${id}] Mark feed as paused");
+      log.info("processFeed[${id}] Mark feed as paused");
       def sf = SourceFeed.get(id)
       log.debug("Lock...");
       sf.lock()
