@@ -42,12 +42,17 @@ management:
             enabled: true
             db:
                 enabled: true
-            defaults:
-                enabled: true
             livenessstate:
                 enabled: true
             readinessstate:
                 enabled: true
+            defaults:
+                enabled: true
+            probes:
+                enabled: true
+            group:
+                exploratory:
+                    include: readinessState,livenessState
             show-details: when-authorized
             show-components: when-authorized
             roles: ROLE_ADMIN,ROLE_USER
