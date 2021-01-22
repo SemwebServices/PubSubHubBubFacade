@@ -42,6 +42,8 @@ management:
             enabled: true
             db:
                 enabled: true
+            datasource:
+                enabled: true
             livenessstate:
                 enabled: true
             readinessstate:
@@ -51,8 +53,8 @@ management:
             probes:
                 enabled: true
             group:
-                exploratory:
-                    include: readinessState,livenessState
+                custom:
+                    include: readinessstate,livenessstate
             show-details: when-authorized
             show-components: when-authorized
             roles: ROLE_ADMIN,ROLE_USER
