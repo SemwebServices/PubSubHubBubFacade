@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ff-ingress
@@ -20,5 +20,7 @@ spec:
       - path: /feedFacade
         pathType: Prefix
         backend:
-          serviceName: ff-service
-          servicePort: 8080
+          service: 
+            name: ff-service
+            port:
+              number: 8080
