@@ -35,6 +35,9 @@ management:
         enabled: true
     endpoints:
         enabled-by-default: true
+        web:
+            exposure:
+                include: "*"
     endpoint:
         jmx:
             enabled: true
@@ -64,9 +67,6 @@ management:
             enabled: true
         loggers:
             enabled: true
-        web:
-            exposure:
-                include: 'health,info'
     health:
         probes:
             enabled: true
