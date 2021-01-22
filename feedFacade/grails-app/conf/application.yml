@@ -44,6 +44,10 @@ management:
                 enabled: true
             defaults:
                 enabled: true
+            livenessstate:
+                enabled: true
+            readinessstate:
+                enabled: true
             show-details: when-authorized
             show-components: when-authorized
             roles: ROLE_ADMIN,ROLE_USER
