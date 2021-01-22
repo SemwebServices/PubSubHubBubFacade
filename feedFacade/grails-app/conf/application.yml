@@ -35,6 +35,7 @@ management:
         enabled: true
     endpoints:
         enabled-by-default: true
+    endpoint:
         jmx:
             enabled: true
         health:
@@ -55,6 +56,9 @@ management:
         web:
             exposure:
                 include: 'health,info'
+    health:
+        probes:
+            enabled: true
 ---
 grails:
     mime:
