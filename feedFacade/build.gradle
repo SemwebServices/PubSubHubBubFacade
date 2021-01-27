@@ -151,3 +151,40 @@ jib {
     // format = 'OCI' / 'Docker'
   }
 }
+
+buildProperties.doLast {
+    // Find the right file
+    File grailsBuildInfoFile = it.outputs.files.files.find { it.name == 'grails.build.info' }
+    if(!grailsBuildInfoFile) return // No need to continue if the file is not there
+    Properties properties = new Properties()
+    // Read properties from the file
+    grailsBuildInfoFile.withInputStream {
+        properties.load(it)
+    }
+    // Add new properties from various sources
+    properties.setProperty('build.time', new Date().format("yyyy-MM-dd HH:mm:ss"))
+    // Get a System property
+    properties.setProperty('build.java.version', System.getProperty('java.version'))
+    // Get the host name where the build was created
+    properties.setProperty('build.host', InetAddress.localHost.hostName)
+    // Add property set by your CI (in this case Bamboo)
+    Map<String, String> env = System.getenv()
+
+    if(env.BUILD_NUMBER)
+        properties.setProperty('build.number', env.BUILD_NUMBER)
+
+    if ( env.GIT_REVISION )
+        properties.setProperty('build.git.revision', env.GIT_REVISION)
+
+    if ( env.GIT_BRANCH )
+        properties.setProperty('build.git.branch', env.GIT_BRANCH)
+
+    if (env.GIT_COMMIT)
+        properties.setProperty('build.git.commit', env.GIT_COMMIT)
+
+    // Write the properties back to the file
+    grailsBuildInfoFile.withOutputStream {
+        properties.store(it,null)
+    }
+}
+

@@ -21,8 +21,11 @@ import groovyx.net.http.ApacheHttpBuilder
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.client.config.RequestConfig
 
+import org.springframework.beans.factory.DisposableBean
+
+
 @Transactional
-class FeedCheckerService  implements HealthIndicator {
+class FeedCheckerService  implements HealthIndicator, DisposableBean {
 
   private static int MAX_HTTP_TIME = 10 * 1000;
   private static Integer active_checks = 0;
@@ -30,6 +33,7 @@ class FeedCheckerService  implements HealthIndicator {
 
   def grailsApplication
 
+  def checker_is_enabled = true;
   def running = false;
   def error_count = 0;
   def newEventService
@@ -69,6 +73,21 @@ class FeedCheckerService  implements HealthIndicator {
     feedCheckLog
   }
 
+  @javax.annotation.PostConstruct
+  def init() {
+  }
+
+  @Override
+  void destroy() throws Exception {
+    log.debug("FeedCheckerService::destroy()");
+    synchronized(this) {
+      log.debug("Sleeping....");
+      Thread.sleep(1000*10);
+    }
+    checker_is_enabled = false;
+  }
+
+
   public Long getLastFeedCheckStartTime() {
     return lastFeedCheckStartedAt;
   }
@@ -90,13 +109,18 @@ class FeedCheckerService  implements HealthIndicator {
       log.info("  [${k}] -> ${v}");
     }
 
-    if ( running ) {
-      log.info("Feed checker already running - not launching another [${error_count++}] - active_checks=${active_checks}");
+    if ( checker_is_enabled ) {
+      if ( running ) {
+        log.info("Feed checker already running - not launching another [${error_count++}] - active_checks=${active_checks}");
+      }
+      else {
+        def error_count = 0;
+        lastFeedCheckStartedAt = System.currentTimeMillis();
+        doFeedCheck()
+      }
     }
     else {
-      def error_count = 0;
-      lastFeedCheckStartedAt = System.currentTimeMillis();
-      doFeedCheck()
+      log.info("feedChecker is disabled - shutdown in progress. Not checking feeds");
     }
 
   }
@@ -559,6 +583,7 @@ class FeedCheckerService  implements HealthIndicator {
         sf.consecutiveErrors++;
         sf.lastCompleted=System.currentTimeMillis();
         sf.latestHealth = statsService.logFailure(sf,start_time).latestHealth;
+        // sf.status = 'in-process'
   
         logEvent('Feed.'+uriname,[
           timestamp:new Date(),
