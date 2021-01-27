@@ -95,4 +95,20 @@ public class SystemService {
     }
   }
 
+  // This method removes old subscription entries - by default entries older than 7 days will be expunged
+  public expungeEntries() {
+    Setting max_age_setting = Setting.findByKey('feedfacade.entryMaxAge') ?: new Setting(key:'feedfacade.entryMaxAge', value:'7').save(flush:true, failOnError:true);
+    long max_age_millis = Long.valueOf(max_age_setting.value)*24*60*60*1000;
+    if ( max_age_millis > 0 ) {
+      long mw = System.currentTimeMillis() - max_age_millis;
+      long c1 = Entry.executeQuery('select count(*) from Entry as e').get(0);
+      long c2 = Entry.executeQuery('select count(*) from Entry as e where e.entryTs < :moving_wall',[moving_wall:mw]).get(0);
+      log.info("Expunging entries older than ${max_age_setting.value} days (${max_age_millis}millis) - current count is ${c1}, ${c2} entries have expired");
+      Entry.executeUpdate('delete from SubscriptionEntry se where se.entry in ( select e from Entry e where e.entryTs < :moving_wall)',[moving_wall:mw]);
+      Entry.executeUpdate('delete from Entry e where e.entryTs < :moving_wall',[moving_wall:mw]);
+      long c3 = Entry.executeQuery('select count(*) from Entry as e').get(0);
+      log.info("After delete there are ${c3} entries remaining");
+    }
+  }
+
 }
