@@ -6,8 +6,8 @@ class FeedTopic {
   Topic topic
 
   static constraints = {
-    ownerFeed blank: false, nullable:false
-        topic blank: false, nullable:false
+    ownerFeed nullable:false
+        topic nullable:false
   }
 
 }

@@ -1,6 +1,7 @@
 package feedfacade
 
 import grails.util.Environment
+import grails.util.Metadata 
 
 
 class BootStrap {
@@ -18,6 +19,20 @@ class BootStrap {
     log.info("  -> datasource.dialect : ${grailsApplication.config.dataSource.dialect}");
     log.info("  -> datasource.driverClassName : ${grailsApplication.config.dataSource.driverClassName}");
     log.info("  -> grails.serverUrl : ${grailsApplication.config.grails?.serverUrl}");
+    log.info("  -> Build Time : ${Metadata.getCurrent().get('build.time')}");
+    log.info("  -> Build Time : ${Metadata.getCurrent().get('build.host')}");
+    log.info("  -> Build Time : ${Metadata.getCurrent().get('build.number')}");
+    log.info("  -> Build Time : ${Metadata.getCurrent().get('build.git.revision')}");
+    log.info("  -> Build Time : ${Metadata.getCurrent().get('build.git.branch')}");
+    log.info("  -> Build Time : ${Metadata.getCurrent().get('build.git.commit')}");
+
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        log.info("feedFacade shutdown hook - process terminating");
+      }   
+    }); 
+
 
     User.withTransaction { status ->
       // Only set up default accounts in the test and development environments

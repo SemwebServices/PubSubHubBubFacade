@@ -173,14 +173,20 @@ buildProperties.doLast {
     if(env.BUILD_NUMBER)
         properties.setProperty('build.number', env.BUILD_NUMBER)
 
-    if ( env.GIT_REVISION )
+    if ( env.GIT_REVISION ) {
         properties.setProperty('build.git.revision', env.GIT_REVISION)
+        properties.setProperty('git.revision', env.GIT_REVISION)
+    }
 
-    if ( env.GIT_BRANCH )
+    if ( env.GIT_BRANCH ) {
         properties.setProperty('build.git.branch', env.GIT_BRANCH)
+        properties.setProperty('git.branch', env.GIT_BRANCH)
+    }
 
-    if (env.GIT_COMMIT)
+    if (env.GIT_COMMIT) {
         properties.setProperty('build.git.commit', env.GIT_COMMIT)
+        properties.setProperty('git.commit', env.GIT_COMMIT)
+    }
 
     // Write the properties back to the file
     grailsBuildInfoFile.withOutputStream {

@@ -101,7 +101,8 @@
                     <td>
                       ${f.status}
                       <g:if test="${f.status=='in-process'}">
-                        ${System.currentTimeMillis() - f.lastStarted}
+                        <br/>started: <br/><g:formatDate date="${new Date(f.lastStarted)}" format="yyyy-MM-dd HH:mm:ssz" timeZone="${UTCZONE}"/>
+                        <br/>elapsed: <br/>${System.currentTimeMillis() - f.lastStarted}
                       </g:if>
                     </td>
                     <td>${f.capAlertFeedStatus}</td>

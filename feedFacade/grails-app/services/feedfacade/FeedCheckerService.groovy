@@ -79,11 +79,12 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
 
   @Override
   void destroy() throws Exception {
-    log.debug("FeedCheckerService::destroy()");
+    log.info("FeedCheckerService::destroy()");
     checker_is_enabled = false;
     synchronized(this) {
-      log.debug("Sleeping....");
+      log.info("FeedCheckerService::destroy is waiting for any active feed fetcher threads to cleanly terminate.... active check count: ${active_check_info?.size()}");
       Thread.sleep(1000*15);
+      log.info("FeedCheckerService::destroy finished waiting... active check count: ${active_check_info?.size()}");D
     }
   }
 
@@ -521,7 +522,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
       catch ( java.lang.Exception e ) {
         error=true
         error_message = e.toString()
-        log.error("GENERAL EXCEPTION processFeed[${id}] ${url} problem fetching feed: ${e.message} (elapsed:${System.currentTimeMillis()-start_time})");
+        log.error("GENERAL EXCEPTION processFeed[${id}] ${url} problem fetching feed: ${e.message} (elapsed:${System.currentTimeMillis()-processing_start_time})");
         logEvent('Feed.'+uriname,[
           timestamp:new Date(),
           type: 'error',
@@ -529,7 +530,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
           relatedType:"feed",
           relatedId:uriname
         ]);
-        SourceFeed.staticRegisterFeedIssue(id, "[0008] processFeed[${id}] ${url} general problem fetching feed","${e.message} (elapsed:${System.currentTimeMillis()-start_time})");
+        SourceFeed.staticRegisterFeedIssue(id, "[0008] processFeed[${id}] ${url} general problem fetching feed","${e.message} (elapsed:${System.currentTimeMillis()-processing_start_time})");
       }
       catch ( Throwable e ) {
         error=true
@@ -607,7 +608,8 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
           sf.latestHealth = statsService.logSuccess(sf,start_time,new_entry_count).latestHealth;
         }
   
-        if ( sf.lastCompleted - processing_start_time > MAX_HTTP_TIME ) {
+        // Extra 3000 for other operations
+        if ( sf.lastCompleted - processing_start_time > ( MAX_HTTP_TIME + 3000 ) ) {
           log.warn("Processing feed[${id}] ${url} took ${sf.lastCompleted - processing_start_time} - longer than MAX_HTTP_TIME ${MAX_HTTP_TIME}. Investigate");
         }
   

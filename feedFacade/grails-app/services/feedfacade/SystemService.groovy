@@ -41,7 +41,7 @@ public class SystemService {
 
       while ( ( loop_protection > 0 ) && ( remaining_feeds > 0 ) ) {
         SourceFeed.withTransaction {
-          log.debug("Detected ${remaining_feeds} still to be enabled - activate next set");
+          log.info("Detected ${remaining_feeds} still to be enabled - activate next set");
           enableUpToNFeeds(5);
           Thread.sleep(30*1000);
           loop_protection--;
