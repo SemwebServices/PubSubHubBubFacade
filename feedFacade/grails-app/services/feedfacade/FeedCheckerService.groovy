@@ -86,6 +86,10 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
       Thread.sleep(1000*15);
       log.info("FeedCheckerService::destroy finished waiting... active check count: ${active_check_info?.size()}");D
     }
+
+    active_check_info?.each { k, v ->
+      log.info("  [${k}] -> ${v}");
+    }
   }
 
   // See https://reflectoring.io/spring-bean-lifecycle/
@@ -392,6 +396,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
           def processing_result = null;
           // log.debug("Processing feed (contentType::${feed_info.contentType}) - Extract entries");
           processing_result = getNewFeedEntries(id, url, new java.net.URL(url).openStream(), highestRecordedTimestamp, uriname)
+          log.debug("processFeed[${id}] got entries");
   
           new_entry_count = processing_result.numNewEntries
           processing_result.newEntries.each { entry ->
