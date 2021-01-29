@@ -80,11 +80,16 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
   @Override
   void destroy() throws Exception {
     log.debug("FeedCheckerService::destroy()");
+    checker_is_enabled = false;
     synchronized(this) {
       log.debug("Sleeping....");
-      Thread.sleep(1000*10);
+      Thread.sleep(1000*15);
     }
-    checker_is_enabled = false;
+  }
+
+  // See https://reflectoring.io/spring-bean-lifecycle/
+  public void shutdown() {
+    log.info("FeedCheckerService::shutdown()");
   }
 
 
@@ -433,7 +438,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
           relatedType:"feed",
           relatedId:uriname
         ]);
-        SourceFeed.staticRegisterFeedIssue(id, "Feed seems not to exist","processFeed[${id}] ${url} Feed seems not to exist");
+        SourceFeed.staticRegisterFeedIssue(id, "[0001] Feed seems not to exist","processFeed[${id}] ${url} Feed seems not to exist");
       }
       catch ( java.io.IOException ioe ) {
         error=true
@@ -446,7 +451,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
           relatedType:"feed",
           relatedId:uriname
         ]);
-        SourceFeed.staticRegisterFeedIssue(id, "IO Problem",ioe.message);
+        SourceFeed.staticRegisterFeedIssue(id, "[0002] IO Problem",ioe.message);
       }
       catch ( java.net.NoRouteToHostException no_route_e ) {
         error=true
@@ -459,7 +464,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
           relatedType:"feed", 
           relatedId:uriname
         ]);
-        SourceFeed.staticRegisterFeedIssue(id, "No Route", no_route_e.message);
+        SourceFeed.staticRegisterFeedIssue(id, "[0003] No Route", no_route_e.message);
       }
       catch ( org.apache.http.conn.ConnectTimeoutException ste ) {
         error=true
@@ -472,7 +477,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
           relatedType:"feed",
           relatedId:uriname
         ]);
-        SourceFeed.staticRegisterFeedIssue(id, "Connect Timeout", ste.message);
+        SourceFeed.staticRegisterFeedIssue(id, "[0004] Connect Timeout", ste.message);
       }
       catch ( java.net.SocketTimeoutException ste ) {
         error=true
@@ -485,7 +490,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
           relatedType:"feed",
           relatedId:uriname
         ]);
-        SourceFeed.staticRegisterFeedIssue(id, "Socket Timeout", ste.message);
+        SourceFeed.staticRegisterFeedIssue(id, "[0005] Socket Timeout", ste.message);
       }
       catch ( org.xml.sax.SAXParseException spe ) {
         error=true
@@ -498,7 +503,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
           relatedType:"feed",
           relatedId:uriname
         ]);
-        SourceFeed.staticRegisterFeedIssue(id, "XML Parse problem", spe.message);
+        SourceFeed.staticRegisterFeedIssue(id, "[0006] XML Parse problem", spe.message);
       }
       catch ( javax.net.ssl.SSLHandshakeException sslhe ) {
         error=true
@@ -511,7 +516,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
           relatedType:"feed",
           relatedId:uriname
         ]);
-        SourceFeed.staticRegisterFeedIssue(id, "XML Parse problem", sslhe.message);
+        SourceFeed.staticRegisterFeedIssue(id, "[0007] XML Parse problem", sslhe.message);
       }
       catch ( java.lang.Exception e ) {
         error=true
@@ -524,7 +529,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
           relatedType:"feed",
           relatedId:uriname
         ]);
-        SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} general problem fetching feed","${e.message} (elapsed:${System.currentTimeMillis()-start_time})");
+        SourceFeed.staticRegisterFeedIssue(id, "[0008] processFeed[${id}] ${url} general problem fetching feed","${e.message} (elapsed:${System.currentTimeMillis()-start_time})");
       }
       catch ( Throwable e ) {
         error=true
@@ -537,77 +542,84 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
           relatedType:"feed",
           relatedId:uriname
         ]);
-        SourceFeed.staticRegisterFeedIssue(id, "processFeed[${id}] ${url} general RUNTIME problem fetching feed", "${e.message} (elapsed:${System.currentTimeMillis()-start_time})")
+        SourceFeed.staticRegisterFeedIssue(id, "[0009] processFeed[${id}] ${url} general RUNTIME problem fetching feed", "${e.message} (elapsed:${System.currentTimeMillis()-start_time})")
       }
     }
     catch ( Exception e ) {
       log.error("Untrapped exception processing feed",e);
+      SourceFeed.staticRegisterFeedIssue(id, "[0010] Untrapped", "${url} ${e.message} (elapsed:${System.currentTimeMillis()-start_time})")
     }
     finally {
     }
 
     // log.debug("After processing ${url} entries, highest timestamp seen is ${highestSeenTimestamp}");
 
-    SourceFeed.withNewTransaction {
-      log.info("processFeed[${id}] Mark feed as paused");
-      def sf = SourceFeed.get(id)
-      log.debug("Lock...");
-      sf.lock()
-      log.debug("Locked...");
-      sf.status = 'paused'
-      sf.httpExpires = feed_info?.expires
-      sf.httpLastModified = feed_info?.lastModified
+    try {
+      SourceFeed.withNewTransaction {
+        log.info("processFeed[${id}] Mark feed as paused");
+        def sf = SourceFeed.get(id)
+        log.debug("Lock...");
+        sf.lock()
+        log.debug("Locked...");
+        sf.status = 'paused'
+        sf.httpExpires = feed_info?.expires
+        sf.httpLastModified = feed_info?.lastModified
+    
+        if ( newhash ) {
+          // log.debug("Updating hash to ${newhash}");
+          sf.lastHash = newhash
+        }
+    
+        if ( highestSeenTimestamp ) {
+          // log.debug("processFeed[${id}] Updating sf.highestTimestamp to be ${highestSeenTimestamp}");
+          sf.highestTimestamp = highestSeenTimestamp
+        }
+        // sf.lastCompleted=start_time
+        // Use the actual last completed time to try and even out the feed checking over time - this will skew each feed
+        // So that all feeds become eligible over time, rather than being based on the start time of the batch
+        sf.lastElapsed=start_time-sf.lastCompleted
+        sf.lastError=error_message
   
-      if ( newhash ) {
-        // log.debug("Updating hash to ${newhash}");
-        sf.lastHash = newhash
-      }
+        if ( error ) {
+    
+          sf.feedStatus='ERROR'
   
-      if ( highestSeenTimestamp ) {
-        // log.debug("processFeed[${id}] Updating sf.highestTimestamp to be ${highestSeenTimestamp}");
-        sf.highestTimestamp = highestSeenTimestamp
-      }
-      // sf.lastCompleted=start_time
-      // Use the actual last completed time to try and even out the feed checking over time - this will skew each feed
-      // So that all feeds become eligible over time, rather than being based on the start time of the batch
-      sf.lastElapsed=start_time-sf.lastCompleted
-      sf.lastError=error_message
-
-      if ( error ) {
+          if ( sf.consecutiveErrors == null ) 
+            sf.consecutiveErrors=0;
   
-        sf.feedStatus='ERROR'
-
-        if ( sf.consecutiveErrors == null ) 
-          sf.consecutiveErrors=0;
-
-        sf.consecutiveErrors++;
-        sf.lastCompleted=System.currentTimeMillis();
-        sf.latestHealth = statsService.logFailure(sf,start_time).latestHealth;
-        // sf.status = 'in-process'
+          sf.consecutiveErrors++;
+          sf.lastCompleted=System.currentTimeMillis();
+          sf.latestHealth = statsService.logFailure(sf,start_time).latestHealth;
+          // sf.status = 'in-process'
+    
+          logEvent('Feed.'+uriname,[
+            timestamp:new Date(),
+            type: 'error',
+            message:'Feed status : ERROR '+error_message,
+            relatedType:"feed",
+            relatedId:uriname
+          ]);
+        }
+        else { 
+          sf.feedStatus='OK'
+          sf.consecutiveErrors = 0;
+          sf.lastCompleted=System.currentTimeMillis();
+          sf.latestHealth = statsService.logSuccess(sf,start_time,new_entry_count).latestHealth;
+        }
   
-        logEvent('Feed.'+uriname,[
-          timestamp:new Date(),
-          type: 'error',
-          message:'Feed status : ERROR '+error_message,
-          relatedType:"feed",
-          relatedId:uriname
-        ]);
+        if ( sf.lastCompleted - processing_start_time > MAX_HTTP_TIME ) {
+          log.warn("Processing feed[${id}] ${url} took ${sf.lastCompleted - processing_start_time} - longer than MAX_HTTP_TIME ${MAX_HTTP_TIME}. Investigate");
+        }
+  
+        log.debug("processFeed[${id}] completed Saving source feed, set status back to ${sf.status}");
+        feedCheckLog.add([timestamp:new Date(),message:"Processing completed on ${id}/${url} at ${sf.lastCompleted} / ${error_message}"]);
+        sf.save(flush:true, failOnError:true);
       }
-      else { 
-        sf.feedStatus='OK'
-        sf.consecutiveErrors = 0;
-        sf.lastCompleted=System.currentTimeMillis();
-        sf.latestHealth = statsService.logSuccess(sf,start_time,new_entry_count).latestHealth;
-      }
-
-      if ( sf.lastCompleted - processing_start_time > MAX_HTTP_TIME ) {
-        log.warn("Processing feed[${id}] ${url} took ${sf.lastCompleted - processing_start_time} - longer than MAX_HTTP_TIME ${MAX_HTTP_TIME}. Investigate");
-      }
-
-      log.debug("processFeed[${id}] completed Saving source feed, set status back to ${sf.status}");
-      feedCheckLog.add([timestamp:new Date(),message:"Processing completed on ${id}/${url} at ${sf.lastCompleted} / ${error_message}"]);
-      sf.save(flush:true, failOnError:true);
     }
+    catch ( Exception e ) {
+      SourceFeed.staticRegisterFeedIssue(id, "[0011] Error Reporting Problem", "${url} ${e.message} (elapsed:${System.currentTimeMillis()-start_time})")
+    }
+
     log.debug("continueToProcessFeed(${id},... returning (error=${error}, errorMessage=${error_message})");
   }
 
