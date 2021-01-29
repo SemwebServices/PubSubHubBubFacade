@@ -591,7 +591,6 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
           sf.consecutiveErrors++;
           sf.lastCompleted=System.currentTimeMillis();
           sf.latestHealth = statsService.logFailure(sf,start_time).latestHealth;
-          // sf.status = 'in-process'
     
           logEvent('Feed.'+uriname,[
             timestamp:new Date(),
@@ -614,12 +613,13 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
         }
   
         log.debug("processFeed[${id}] completed Saving source feed, set status back to ${sf.status}");
+        sf.save();
         feedCheckLog.add([timestamp:new Date(),message:"Processing completed on ${id}/${url} at ${sf.lastCompleted} / ${error_message}"]);
-        sf.save(flush:true, failOnError:true);
       }
     }
     catch ( Exception e ) {
       SourceFeed.staticRegisterFeedIssue(id, "[0011] Error Reporting Problem", "${url} ${e.message} (elapsed:${System.currentTimeMillis()-start_time})")
+      log.error("Error closing out feed check",e);
     }
 
     log.debug("continueToProcessFeed(${id},... returning (error=${error}, errorMessage=${error_message})");
