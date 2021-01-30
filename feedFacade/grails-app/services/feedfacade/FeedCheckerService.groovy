@@ -58,7 +58,8 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
     new SimpleDateFormat('EEE, d MMM yyyy HH:mm:ss z'),
     new SimpleDateFormat('EEE, d MMM yyyy HH:mm:ss Z'),
     new SimpleDateFormat('EEE, d MMM yyyy HH:mm:ss'),
-    new SimpleDateFormat('EEE, dd MMM yyyy  H:mm:ss zzz')
+    new SimpleDateFormat('EEE, dd MMM yyyy  H:mm:ss zzz'),
+    new SimpleDateFormat('EEE, dd MMM yyyy  H:mm zzz')
   ];
 
   def getLastLog() {
