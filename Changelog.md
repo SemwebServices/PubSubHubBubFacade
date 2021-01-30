@@ -1,3 +1,6 @@
+2021-01-30 Open 2.1.22-SNAPSHOT
+
+  * Bump version
 
 2021-01-30 Release 2.1.21
 
