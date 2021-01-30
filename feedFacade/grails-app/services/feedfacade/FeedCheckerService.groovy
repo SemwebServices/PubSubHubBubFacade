@@ -84,7 +84,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
     synchronized(this) {
       log.info("FeedCheckerService::destroy is waiting for any active feed fetcher threads to cleanly terminate.... active check count: ${active_check_info?.size()}");
       Thread.sleep(1000*15);
-      log.info("FeedCheckerService::destroy finished waiting... active check count: ${active_check_info?.size()}");D
+      log.info("FeedCheckerService::destroy finished waiting... active check count: ${active_check_info?.size()}");
     }
 
     active_check_info?.each { k, v ->

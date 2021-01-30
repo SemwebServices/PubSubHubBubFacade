@@ -1,6 +1,6 @@
 2021-01-30 Open 2.1.22-SNAPSHOT
 
-  * Bump version
+  * The cleanup background will now also expunge any feed issues older than the rolling wall period
 
 2021-01-30 Release 2.1.21
 

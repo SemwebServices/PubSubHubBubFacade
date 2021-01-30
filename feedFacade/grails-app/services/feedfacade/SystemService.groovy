@@ -108,6 +108,9 @@ public class SystemService {
       Entry.executeUpdate('delete from Entry e where e.entryTs < :moving_wall',[moving_wall:mw]);
       long c3 = Entry.executeQuery('select count(*) from Entry as e').get(0);
       log.info("After delete there are ${c3} entries remaining");
+
+      // Expunge any feed issues that are older than moving wall
+      FeedIssue.executeUpdate('delete from FeedIssue fi where fi.lastSeen > :moving_wall',[moving_wall:mw]);
     }
   }
 

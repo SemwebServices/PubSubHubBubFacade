@@ -172,3 +172,8 @@ Requires a configmap of the following shape:
       CC_HIBERNATE_DIALECT: "org.hibernate.dialect.PostgreSQLDialect"
       CC_ES_HOST: "elasticsearch-coordinating-only.services"
 
+## Dockerhub
+
+The docker image for this service can be found here:
+
+    https://hub.docker.com/r/semweb/caphub_feedfacade
