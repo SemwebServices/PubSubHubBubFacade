@@ -22,16 +22,16 @@ podTemplate(
       constructed_tag = "build-${props?.appVersion}-${checkout_details?.GIT_COMMIT?.take(12)}"
       do_k8s_update = false
       println("Got props: asString:${props} appVersion:${props.appVersion}/${props['appVersion']}/${semantic_version_components}");
-      sh 'echo branch:$BRANCH_NAME'
-      sh 'echo commit:$checkout_details.GIT_COMMIT'
+      sh "echo commit:${checkout_details}"
+      sh "echo commit:${checkout_details.GIT_COMMIT}"
     }
 
     stage ('build service assembly') {
       container('jdk11') {
         dir ('feedFacade') {
-          sh 'export GIT_REVISION="${checkout_details.GIT_REVISION}"'
-          sh 'export GIT_BRANCH="${checkout_details.GIT_BRANCH}"'
-          sh 'export GIT_COMMIT="${checkout_details.GIT_COMMIT}"'
+          // sh 'export GIT_REVISION="${checkout_details.GIT_REVISION}"'
+          // sh 'export GIT_BRANCH="${checkout_details.GIT_BRANCH}"'
+          // sh 'export GIT_COMMIT="${checkout_details.GIT_COMMIT}"'
           sh './gradlew --no-daemon -x test -x integrationTest --console=plain clean build'
           sh 'ls -la ./build/libs/*'
           sh "cp build/libs/feedFacade-${props.appVersion}.war ../docker/feedFacade.war".toString()
