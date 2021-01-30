@@ -12,6 +12,6 @@ EXPOSE 8080/tcp
 
 # ENTRYPOINT ["/wait", "java","-Djava.security.egd=file:/dev/./urandom","-Xshareclasses", "-Xscmx50M", "-Xtune:virtualized", "-jar","/feedFacade.war"]
 # CMD /wait && java -Djava.security.egd=file:/dev/./urandom -Xshareclasses -Xscmx50M -Xtune:virtualized -jar /feedFacade.war
-# Trying the exec form of CMD as signals don't seem to be reaching the JVM
-# CMD java -Djava.security.egd=file:/dev/./urandom -Xshareclasses -Xscmx50M -Xtune:virtualized -jar /feedFacade.war
-CMD [ "java", "-Djava.security.egd=file:/dev/./urandom", "-Xshareclasses", "-Xscmx50M", "-Xtune:virtualized", "-jar /feedFacade.war" ]
+# Trying the exec form of CMD as signals don't seem to be reaching the JVM - following did not work so reverting
+# CMD [ "java", "-Djava.security.egd=file:/dev/./urandom", "-Xshareclasses", "-Xscmx50M", "-Xtune:virtualized", "-jar /feedFacade.war" ]
+CMD java -Djava.security.egd=file:/dev/./urandom -Xshareclasses -Xscmx50M -Xtune:virtualized -jar /feedFacade.war
