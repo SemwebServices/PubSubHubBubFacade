@@ -22,7 +22,6 @@ class BootStrap {
     log.info("  -> Build Time : ${Metadata.getCurrent().get('build.time')}");
     log.info("  -> Build Host : ${Metadata.getCurrent().get('build.host')}");
     log.info("  -> Build Number : ${Metadata.getCurrent().get('build.number')}");
-    log.info("  -> Git Revision : ${Metadata.getCurrent().get('build.git.revision')}");
     log.info("  -> Git Branch : ${Metadata.getCurrent().get('build.git.branch')}");
     log.info("  -> Git Commit : ${Metadata.getCurrent().get('build.git.commit')}");
 
