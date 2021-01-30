@@ -29,6 +29,9 @@ podTemplate(
     stage ('build service assembly') {
       container('jdk11') {
         dir ('feedFacade') {
+          sh 'export GIT_REVISION="${checkout_details.GIT_REVISION}"'
+          sh 'export GIT_BRANCH="${checkout_details.GIT_BRANCH}"'
+          sh 'export GIT_COMMIT="${checkout_details.GIT_COMMIT}"'
           sh './gradlew --no-daemon -x test -x integrationTest --console=plain clean build'
           sh 'ls -la ./build/libs/*'
           sh "cp build/libs/feedFacade-${props.appVersion}.war ../docker/feedFacade.war".toString()
