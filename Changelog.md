@@ -1,6 +1,8 @@
 2021-01-30 Open 2.1.22-SNAPSHOT
 
   * The cleanup background will now also expunge any feed issues older than the rolling wall period
+  * Feed Checker service can now cope with dates that omit :ss specifier
+  * Use CMD form in dockerfile to ensure SIGTERM reaches pod in k8s deployments - for clean shutdown of polling threads
 
 2021-01-30 Release 2.1.21
 
