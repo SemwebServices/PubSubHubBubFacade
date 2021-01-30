@@ -110,7 +110,7 @@ public class SystemService {
       log.info("After delete there are ${c3} entries remaining");
 
       // Expunge any feed issues that are older than moving wall
-      FeedIssue.executeUpdate('delete from FeedIssue fi where fi.lastSeen > :moving_wall',[moving_wall:mw]);
+      FeedIssue.executeUpdate('delete from FeedIssue fi where fi.lastSeen < :moving_wall',[moving_wall:mw]);
     }
   }
 
