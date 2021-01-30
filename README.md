@@ -138,3 +138,37 @@ in development
   grails run-app
 
 can ease your pain when redirecting log output to a file
+
+
+# CI/CD to test environment
+
+The Jenkinsfile will attempt to deploy a service from the definitions in the k8s directory HOWEVER this setup relies
+on the pre-existence of a config file on the server. Specifically - this like in the config
+
+        envFrom:
+          - configMapRef:
+              name: cap
+
+Requires a configmap of the following shape:
+
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      namespace: swcaptest
+      name: cap
+    data:
+      RABBIT_HOST: "default-rabbit-rabbitmq.services"
+      CAP_RABBIT_USER: ""
+      CAP_RABBIT_PASS: ""
+      FF_DB_URL: "jdbc:postgresql://pg12-postgresql.default:5432/feedfacade"
+      FF_USERNAME: ""
+      FF_PASSWORD: ""
+      FF_JDBC_DRIVER: "org.postgresql.Driver"
+      FF_HIBERNATE_DIALECT: "org.hibernate.dialect.PostgreSQLDialect"
+      CC_DB_URL: "jdbc:postgresql://pg12-postgresql.default:5432/capcollator"
+      CC_USERNAME: ""
+      CC_PASSWORD: ""
+      CC_JDBC_DRIVER: "org.postgresql.Driver"
+      CC_HIBERNATE_DIALECT: "org.hibernate.dialect.PostgreSQLDialect"
+      CC_ES_HOST: "elasticsearch-coordinating-only.services"
+

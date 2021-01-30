@@ -112,6 +112,11 @@ class StatsService {
                          .setProperties(['owner':owner.id, 'dom':dom, 'hour':hour])
                          .list()
 
+    if ( buckets.size() > 0 ) {
+      log.error("Multiple buckets found for slot ${owner.id} ${dom} ${hour} - investigate");
+      // raiseEvent('MULTIPLE-STATS-SLOT:${owner.id}:${dom}:${hour}',[owner:owner.id, dom:dom, hour:hour])
+    }
+
     def bucket_id = buckets.size() == 1 ? buckets.get(0) : null;  // SourceFeedStats.findByOwnerAndDayOfMonthAndHour(owner,dom,hour)
 
     if ( bucket_id ) {

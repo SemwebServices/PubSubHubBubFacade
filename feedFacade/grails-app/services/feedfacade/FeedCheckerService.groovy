@@ -395,7 +395,11 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
     
           def processing_result = null;
           // log.debug("Processing feed (contentType::${feed_info.contentType}) - Extract entries");
-          processing_result = getNewFeedEntries(id, url, new java.net.URL(url).openStream(), highestRecordedTimestamp, uriname)
+
+          InputStream page_is = new java.io.ByteArrayInputStream(feed_info.feed_text.getBytes())
+
+          // processing_result = getNewFeedEntries(id, url, new java.net.URL(url).openStream(), highestRecordedTimestamp, uriname)
+          processing_result = getNewFeedEntries(id, url, page_is, highestRecordedTimestamp, uriname)
           log.debug("processFeed[${id}] got entries");
   
           new_entry_count = processing_result.numNewEntries
@@ -527,7 +531,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
       catch ( java.lang.Exception e ) {
         error=true
         error_message = e.toString()
-        log.error("GENERAL EXCEPTION processFeed[${id}] ${url} problem fetching feed: ${e.message} (elapsed:${System.currentTimeMillis()-processing_start_time})");
+        log.error("GENERAL EXCEPTION processFeed[${id}] ${url} problem fetching feed: (${e.class.name}) ${e.message} (elapsed:${System.currentTimeMillis()-processing_start_time})");
         logEvent('Feed.'+uriname,[
           timestamp:new Date(),
           type: 'error',
