@@ -79,11 +79,15 @@ class SourceFeed {
   }
 
   static mapping = {
-    topics sort:'topic'
-    lastError type:'text'
+    baseUrl index:'baseUrl_Idx,pendingChecksIdx'
+    enabled index:'checkerIdx,pendingChecksIdx'
     feedStatus index:'checkerIdx'
-    enabled index:'checkerIdx'
-    lastCompleted index:'checkerIdx'
+    lastCompleted index:'checkerIdx,pendingChecksIdx'
+    lastError type:'text'
+    name index:'name_Idx'
+    status index:'status_Idx,pendingChecksIdx'
+    topics sort:'topic'
+    uriname index:'uriname_Idx'
   }
 
   public void addTopics(String topicList) {
