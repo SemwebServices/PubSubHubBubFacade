@@ -22,4 +22,10 @@ class SourceFeedStats {
            health blank: false, nullable:true
   }
 
+  static mapping = {
+    owner index:'sfs_access_idx'
+    lastUpdate index:'sfs_access_idx'
+  }
+
+
 }

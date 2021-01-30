@@ -8,6 +8,8 @@ import grails.converters.*
 class SourcefeedController {
 
   def index() { 
+    long start_time = System.currentTimeMillis();
+
     log.debug("SourcefeedController::index");
     def result = [:]
 
@@ -49,15 +51,19 @@ class SourcefeedController {
       clause_count++;
     }
 
+    log.debug("About to count blocked feeds - elasped - ${System.currentTimeMillis() - start_time}");
     // Count how many feeds might be blocked
     result.blocked_feeds = SourceFeed.executeQuery('select count(sf) from SourceFeed as sf where sf.status=:inProcess and sf.lastStarted < :blocktime', 
                                                    [blocktime:System.currentTimeMillis()-60000, inProcess:'in-process'])[0];
 
 
+    log.debug("About to count feeds - elasped - ${System.currentTimeMillis() - start_time}");
     result.totalFeeds = SourceFeed.executeQuery('select count(sf) '+base_feed_qry,qry_params)[0]
+
+    log.debug("About to find feeds - elasped - ${System.currentTimeMillis() - start_time}");
     result.feeds = SourceFeed.executeQuery('select sf '+base_feed_qry+order_by_clause,qry_params,params)
 
-    log.debug("found ${result.totalFeeds} feeds");
+    log.debug("found ${result.totalFeeds} feeds - elasped - ${System.currentTimeMillis() - start_time}");
 
     result
   }
