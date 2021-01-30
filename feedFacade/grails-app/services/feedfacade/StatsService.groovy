@@ -112,8 +112,8 @@ class StatsService {
                          .setProperties(['owner':owner.id, 'dom':dom, 'hour':hour])
                          .list()
 
-    if ( buckets.size() > 0 ) {
-      log.error("Multiple buckets found for slot ${owner.id} ${dom} ${hour} - investigate");
+    if ( buckets.size() > 1 ) {
+      log.error("Multiple (${buckets.size()}) buckets found for slot ${owner.id} ${dom} ${hour} - investigate");
       // raiseEvent('MULTIPLE-STATS-SLOT:${owner.id}:${dom}:${hour}',[owner:owner.id, dom:dom, hour:hour])
     }
 
