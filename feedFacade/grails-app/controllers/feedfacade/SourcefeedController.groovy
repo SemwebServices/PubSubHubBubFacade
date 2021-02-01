@@ -10,6 +10,8 @@ class SourcefeedController {
   def index() { 
     long start_time = System.currentTimeMillis();
 
+    def pagination_props = [ max : params.max ?: 10, offset: params.offset ?: 0 ]
+
     log.debug("SourcefeedController::index");
     def result = [:]
 
@@ -61,7 +63,7 @@ class SourcefeedController {
     result.totalFeeds = SourceFeed.executeQuery('select count(sf) '+base_feed_qry,qry_params)[0]
 
     log.debug("About to find feeds - elasped - ${System.currentTimeMillis() - start_time}");
-    result.feeds = SourceFeed.executeQuery('select sf '+base_feed_qry+order_by_clause,qry_params,params)
+    result.feeds = SourceFeed.executeQuery('select sf '+base_feed_qry+order_by_clause,qry_params,pagination_props)
 
     log.debug("found ${result.totalFeeds} feeds - elasped - ${System.currentTimeMillis() - start_time}");
 
