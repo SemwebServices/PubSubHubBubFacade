@@ -64,6 +64,13 @@ class BootStrap {
 
       log.debug("Call sourceListService.setupSources");
       sourceListService.setUpSources(grailsApplication.config.fah.sourceList);
+
+      // Ensure we have all flags defined
+      [ 
+        [ code:'InvalidPubDate', name:'Invalid Pub Date', type:'Warn', ttl:60*60*24*7 ]
+      ].each { flag_definition ->
+        FlagDefinition.findByCode(flag_definition.code) ?: new FlagDefinition(flag_definition).save(flush:true, failOnError:true);
+      }
     }
   }
 
