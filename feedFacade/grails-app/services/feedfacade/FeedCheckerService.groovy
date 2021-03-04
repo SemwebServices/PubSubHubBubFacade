@@ -758,6 +758,11 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
       def feed_pubdate = null;
       if ( rootNode.channel.pubDate.size() == 1 ) {
         feed_pubdate = parseDate(rootNode.channel.pubDate.text())
+        // If we could not parse the pubdate, then the feed fails validation - we might still be able to extract
+        // useful CAP events from the items, but this really should be fixed.
+        if ( feed_pubdate == null ) {
+          raiseFlag('InvalidPubDate','feedfacade.SourceFeed',id.toString());
+        }
       }
       else {
         // Default to NOW
@@ -767,9 +772,14 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
       rootNode.channel.item.each { item ->
 
         entry_count++;
-     
        
-        def entry_updated_time = item.pubDate.size() == 1 ? parseDate(item.pubDate.text())?.getTime() : feed_pubdate.getTime();
+        def parsed_pubdate = parseDate(item.pubDate.text())?.getTime();
+        // If we could not parse the pubdate, then the feed fails validation - we might still be able to extract
+        // useful CAP events from the items, but this really should be fixed.
+        if ( parsed_pubdate == null ) {
+          raiseFlag('InvalidPubDate','feedfacade.SourceFeed',id?.toString());
+        }
+        def entry_updated_time = item.pubDate.size() == 1 ? parsed_pubdate : feed_pubdate.getTime();
 
         if ( entry_updated_time ) {
           if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
@@ -807,7 +817,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
         entry_count++;
 
         def entry_updated_time = parseDate(entry.updated.text()).getTime();
-      
+
         // log.debug("getNewFeedEntries[${id}] -> processing entry node id:${entry.id.text()} :: ts:${entry_updated_time}");
 
         // See if this entry has a timestamp greater than any we have seen so far
@@ -946,5 +956,16 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
       result[k] = v
     }
     return result;
+  }
+
+  private raiseFlag(String flag, String domain, String id) {
+    if ( ( id != null ) &&
+         ( flag != null ) &&
+         ( domain != null ) ) {
+      console.log("raiseFlag(${flag},${domain},${id}");
+    }
+    else {
+      log.error("Missing data in call to raiseFlag");
+    }
   }
 }
