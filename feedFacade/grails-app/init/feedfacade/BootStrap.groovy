@@ -67,7 +67,7 @@ class BootStrap {
 
       // Ensure we have all flags defined
       [ 
-        [ code:'InvalidPubDate', name:'Invalid Pub Date', type:'Warn', ttl:60*60*24*7 ]
+        [ code:'InvalidPubDate', name:'Invalid Pub Date', type:'Warn', ttl:60*60*24*7*1000 ]
       ].each { flag_definition ->
         FlagDefinition.findByCode(flag_definition.code) ?: new FlagDefinition(flag_definition).save(flush:true, failOnError:true);
       }
