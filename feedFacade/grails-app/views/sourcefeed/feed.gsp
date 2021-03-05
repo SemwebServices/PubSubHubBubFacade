@@ -35,12 +35,7 @@
             </div>
             <div class="form-group">
               <label class="col-sm-2 control-label">Health Last Hour</label>
-              <div class="col-sm-10"><p class="form-control-static">
-                <g:if test="${ feed.latestHealth >= 80 }"> <asset:image src="sunny.svg" width="32" alt="${feed.latestHealth}"/></g:if>
-                <g:if test="${ feed.latestHealth >= 60 && feed.latestHealth < 80 }"><asset:image src="partially-sunny.svg" width="32" alt="${feed.latestHealth}"/></g:if>
-                <g:if test="${ feed.latestHealth >= 40 && feed.latestHealth < 60 }"><asset:image src="cloudy.svg" width="32" alt="${feed.latestHealth}"/></g:if>
-                <g:if test="${ feed.latestHealth >= 20 && feed.latestHealth < 40 }"><asset:image src="raining.svg" width="32" alt="${feed.latestHealth}"/></g:if>
-                <g:if test="${ feed.latestHealth >= 0 && feed.latestHealth < 20 }"><asset:image src="storm.svg" width="32" alt="${feed.latestHealth}"/></g:if>
+              <div class="col-sm-10"><p backgroundColor="" class="form-control-static">
                 ${feed.latestHealth}%
               </p></div>
             </div>
@@ -90,11 +85,7 @@
                   <th>Health</th>
                   <g:each in="${stats}" var="h">
                     <td>
-                      <g:if test="${ h.health >= 80 }"> <asset:image src="sunny.svg" width="32" alt="${h.health}"/></g:if>
-                      <g:if test="${ h.health >= 60 && h.health < 80 }"><asset:image src="partially-sunny.svg" width="32" alt="${h.health}"/></g:if>
-                      <g:if test="${ h.health >= 40 && h.health < 60 }"><asset:image src="cloudy.svg" width="32" alt="${h.health}"/></g:if>
-                      <g:if test="${ h.health >= 20 && h.health < 40 }"><asset:image src="raining.svg" width="32" alt="${h.health}"/></g:if>
-                      <g:if test="${ h.health >= 0 && h.health < 20 }"><asset:image src="storm.svg" width="32" alt="${h.health}"/></g:if>
+                      ${h.health}%
                     </td>
                   </g:each>
                 </tr>

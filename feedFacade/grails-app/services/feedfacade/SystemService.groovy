@@ -111,6 +111,8 @@ public class SystemService {
 
       // Expunge any feed issues that are older than moving wall
       FeedIssue.executeUpdate('delete from FeedIssue fi where fi.lastSeen < :moving_wall',[moving_wall:mw]);
+
+      FlagEvent.executeUpdate('delete from FlagEvent fe where fe.expiryTime > :now',[now: System.currentTimeMillis()]);
     }
   }
 

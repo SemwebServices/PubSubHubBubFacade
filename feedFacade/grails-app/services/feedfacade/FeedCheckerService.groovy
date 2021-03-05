@@ -38,6 +38,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
   def error_count = 0;
   def newEventService
   def statsService
+  def flagsService
   def feedCheckLog=new org.apache.commons.collections.buffer.CircularFifoBuffer(100);
   RabbitMessagePublisher rabbitMessagePublisher
   Long lastFeedCheckStartedAt = 0;
@@ -761,7 +762,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
         // If we could not parse the pubdate, then the feed fails validation - we might still be able to extract
         // useful CAP events from the items, but this really should be fixed.
         if ( feed_pubdate == null ) {
-          raiseFlag('InvalidPubDate','feedfacade.SourceFeed',id.toString());
+          flagsService.raiseFlag('InvalidPubDate','feedfacade.SourceFeed',id.toString());
         }
       }
       else {
@@ -958,14 +959,4 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
     return result;
   }
 
-  private raiseFlag(String flag, String domain, String id) {
-    if ( ( id != null ) &&
-         ( flag != null ) &&
-         ( domain != null ) ) {
-      console.log("raiseFlag(${flag},${domain},${id}");
-    }
-    else {
-      log.error("Missing data in call to raiseFlag");
-    }
-  }
 }
