@@ -210,4 +210,13 @@ class SourceFeed {
     List<FeedIssue> r = FeedIssue.executeQuery('select fi from FeedIssue as fi where fi.ownerFeed=:o order by lastSeen desc',[o:this],[max:max]);
     return r
   }
+
+  public List<FlagEvent> getFlags() {
+    List<FlagEvent> result = null;
+    if ( this.id != null ) {
+      result = FlagEvent.executeQuery('select fe from FlagEvent fe where fe.resourceType=:rt and fe.resourceId=:id',
+                                      [rt:'feedfacade.SourceFeed', id:this.id.toString()]);
+    }
+    return result;
+  }
 }

@@ -124,6 +124,25 @@
                   </g:each>
                 </tbody>
               </table>
+              <br/>
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Flag</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <g:each in="${feed.getFlags()}" var="flag">
+                    <tr>
+                      <td>${flag.definition.code} </td>
+                      <td>${flag.definition.name} </td>
+                      <td>${flag.definition.type} </td>
+                    </tr>
+                  </g:each>
+                </tbody>
+              </table>
             </g:if>
           </div>
         </div>
