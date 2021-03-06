@@ -197,7 +197,8 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
                       feed_info.hash,
                       feed_info.highesTimestamp,
                       feed_info.expires,
-                      feed_info.lastModified);
+                      feed_info.lastModified,
+                      feed_info.feedStatus);
         }
         else {  
           // nothing left in the queue
@@ -237,7 +238,8 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
                   hash, 
                   highestRecordedTimestamp,
                   httpExpires,
-                  httpLastModified) {
+                  httpLastModified,
+                  feedStatus) {
 
     // log.debug("processFeed[${id}] (${start_time},${id},${url},${hash},${highestRecordedTimestamp})");
 
@@ -302,7 +304,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
               }
 
               log.info("FEED-CHECK-PROMISE[${check_id}] Launch promise ${promise_info} after start, active_checks=${active_checks}");
-              this.continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time, lfs);
+              this.continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time, lfs, feedStatus);
             }
           }
         }.curry(ckid))
@@ -329,7 +331,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
       }
       else if ( feed_check_mode=='serial' ) {
         LocalFeedSettings lfs = LocalFeedSettings.findByUriname(uriname)
-        this.continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time, lfs);
+        this.continueToProcessFeed(id, uriname, url, hash, httpExpires, httpLastModified, highestRecordedTimestamp, start_time, lfs, feedStatus);
       }
       else {
         log.warn("Unhandled feed checker mode");
@@ -354,7 +356,8 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
                                      httpLastModified, 
                                      highestRecordedTimestamp, 
                                      start_time,
-                                     lfs) {
+                                     lfs,
+                                     feedStatus) {
 
     log.debug("continueToProcessFeed[${id}] continue_processing.... :: url:${url} existing hash:${hash}");
     def error = false
@@ -387,11 +390,13 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
     try {
       try {
         log.debug("call fetchFeedPage for ${url}");
-        feed_info = fetchFeedPage(url, httpExpires, httpLastModified);
+        feed_info = fetchFeedPage(id, url, httpExpires, httpLastModified);
         // log.debug(feed_info.toString())
 
-        // If we got a hash back from fetching the page AND the storred hash is different OR not set, then process the feed.
-        if ( ( feed_info.hash != null ) && ( ( hash == null ) || ( feed_info.hash != hash ) ) ) {
+        // If we got a hash back from fetching the page AND 
+        // the storred hash is different OR not set OR the feed is in an ERROR state, then process the feed.
+        if ( ( feed_info.hash != null ) && 
+             ( ( hash == null ) || ( feed_info.hash != hash ) && ( feedStatus=='ERROR') ) ) {
           newhash = feed_info.hash
           log.debug("processFeed[${id}] Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
     
@@ -645,7 +650,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
    * @See http://stackoverflow.com/questions/7095897/im-trying-to-use-javas-httpurlconnection-to-do-a-conditional-get-but-i-neve
    * 
    */
-  def fetchFeedPage(feed_address, httpExpires, httpLastModified) {
+  def fetchFeedPage(id, feed_address, httpExpires, httpLastModified) {
     long feedFetchStartTime = System.currentTimeMillis();
 
     def result = [:]
@@ -689,7 +694,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
     // If the last modified from the server is null OR it is different to the last one we saw
     if ( ( result.lastModified == null ) || ( result.lastModified != httpLastModified ) ) {
       log.debug("processing content from ${feed_address} / ${result.lastModified} / ${httpLastModified}")
-      String response_content = http_client.get {
+      Object response_content = http_client.get {
 
         response.parser('application/xml') { ChainedHttpConfig cfg, FromServer fs ->
           fs.inputStream.text
@@ -711,7 +716,13 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
       }
 
       if ( response_content ) {
-        result.feed_text = response_content
+        if ( response_content instanceof String ) 
+          result.feed_text = response_content
+        else {
+          // We weren't able to get a string from the content type.. lets see if we can process it anyway
+          flagsService.raiseFlag('UnexpectedContentType','feedfacade.SourceFeed',id.toString());
+          result.feed_text = new String(response_content)
+        }
 
         MessageDigest md5_digest = MessageDigest.getInstance("MD5");
         md5_digest.update(result.feed_text.getBytes())
@@ -755,18 +766,19 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
     def entry_count = 0;
 
     if ( rootNode.name().toString() == 'rss' ) { // It's RSS
-
+      log.debug("RSS....");
       def feed_pubdate = null;
       if ( rootNode.channel.pubDate.size() == 1 ) {
         feed_pubdate = parseDate(rootNode.channel.pubDate.text())
         // If we could not parse the pubdate, then the feed fails validation - we might still be able to extract
         // useful CAP events from the items, but this really should be fixed.
         if ( feed_pubdate == null ) {
-          flagsService.raiseFlag('InvalidPubDate','feedfacade.SourceFeed',id.toString());
+          flagsService.raiseFlag('InvalidFeedPubDate','feedfacade.SourceFeed',id.toString());
         }
       }
       else {
         // Default to NOW
+        log.debug("RSS feed did not contain a pubdate, default to NOW");
         feed_pubdate = new Date()
       }
 
@@ -778,7 +790,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
         // If we could not parse the pubdate, then the feed fails validation - we might still be able to extract
         // useful CAP events from the items, but this really should be fixed.
         if ( parsed_pubdate == null ) {
-          raiseFlag('InvalidPubDate','feedfacade.SourceFeed',id?.toString());
+          raiseFlag('InvalidItemPubDate','feedfacade.SourceFeed',id?.toString());
         }
         def entry_updated_time = item.pubDate.size() == 1 ? parsed_pubdate : feed_pubdate.getTime();
 
@@ -814,10 +826,39 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
       }
     }
     else if ( ( rootNode.name().toString() == 'feed' ) || ( rootNode.name().toString() == '{http://www.w3.org/2005/Atom}feed' ) ) {  // IT's ATOM
+
+      log.debug("ATOM");
+
+      Date feed_pubdate = null;
+      if ( rootNode.updated.size() == 1 ) {
+        feed_pubdate = parseDate(rootNode.updated.text())
+        if ( feed_pubdate == null ) {
+          log.warn("Unable to parse feed pubdate ${rootNode.updated.text()}");
+          flagsService.raiseFlag('InvalidFeedPubDate','feedfacade.SourceFeed',id.toString());
+        }
+        else {
+          log.debug("Valid ATOM pub date ${feed_pubdate}")
+        }
+      }
+      else {
+        // Default to NOW
+        log.debug("RSS feed did not contain a pubdate, default to NOW");
+        feed_pubdate = new Date()
+      }
+
+
       rootNode.entry.each { entry ->
         entry_count++;
 
-        def entry_updated_time = parseDate(entry.updated.text()).getTime();
+        Date parsed_entry_date = parseDate(entry.updated.text());
+        def entry_updated_time = null;
+
+        if ( parsed_entry_date != null ) {
+          entry_updated_time = parsed_entry_date.getTime()
+        }
+        else {
+          flagsService.raiseFlag('InvalidItemPubDate','feedfacade.SourceFeed',id.toString());
+        }
 
         // log.debug("getNewFeedEntries[${id}] -> processing entry node id:${entry.id.text()} :: ts:${entry_updated_time}");
 

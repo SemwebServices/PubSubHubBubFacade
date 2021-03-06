@@ -28,10 +28,10 @@ class FlagEvent {
   ]
 
   static constraints = {
-       definition blank: false, nullable:false
-        firstSeen blank: false, nullable:false
-         lastSeen blank: false, nullable:false
-       expiryTime blank: false, nullable:false
+       definition nullable:false
+        firstSeen nullable:false
+         lastSeen nullable:false
+       expiryTime nullable:false
      resourceType blank: false, nullable:false
        resourceId blank: false, nullable:false
             notes blank: false, nullable:true

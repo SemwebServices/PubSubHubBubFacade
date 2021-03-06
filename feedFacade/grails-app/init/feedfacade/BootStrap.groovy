@@ -65,9 +65,14 @@ class BootStrap {
       log.debug("Call sourceListService.setupSources");
       sourceListService.setUpSources(grailsApplication.config.fah.sourceList);
 
-      // Ensure we have all flags defined
+      // Ensure we have all flags defined (TTLs are given in milliseconds)
       [ 
-        [ code:'InvalidPubDate', name:'Invalid Pub Date', type:'Warn', ttl:60*60*24*7 ]
+        [ code:'InvalidFeedPubDate',       name:'Invalid Feed Pub Date',      type:'Warn', ttl:60*60*24*7*1000,
+          advice: 'Check the format of the date element at the root of your feed. Dates should be formatted according to RFC 3339 for ATOM and RFC 822 for RSS' ],
+        [ code:'InvalidItemPubDate',       name:'Invalid Item Pub Date',      type:'Warn', ttl:60*60*24*7*1000,
+          advice: 'Check the format of date elements for items in your feed. Dates should be formatted according to RFC 3339 for ATOM and RFC 822 for RSS' ],
+        [ code:'UnexpectedContentType',    name:'Unexpected Content Type',    type:'Warn', ttl:60*60*24*7*1000,
+          advice: 'Your web server should return a content type of application/xml, application/rss+xml, application/atom+xml or text/xml' ],
       ].each { flag_definition ->
         FlagDefinition.findByCode(flag_definition.code) ?: new FlagDefinition(flag_definition).save(flush:true, failOnError:true);
       }

@@ -124,21 +124,35 @@
                   </g:each>
                 </tbody>
               </table>
-              <br/>
+            </g:if>
+            <g:set var="feed_flags" value="${feed.getFlags()}"/>
+            <g:if test="${feed_flags.size() > 0 }">
               <table class="table table-striped">
                 <thead>
                   <tr>
                     <th>Flag</th>
                     <th>Name</th>
                     <th>Type</th>
+                    <th>First Seen</th>
+                    <th>Last Seen</th>
+                    <th>Expiry</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <g:each in="${feed.getFlags()}" var="flag">
+                  <g:each in="${feed_flags}" var="flag">
                     <tr>
                       <td>${flag.definition.code} </td>
                       <td>${flag.definition.name} </td>
                       <td>${flag.definition.type} </td>
+                      <td><g:formatDate date="${new Date(flag.firstSeen)}" format="yyyy-MM-dd HH:mm:ssz" timeZone="${UTCZONE}"/></td>
+                      <td><g:formatDate date="${new Date(flag.lastSeen)}" format="yyyy-MM-dd HH:mm:ssz" timeZone="${UTCZONE}"/></td>
+                      <td>
+                        <g:formatDate date="${new Date(flag.expiryTime)}" format="yyyy-MM-dd HH:mm:ssz" timeZone="${UTCZONE}"/>
+                        ( ${flag.expiryTime - System.currentTimeMillis()} ) 
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colspan="6">${flag.definition.advice}</td>
                     </tr>
                   </g:each>
                 </tbody>

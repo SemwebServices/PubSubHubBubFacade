@@ -99,8 +99,9 @@ public class SystemService {
   public expungeEntries() {
     Setting max_age_setting = Setting.findByKey('feedfacade.entryMaxAge') ?: new Setting(key:'feedfacade.entryMaxAge', value:'7').save(flush:true, failOnError:true);
     long max_age_millis = Long.valueOf(max_age_setting.value)*24*60*60*1000;
+    long run_time = System.currentTimeMillis();
     if ( max_age_millis > 0 ) {
-      long mw = System.currentTimeMillis() - max_age_millis;
+      long mw = run_time - max_age_millis;
       long c1 = Entry.executeQuery('select count(*) from Entry as e').get(0);
       long c2 = Entry.executeQuery('select count(*) from Entry as e where e.entryTs < :moving_wall',[moving_wall:mw]).get(0);
       log.info("Expunging entries older than ${max_age_setting.value} days (${max_age_millis}millis) - current count is ${c1}, ${c2} entries have expired");
@@ -112,7 +113,11 @@ public class SystemService {
       // Expunge any feed issues that are older than moving wall
       FeedIssue.executeUpdate('delete from FeedIssue fi where fi.lastSeen < :moving_wall',[moving_wall:mw]);
 
-      FlagEvent.executeUpdate('delete from FlagEvent fe where fe.expiryTime > :now',[now: System.currentTimeMillis()]);
+      FlagEvent.executeQuery('select fe from FlagEvent fe').each { fe ->
+        log.debug("flag event ${fe.id} - will expire in ${run_time-fe.expiryTime}ms");
+      }
+
+      FlagEvent.executeUpdate('delete from FlagEvent fe where fe.expiryTime > :now',[now: run_time]);
     }
   }
 
