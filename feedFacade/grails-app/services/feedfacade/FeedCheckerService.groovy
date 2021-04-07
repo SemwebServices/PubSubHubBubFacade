@@ -27,7 +27,7 @@ import org.springframework.beans.factory.DisposableBean
 @Transactional
 class FeedCheckerService  implements HealthIndicator, DisposableBean {
 
-  private static int MAX_HTTP_TIME = 10 * 1000;
+  private static int MAX_HTTP_TIME = 30 * 1000;
   private static Integer active_checks = 0;
   private static Map<String,Object> active_check_info = [:]
 
@@ -160,7 +160,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
       def cont = true
       while ( cont ) {
 
-        // log.debug("Processing feed ${++processed_feed_counter}");
+        log.debug("Processing feed ${++processed_feed_counter}");
 
         // Grab the next feed to examine -- do it in a transaction
         def feed_info = null
@@ -202,7 +202,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
         }
         else {  
           // nothing left in the queue
-          // log.debug("Nothing left to process.. Continue");
+          log.debug("Nothing left to process.. exit loop");
           cont = false
         }
       }
@@ -241,7 +241,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
                   httpLastModified,
                   feedStatus) {
 
-    // log.debug("processFeed[${id}] (${start_time},${id},${url},${hash},${highestRecordedTimestamp})");
+    log.debug("processFeed[${id}] (${start_time},${id},${url},${hash},${highestRecordedTimestamp})");
 
     logEvent('Feed.'+uriname,[
       timestamp:new Date(),
@@ -310,22 +310,22 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
         }.curry(ckid))
 
         p.onError( { check_id, Throwable err ->
+          log.error("FEED-CHECK-PROMISE[${check_id}] completed with error (active_checks=${active_checks})",err);
           synchronized(active_check_info) {
             active_checks--;
             active_check_info.remove(check_id);
             active_check_info.notifyAll()
           }
-          log.error("FEED-CHECK-PROMISE[${check_id}] completed with error (active_checks=${active_checks})",err);
           log.debug("Notify waiters that promise completed");
         }.curry(ckid))
 
         p.onComplete( { check_id, result ->
+          log.debug("FEED-CHECK-PROMISE[${check_id}] completed OK (active_checks=${active_checks})");
           synchronized(active_check_info) {
             active_checks--;
             active_check_info.remove(check_id);
             active_check_info.notifyAll()
           }
-          log.debug("FEED-CHECK-PROMISE[${check_id}] completed OK (active_checks=${active_checks})");
           log.debug("Notify waiters that promise completed");
         }.curry(ckid))
       }

@@ -24,10 +24,10 @@ apply plugin:"com.bertramlabs.asset-pipeline"
 apply plugin:"com.google.cloud.tools.jib"
 
 repositories {
+    maven { url "https://repo.grails.org/grails/core" }
     mavenLocal()
     mavenCentral()
     maven { url "https://repo1.maven.org/maven2" }
-    maven { url "https://repo.grails.org/grails/core" }
 }
 
 configurations {
