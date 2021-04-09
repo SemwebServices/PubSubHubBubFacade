@@ -396,7 +396,9 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
         // If we got a hash back from fetching the page AND 
         // the storred hash is different OR not set OR the feed is in an ERROR state, then process the feed.
         if ( ( feed_info.hash != null ) && 
-             ( ( hash == null ) || ( feed_info.hash != hash ) && ( feedStatus=='ERROR') ) ) {
+             ( ( hash == null ) || 
+               ( feed_info.hash != hash ) || 
+               ( feedStatus=='ERROR') ) ) {
           newhash = feed_info.hash
           log.debug("processFeed[${id}] Detected hash change (old:${hash},new:${feed_info.hash}).. Process");
     
@@ -441,7 +443,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
           }
         }
         else {
-          log.info("processFeed[${id}] ${url} unchanged");
+          log.info("processFeed[${id}] ${url} unchanged, computed hash=${feed_info?.hash} prev hash=${hash} feedStatus=${feedStatus}");
         }
       }
       catch ( java.io.FileNotFoundException fnfe ) {
@@ -737,6 +739,9 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
   }
 
   def getNewFeedEntries(id, url, feed_is, highestRecordedTimestamp, uriname) {
+
+    log.info("getNewFeedEntries(${id},${url}...)");
+
     def result = [:]
     result.numNewEntries=0
     result.newEntries=[]
@@ -797,7 +802,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
 
         if ( entry_updated_time ) {
           if ( entry_updated_time > highestRecordedTimestamp ?: 0 ) {
-            log.debug("getNewFeedEntries[${id}: RSS    -> ${item.guid.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
+            log.info("getNewFeedEntries[${id}: RSS    -> ${item.guid.text()} has a timestamp (${entry_updated_time} > ${highestRecordedTimestamp} so process it");
             result.numNewEntries++
             result.newEntries.add([
                                    id:item.guid.text(),
