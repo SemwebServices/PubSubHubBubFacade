@@ -27,7 +27,7 @@ import org.springframework.beans.factory.DisposableBean
 @Transactional
 class FeedCheckerService  implements HealthIndicator, DisposableBean {
 
-  private static int MAX_HTTP_TIME = 30 * 1000;
+  private static int MAX_HTTP_TIME = 10 * 1000;
   private static Integer active_checks = 0;
   private static Map<String,Object> active_check_info = [:]
 
@@ -369,7 +369,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
     def processing_start_time = System.currentTimeMillis()
 
     if ( lfs != null ) {
-      log.debug("Have override local feed settings for ${lfs.uriname}");
+      log.info("Have override local feed settings for ${lfs.uriname}");
 
       if ( lfs.alternateFeedURL != null )
         url = lfs.alternateFeedURL;
@@ -389,7 +389,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
     // You don't do any work in here beyond the inner try block.
     try {
       try {
-        log.debug("call fetchFeedPage for ${url}");
+        log.info("call fetchFeedPage for ${url}");
         feed_info = fetchFeedPage(id, url, httpExpires, httpLastModified);
         // log.debug(feed_info.toString())
 
@@ -441,7 +441,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
           }
         }
         else {
-          // log.debug("processFeed[${id}] ${url} unchanged");
+          log.info("processFeed[${id}] ${url} unchanged");
         }
       }
       catch ( java.io.FileNotFoundException fnfe ) {
@@ -567,6 +567,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
       SourceFeed.staticRegisterFeedIssue(id, "[0010] Untrapped", "${url} ${e.message} (elapsed:${System.currentTimeMillis()-start_time})")
     }
     finally {
+      log.info("processFeed[${id}] fetch phase complete");
     }
 
     // log.debug("After processing ${url} entries, highest timestamp seen is ${highestSeenTimestamp}");
