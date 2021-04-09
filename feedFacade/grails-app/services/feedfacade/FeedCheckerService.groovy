@@ -359,7 +359,7 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
                                      lfs,
                                      feedStatus) {
 
-    log.debug("continueToProcessFeed[${id}] continue_processing.... :: url:${url} existing hash:${hash}");
+    log.info("continueToProcessFeed[${id}] continue_processing.... :: url:${url} existing hash:${hash}");
     def error = false
     String error_message = null
     def newhash = null;
@@ -633,12 +633,12 @@ class FeedCheckerService  implements HealthIndicator, DisposableBean {
         feedCheckLog.add([timestamp:new Date(),message:"Processing completed on ${id}/${url} at ${sf.lastCompleted} / ${error_message}"]);
       }
     }
-    catch ( Exception e ) {
+    catch ( Throwable e ) {
       SourceFeed.staticRegisterFeedIssue(id, "[0011] Error Reporting Problem", "${url} ${e.message} (elapsed:${System.currentTimeMillis()-start_time})")
       log.error("Error closing out feed check",e);
     }
 
-    log.debug("continueToProcessFeed(${id},... returning (error=${error}, errorMessage=${error_message})");
+    log.info("continueToProcessFeed(${id},... returning (error=${error}, errorMessage=${error_message})");
   }
 
 
