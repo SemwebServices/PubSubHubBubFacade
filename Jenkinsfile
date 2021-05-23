@@ -92,6 +92,8 @@ podTemplate(
             String tmpResolved = new groovy.text.SimpleTemplateEngine().createTemplate( ymlFile ).make( [:] + env.getOverriddenEnvironment() ).toString()
             println("Resolved template: ${tmpResolved}");
             writeFile(file: 'module_deploy.yaml', text: tmpResolved)
+            println("Apply deployment");
+            sh 'kubectl apply -f module_deploy.yaml'
           }
         }
       }
