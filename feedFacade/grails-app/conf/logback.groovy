@@ -23,7 +23,9 @@ appender('STDOUT', ConsoleAppender) {
 }
 
 root(WARN, ['STDOUT'])
-logger ('feedfacade', DEBUG)
+if (Environment.isDevelopmentMode() ) {
+  logger ('feedfacade', DEBUG)
+}
 
 def targetDir = BuildSettings.TARGET_DIR
 if ( (Environment.isDevelopmentMode() && targetDir != null) ||
