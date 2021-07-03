@@ -1,6 +1,6 @@
 /**
  * Gradle build config.
- *
+ * 
  * When triggered from jenkins, user and password will be supplied from the appropriate secret.
  * When triggered from the command line, user will need to provide appropriate values.
  * gradle jib - to publish to nexus at docker.semweb.co
