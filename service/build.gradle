@@ -24,7 +24,6 @@ plugins {
   id "com.google.cloud.tools.jib" version "3.1.1"
 }
 
-
 version "${appVersion}"
 group "feedfacade"
 
@@ -36,6 +35,9 @@ apply plugin:"com.github.erdi.webdriver-binaries"
 apply plugin:"org.grails.grails-gsp"
 apply plugin:"com.bertramlabs.asset-pipeline"
 // apply plugin:"com.google.cloud.tools.jib"
+
+Map<String, String> env = System.getenv()
+String version_components = appVersion.split('\\.')
 
 repositories {
     maven { url "https://repo.grails.org/grails/core" }
@@ -162,7 +164,6 @@ buildProperties.doLast {
     // Get the host name where the build was created
     properties.setProperty('build.host', InetAddress.localHost.hostName)
     // Add property set by your CI (in this case Bamboo)
-    Map<String, String> env = System.getenv()
 
     if(env.BUILD_NUMBER)
         properties.setProperty('build.number', env.BUILD_NUMBER)
