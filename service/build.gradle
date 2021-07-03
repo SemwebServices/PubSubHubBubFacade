@@ -218,7 +218,7 @@ jib {
     }
   }
   extraDirectories.paths {
-    tasks.compileGsonViews.outputs.files.each { fileEntry ->
+    tasks.compileGsonViews?.outputs?.files?.each { fileEntry ->
       path {
         from = fileEntry
 
