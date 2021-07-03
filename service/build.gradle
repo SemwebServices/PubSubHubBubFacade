@@ -1,7 +1,5 @@
 /**
  *
- *
- *
  * gradle jib - to publish to nexus at docker.semweb.co
  *    ./gradlew --no-daemon -x integrationTest --console=plain -Djib.to.auth.username=$USERNAME -Djib.to.auth.password=$PASSWORD clean build jib
  *
@@ -38,6 +36,7 @@ apply plugin:"com.bertramlabs.asset-pipeline"
 // apply plugin:"com.google.cloud.tools.jib"
 
 repositories {
+    maven { url "https://nexus.semweb.co/repository/maven-public" }
     maven { url "https://repo.grails.org/grails/core" }
     mavenLocal()
     mavenCentral()
