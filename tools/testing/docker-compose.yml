@@ -1,0 +1,73 @@
+version: "2.0"
+
+volumes:
+  pgdata:
+  esdata:
+
+services:
+  #
+  # docker exec -it pg psql -u postgres
+  #
+  postgres:
+    container_name: pg
+    image: postgres:latest
+    restart: "no"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pa55w0rd
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - 5432:5432
+    networks:
+      default:
+        aliases:
+          - pghost
+
+  # https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
+  # https://github.com/k-int/KBPlusG3/blob/dev-integration/SETUP-ES-DOCKER.txt
+  # see https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
+  es5:
+    container_name: es5
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.8
+    restart: "no"
+    environment:
+      - xpack.security.enabled=false
+      - xpack.monitoring.enabled=false
+      - xpack.ml.enabled=false
+      - xpack.graph.enabled=false
+      - xpack.watcher.enabled=false
+      - bootstrap.memory_lock=true
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - discovery.zen.minimum_master_nodes=1
+      - discovery.type=single-node 
+      - cluster.name=elasticsearch
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
+    ports:
+      - 9200:9200 
+      - 9300:9300
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      default:
+        aliases:
+          - eshost
+
+  # Converted from 
+  # docker run -d --restart always --hostname rabbitmq -p 15672:15672 -p 5672:5672 --name rabbitmq -e RABBITMQ_DEFAULT_USER=adm -e RABBITMQ_DEFAULT_PASS=admpass rabbitmq:management
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:management
+    restart: "no"
+    ports:
+      - 15672:15672 
+      - 5672:5672
+    environment:
+      - RABBITMQ_DEFAULT_USER=adm
+      - RABBITMQ_DEFAULT_PASS=admpass 
