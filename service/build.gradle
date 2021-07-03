@@ -213,14 +213,12 @@ jib {
     }
   }
   extraDirectories.paths {
-    tasks.compileGsonViews.outputs.files.each { fileEntry ->
-      path {
-        from = fileEntry
-
-        // Path in the container where we want to write the gson classes.
-        into = '/app/gson-classes'
-      }
-    }
+    // tasks.compileGsonViews.outputs.files.each { fileEntry ->
+    //   path {
+    //     from = fileEntry
+    //     into = '/app/gson-classes'
+    //   }
+    // }
   }
   container {
     // jvmFlags = ['-Dmy.property=example.value', '-Xms512m', '-Xdebug']
