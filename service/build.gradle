@@ -1,3 +1,12 @@
+/**
+ *
+ *
+ *
+ * gradle jib - to publish to nexus at docker.semweb.co
+ *    ./gradlew --no-daemon -x integrationTest --console=plain -Djib.to.auth.username=$USERNAME -Djib.to.auth.password=$PASSWORD clean build jib
+ *
+ */
+
 buildscript {
     repositories {
         maven { url "https://repo.grails.org/grails/core" }
@@ -11,6 +20,12 @@ buildscript {
     }
 }
 
+plugins {
+  // id "com.google.cloud.tools.jib" version "3.1.1"
+  id "com.google.cloud.tools.jib"
+}
+
+
 version "${appVersion}"
 group "feedfacade"
 
@@ -21,7 +36,7 @@ apply plugin:"org.grails.grails-web"
 apply plugin:"com.github.erdi.webdriver-binaries"
 apply plugin:"org.grails.grails-gsp"
 apply plugin:"com.bertramlabs.asset-pipeline"
-apply plugin:"com.google.cloud.tools.jib"
+// apply plugin:"com.google.cloud.tools.jib"
 
 repositories {
     maven { url "https://repo.grails.org/grails/core" }
@@ -132,28 +147,6 @@ assets {
     minifyCss = true
 }
 
-// https://github.com/GoogleContainerTools/jib/tree/master/jib-gradle-plugin
-jib.to.image = 'semweb/caphub_feedfacade'
-jib {
-  from {
-    image = 'adoptopenjdk:11-jdk-openj9-bionic'
-  }
-  to {
-    image = 'semweb/caphub_feedfacade'
-    // credHelper = 'osxkeychain'
-    tags = ['latest']
-  }
-  container {
-    jvmFlags = [ '-Djava.security.egd=file:/dev/./urandom', '-Xshareclasses', '-Xscmx50M', '-Xtune:virtualized' ]
-    // mainClass = 'mypackage.MyApp'
-    // args = ['some', 'args']
-    // ports = ['1000', '2000-2003/udp']
-    ports = ['8080']
-    // labels = [key1:'value1', key2:'value2']
-    // format = 'OCI' / 'Docker'
-  }
-}
-
 buildProperties.doLast {
     // Find the right file
     File grailsBuildInfoFile = it.outputs.files.files.find { it.name == 'grails.build.info' }
@@ -196,3 +189,47 @@ buildProperties.doLast {
     }
 }
 
+jib {
+  from {
+    image = "gcr.io/distroless/java:11"
+  }
+  to {
+    image = "docker.semweb.co/semweb/caphub_feedfacade"
+    if ( appVersion.contains('SNAPSHOT') ) {
+      if ( env.CONSTRUCTED_TAG ) {
+        tags = ['snapshot-latest', "${env.CONSTRUCTED_TAG}" ]
+      }
+      else {
+        tags = ['snapshot-latest']
+      }
+    }
+    else {
+      if ( env.CONSTRUCTED_TAG ) {
+        tags = ['latest', "${env.CONSTRUCTED_TAG}", "$version_components[0]", "${version_components[0]}.${version_components[1]}" ]
+      }
+      else {
+        tags = ['latest', "$version_components[0]", "${version_components[0]}.${version_components[1]}" ]
+      }
+    }
+  }
+  extraDirectories.paths {
+    tasks.compileGsonViews.outputs.files.each { fileEntry ->
+      path {
+        from = fileEntry
+
+        // Path in the container where we want to write the gson classes.
+        into = '/app/gson-classes'
+      }
+    }
+  }
+  container {
+    // jvmFlags = ['-Dmy.property=example.value', '-Xms512m', '-Xdebug']
+    // mainClass = 'mypackage.MyApp'
+    // args = ['some', 'args']
+    // ports = ['1000', '2000-2003/udp']
+    // labels = [key1:'value1', key2:'value2']
+    // format = 'OCI'
+    extraClasspath = ['/app/gson-classes']
+    ports = ['8080'] // This is the default grails port.
+  }
+}

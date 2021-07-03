@@ -146,7 +146,7 @@ environments:
           port: 8081
         dataSource:
             dbCreate: update
-            url: jdbc:postgresql://postgres:5432/feedfacadedev
+            url: jdbc:postgresql://localhost:5432/feedfacadedev
             username: feedfacade
             password: feedFacade
             driverClassName: org.postgresql.Driver

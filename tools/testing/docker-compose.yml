@@ -12,6 +12,7 @@ services:
     container_name: pg
     image: postgres:latest
     restart: "no"
+    command: postgres -c 'max_connections=200'
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: pa55w0rd
@@ -21,10 +22,6 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - 5432:5432
-    networks:
-      default:
-        aliases:
-          - pghost
 
   # https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docker.html
   # https://github.com/k-int/KBPlusG3/blob/dev-integration/SETUP-ES-DOCKER.txt
@@ -54,10 +51,6 @@ services:
       - 9300:9300
     volumes:
       - esdata:/usr/share/elasticsearch/data
-    networks:
-      default:
-        aliases:
-          - eshost
 
   # Converted from 
   # docker run -d --restart always --hostname rabbitmq -p 15672:15672 -p 5672:5672 --name rabbitmq -e RABBITMQ_DEFAULT_USER=adm -e RABBITMQ_DEFAULT_PASS=admpass rabbitmq:management
