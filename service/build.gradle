@@ -200,6 +200,9 @@ jib {
       if ( env.CONSTRUCTED_TAG ) {
         tags = ['snapshot-latest', "${env.CONSTRUCTED_TAG}" ]
       }
+      else if ( env.GITHUB_RUN_NUMBER ) {
+        tags = ['snapshot-latest', "SNAPSHOT-${env.GITHUB_RUN_NUMBER}" ]
+      }
       else {
         tags = ['snapshot-latest']
       }
@@ -208,8 +211,11 @@ jib {
       if ( env.CONSTRUCTED_TAG ) {
         tags = ['latest', "${env.CONSTRUCTED_TAG}", "$version_components[0]", "${version_components[0]}.${version_components[1]}" ]
       }
+      else if ( env.GITHUB_RUN_NUMBER ) {
+        tags = ['latest', "${version_components[0]}-${env.GITHUB_RUN_NUMBER}", "${version_components[0]}.${version_components[1]}-${env.GITHUB_RUN_NUMBER}" ]
+      }
       else {
-        tags = ['latest', "$version_components[0]", "${version_components[0]}.${version_components[1]}" ]
+        tags = ['latest', "${version_components[0]}", "${version_components[0]}.${version_components[1]}" ]
       }
     }
   }
