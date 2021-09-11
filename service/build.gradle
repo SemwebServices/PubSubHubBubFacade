@@ -25,8 +25,6 @@ plugins {
   id "com.google.cloud.tools.jib" version "3.1.1"
 }
 
-
-
 Map<String, String> env = System.getenv()
 String version_components = appVersion.split('\\.')
 
@@ -43,6 +41,9 @@ apply plugin:"com.github.erdi.webdriver-binaries"
 apply plugin:"org.grails.grails-gsp"
 apply plugin:"com.bertramlabs.asset-pipeline"
 // apply plugin:"com.google.cloud.tools.jib"
+
+Map<String, String> env = System.getenv()
+String version_components = appVersion.split('\\.')
 
 repositories {
     maven { url "https://nexus.semweb.co/repository/maven-public" }
@@ -218,7 +219,6 @@ jib {
     }
   }
   extraDirectories.paths {
-    // tasks.compileGsonViews?.outputs?.files?.each { fileEntry ->
     //   path {
     //     from = fileEntry
     //     into = '/app/gson-classes'
