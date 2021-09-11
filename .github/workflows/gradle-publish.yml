@@ -35,7 +35,7 @@ jobs:
       run: ./gradlew build --no-daemon -x integrationTest --console=plain
 
     - name: Publish to semweb nexus
-      run: gradle --no-daemon -x integrationTest --console=plain -Djib.to.auth.username=$USERNAME -Djib.to.auth.password=$PASSWORD clean build jib
+      run: ./gradlew --no-daemon -x integrationTest --console=plain -Djib.to.auth.username=$USERNAME -Djib.to.auth.password=$PASSWORD clean build jib
       working-directory: service
       env:
         USERNAME: ${{ secrets.NEXUS_USER }}
