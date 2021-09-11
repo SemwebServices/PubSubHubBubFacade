@@ -6,11 +6,9 @@ runs-on: self-hosted
 
 on:
   push:
-    branches:
-      - [main, master, uat]
+    branches: [main, master, uat]
   pull_request:
-    branches:
-      - [main, master, uat]
+    branches: [main, master, uat]
 
 jobs:
   build:
