@@ -1,3 +1,6 @@
+THIS REPOSITORY HAS MOVED TO https://gitlab.com/alert-hub-org/FeedFacade
+
+
 # PubSubHubBubFacade
 
 An asychronous feed fetcher which emits events when it detects new entries in RSS/ATOM feeds with the intent of turning
