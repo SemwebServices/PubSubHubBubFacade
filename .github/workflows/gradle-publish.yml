@@ -5,14 +5,12 @@ name: Gradle Package
 runs-on: self-hosted
 
 on:
-  release:
-    types: [created]
   push:
     branches:
-      - main
+      - [main, master, uat]
   pull_request:
     branches:
-      - main
+      - [main, master, uat]
 
 jobs:
   build:
