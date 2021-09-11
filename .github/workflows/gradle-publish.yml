@@ -35,7 +35,7 @@ jobs:
         cache: gradle
 
     - name: Build with Gradle
-      working-directory: service
+      working-directory: feedFacade
       run: ./gradlew build --no-daemon -x integrationTest --console=plain
 
     # The USERNAME and TOKEN need to correspond to the credentials environment variables used in
